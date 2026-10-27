@@ -37,10 +37,15 @@ The clearest result from the earlier tests: **the same model passed a scoped tas
 ## Per-Task Loop
 
 1. **Brief.** Claude writes the task brief (scope, files, acceptance criteria) and saves it as the first section of the task's review note.
-2. **Run.** From the Calbud folder:
+2. **Run.** Default: Claude opens the web UI in its built-in browser using the sign-in link that `start-deepseek-harness.bat` saves to `local-llm-tools\deepseek-harness\harness-run.log`. It starts a **New Session in the Calbud workspace**, checks that the picker shows `qwen3.6:35b-a3b-128k` before sending, pastes the brief, and checks the page until the run ends. Runs started this way show up in your web view, and you can watch them live.
+
+   Fallback, headless (runs don't appear in the web view). From the Calbud folder (PowerShell):
    ```
-   dsh --profile calbud headless --json "<brief>"
+   $h = "C:\Users\orgo1\Documents\local-llm-tools\deepseek-harness"
+   $env:DSH_HOME = "$h\home"; $env:OLLAMA_LOCAL_API_KEY = "ollama"
+   & "$h\install\node_modules\.bin\dsh.cmd" --profile headless --patch "$h\calbud-local.yml" --json "<brief>"
    ```
+   `calbud-local.yml` swaps the headless profile's default (`deepseek-flash`, DeepSeek's cloud) for the local 35B through the swap proxy. The key is a placeholder: Ollama ignores it, but the harness refuses to start without one. To use the 27B or Swift, add a second `--patch` that overrides `agent-default-model`.
    The run continues until the harness exits. No time limit is imposed; slow runs are recorded, not killed.
 3. **Check.** Claude reviews the git diff, then runs the build, the tests and any acceptance checks.
 4. **Escalate if needed.** If the 35B's output fails badly (doesn't build, wrong approach, silent stop), the same brief goes to the second-attempt model before Claude fixes anything. Both results are recorded.
@@ -83,9 +88,9 @@ Usable as-is / usable after small fixes / rewritten. One-line lesson for future 
 
 - [x] `git init` in the Calbud folder, with one commit for the plan docs, so every harness run has a clean diff.
 - [x] Calbud workspace in the harness: already exists (`Documents\Calbud`, created 2026-10-27, one session).
-- [ ] A `calbud` headless profile (a copy of `headless`) with the 35B as the default model and Ollama routed through the swap proxy (port 8100).
+- [x] Local-model overlay `local-llm-tools\deepseek-harness\calbud-local.yml` (instead of a separate profile): 35B default, swap proxy, web profile's search settings.
 - [ ] The swap proxy running (`start-deepseek-harness.bat` starts it; a headless run needs it started separately).
-- [ ] A smoke-test brief (e.g. "create `hello.txt` containing ok") to confirm the headless run, the model and the file write all work before real work starts.
+- [x] Smoke test (2026-10-27): the 35B created `smoke-test.txt` with "ok" in 42 s, two steps, no extra files touched. The session was saved under `home\sessions\--C-Users-orgo1-Documents-Calbud--\` but not added to the Calbud workspace's session list, so it may not show in the web view.
 
 ## Planned Task Order (Phase 1 of GAME_PLAN.md)
 
