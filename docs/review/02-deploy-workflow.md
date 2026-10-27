@@ -43,3 +43,28 @@ Use exactly these action versions.
 3. Then run a normal `npm run build` again and confirm `dist/index.html` is back to `/Calbud/`, so `dist/` is left in its default state.
 
 Reply with a short summary: the file you created, and the result of each check, including the script paths you saw in `dist/index.html` both times.
+
+## Run
+- Model / effort: `qwen3.6:35b-a3b-128k`, High, via the web UI (session "Deploy Workflow Brief")
+- Wall time: 1 min 57 s, 14 steps, ~74 tok/s, 196K tokens
+- Outcome: finished, but **checks 2 and 3 were not run**. The session was in **Workspace Write** mode (new sessions default to it, even after full access was turned on in the task 01 session), and the sandbox blocked Node from spawning processes (EPERM). The model reported this honestly and fell back to reading `vite.config.ts`, plus quoting the old `dist/index.html`.
+- Harness output committed unchanged as `3742c70`.
+
+## Result
+- `.github/workflows/deploy.yml` matches the brief exactly: triggers, permissions, concurrency, both jobs, action versions, and `BASE_PATH` from `github.event.repository.name`.
+- My own run of the checks:
+  - `BASE_PATH=/test-repo/` → every script, stylesheet and manifest loads from `/test-repo/`.
+  - A default build goes back to `/Calbud/`.
+  - `npm ci --dry-run` succeeds, so the lockfile is in sync for the workflow's `npm ci`.
+- No existing files changed, and `node_modules` is intact.
+
+## What I changed
+Nothing in the code.
+
+## How I would have done it
+The same file. The brief spelled it out, and the model reproduced it without drift. The only thing I'd have added is a note for the one-time GitHub setup, which can't live in the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions** before the first push. Otherwise `configure-pages` fails on the first run.
+
+## Verdict
+Usable as-is. **Lessons for future briefs:**
+1. Before sending, check that the session's permission mode is **Full access**. It is per-session and new sessions start in Workspace Write, which blocks `npm` and `node`.
+2. The model handled a blocked check well: it said so and didn't claim a pass. My own run of the checks remains the real gate.

@@ -37,7 +37,7 @@ The clearest result from the earlier tests: **the same model passed a scoped tas
 ## Per-Task Loop
 
 1. **Brief.** Claude writes the task brief (scope, files, acceptance criteria) and saves it as the first section of the task's review note.
-2. **Run.** Default: Claude opens the web UI in its built-in browser using the sign-in link that `start-deepseek-harness.bat` saves to `local-llm-tools\deepseek-harness\harness-run.log`. It starts a **New Session in the Calbud workspace**, checks that the picker shows `qwen3.6:35b-a3b-128k` before sending, pastes the brief, and checks the page until the run ends. Runs started this way show up in your web view, and you can watch them live.
+2. **Run.** Default: Claude opens the web UI in its built-in browser using the sign-in link that `start-deepseek-harness.bat` saves to `local-llm-tools\deepseek-harness\harness-run.log`. It starts a **New Session in the Calbud workspace**, checks that the picker shows `qwen3.6:35b-a3b-128k` and that the permission mode is **Full access** (it's per-session, and new sessions start in Workspace Write, which blocks `npm`/`node`) before sending, pastes the brief, and checks the page until the run ends. Runs started this way show up in your web view, and you can watch them live.
 
    Fallback, headless (runs don't appear in the web view). From the Calbud folder (PowerShell):
    ```
