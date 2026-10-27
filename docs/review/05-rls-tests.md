@@ -14,7 +14,7 @@ Do not change either migration. If a test fails because of a migration, **leave 
 
 ### Tools
 - Add the dev dependency **`@electric-sql/pglite` at exactly version `0.5.12`**: run `npm install --save-dev --save-exact @electric-sql/pglite@0.5.12`. PGlite is real Postgres compiled to WASM: `import { PGlite } from '@electric-sql/pglite'`, `const db = new PGlite()`, then `await db.exec(sql)` for SQL with several statements (no parameters) and `await db.query(sql, params)` for one statement with `$1`-style parameters (returns `{ rows, affectedRows }`).
-- Use **plain Node** (no test framework, no `node --test`). Print one line per test, `PASS  <name>` or `FAIL  <name>  <detail>`, then a final `N passed, M failed` line. Exit with code 1 if anything failed.
+- Use **plain Node** (no test framework, no `node --test`). Print one line per test, `PASS  <name>` or `FAIL  <name>  <detail>`, then a final `N passed, M failed` line. Exit with code 1 if anything failed. If the script crashes (an exception escapes), it must also exit with code 1.
 
 ### Create these
 1. **`scripts/test-db.mjs`**.
@@ -107,7 +107,15 @@ Write at least these, with these names. Seed whatever rows you need (as the righ
 
 ### Rules
 - One file, plain JavaScript (ES modules), no TypeScript. Use only Node built-ins plus PGlite.
-- Write the file in pieces of no more than about 100 lines.
+- Use the Step 1 SQL **exactly as given**, and the user ids, names and test names exactly as given.
+
+### How to write the file (follow these steps exactly)
+The finished script is about 300 lines, too long to write in one go. Build it like this:
+1. **One `write`:** create `scripts/test-db.mjs` with only the imports, a PASS/FAIL helper, the Step 1 SQL, the migration loading, the `as` helper, the users from Step 3, then a line containing only `// ADD TESTS HERE`, then the final summary line and `process.exit(fail ? 1 : 0)`. Run `npm run test:db` once: it should print `0 passed, 0 failed`.
+2. **One `edit` per test group** (Sign-up, Households, Profiles, Meal logs, Activities, Shared meal prep and foods, Not signed in): replace `// ADD TESTS HERE` with that group's tests **followed by a new `// ADD TESTS HERE` line**. Each edit is under about 100 lines. Run `npm run test:db` after each group, and fix that group before moving on.
+3. After the last group, remove the `// ADD TESTS HERE` line.
+
+Never rewrite the whole file with `write` after step 1. Don't create helper files (no Python, base64 or text chunks); if you made one, delete it before finishing.
 - Do **not** change the migrations or any file other than `scripts/test-db.mjs` and `package.json` (and the `package-lock.json` that `npm install` updates). Do **not** run any git commands.
 
 ### Done when
