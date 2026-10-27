@@ -206,14 +206,14 @@ $$;
 create policy households_select_own
     on public.households
     for select to authenticated
-    using (id = public.my_household());
+    using (id = (select public.my_household()));
 
 -- profiles: read your own profile and the profiles in your household.
 create policy profiles_select_own_and_household
     on public.profiles
     for select to authenticated
     using (id = (select auth.uid())
-           or household_id = public.my_household());
+           or household_id = (select public.my_household()));
 
 -- profiles: update your own profile only, with id and household_id kept
 -- unchanged (see the explanation above). No insert or delete policies: the
@@ -222,9 +222,9 @@ create policy profiles_update_own
     on public.profiles
     for update to authenticated
     using (id = (select auth.uid())
-           and public.my_household() is not distinct from household_id)
+           and (select public.my_household()) is not distinct from household_id)
     with check (id = (select auth.uid())
-                and public.my_household() is not distinct from household_id);
+                and (select public.my_household()) is not distinct from household_id);
 
 -- meal_logs: read your own rows and the rows of your household members.
 create policy meal_logs_select_household
@@ -233,7 +233,7 @@ create policy meal_logs_select_household
     using (user_id = (select auth.uid())
            or user_id in (select id
                           from public.profiles
-                          where household_id = public.my_household()));
+                          where household_id = (select public.my_household())));
 
 -- meal_logs: your own rows only; user_id must be you both before and after.
 create policy meal_logs_insert_own
@@ -260,7 +260,7 @@ create policy activities_select_household
     using (user_id = (select auth.uid())
            or user_id in (select id
                           from public.profiles
-                          where household_id = public.my_household()));
+                          where household_id = (select public.my_household())));
 
 create policy activities_insert_own
     on public.activities
@@ -283,45 +283,45 @@ create policy activities_delete_own
 create policy meal_prep_select_household
     on public.meal_prep
     for select to authenticated
-    using (household_id = public.my_household());
+    using (household_id = (select public.my_household()));
 
 create policy meal_prep_insert_household
     on public.meal_prep
     for insert to authenticated
-    with check (household_id = public.my_household());
+    with check (household_id = (select public.my_household()));
 
 create policy meal_prep_update_household
     on public.meal_prep
     for update to authenticated
-    using (household_id = public.my_household())
-    with check (household_id = public.my_household());
+    using (household_id = (select public.my_household()))
+    with check (household_id = (select public.my_household()));
 
 create policy meal_prep_delete_household
     on public.meal_prep
     for delete to authenticated
-    using (household_id = public.my_household());
+    using (household_id = (select public.my_household()));
 
 -- foods: same shape as meal_prep.
 create policy foods_select_household
     on public.foods
     for select to authenticated
-    using (household_id = public.my_household());
+    using (household_id = (select public.my_household()));
 
 create policy foods_insert_household
     on public.foods
     for insert to authenticated
-    with check (household_id = public.my_household());
+    with check (household_id = (select public.my_household()));
 
 create policy foods_update_household
     on public.foods
     for update to authenticated
-    using (household_id = public.my_household())
-    with check (household_id = public.my_household());
+    using (household_id = (select public.my_household()))
+    with check (household_id = (select public.my_household()));
 
 create policy foods_delete_household
     on public.foods
     for delete to authenticated
-    using (household_id = public.my_household());
+    using (household_id = (select public.my_household()));
 
 -- ---------------------------------------------------------------------------
 -- 6. Privileges
@@ -343,7 +343,14 @@ revoke execute on function public.handle_new_user() from public, anon;
 -- Table privileges for the client role (RLS still applies on top of these).
 grant usage on schema public to authenticated;
 grant select on public.households to authenticated;
-grant select, update on public.profiles to authenticated;
+-- profiles: Supabase's default privileges already give authenticated full
+-- table rights, so revoke them and grant update on the editable columns only.
+-- id, household_id and created_at can then never be set by a client.
+grant select on public.profiles to authenticated;
+revoke insert, update, delete on public.profiles from authenticated;
+grant update (display_name, color, goal_calories, goal_protein_g,
+              goal_carbs_g, goal_fat_g, timezone)
+    on public.profiles to authenticated;
 grant select, insert, update, delete on public.meal_logs to authenticated;
 grant select, insert, update, delete on public.activities to authenticated;
 grant select, insert, update, delete on public.meal_prep to authenticated;
