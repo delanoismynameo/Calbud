@@ -19,8 +19,7 @@ create table public.profiles (
     goal_carbs_g int not null default 250 check (goal_carbs_g > 0),
     goal_fat_g int not null default 65 check (goal_fat_g > 0),
     timezone text not null default 'America/New_York',
-    created_at timestamptz not null default now(),
-    check (goal_calories > 0 and goal_protein_g > 0 and goal_carbs_g > 0 and goal_fat_g > 0)
+    created_at timestamptz not null default now()
 );
 
 -- 3. foods
@@ -100,7 +99,7 @@ create index meal_logs_user_id_logged_on_idx on public.meal_logs (user_id, logge
 create index meal_prep_household_scheduled_idx on public.meal_prep (household_id, scheduled_date);
 create index activities_user_scheduled_idx on public.activities (user_id, scheduled_date);
 create index profiles_household_id_idx on public.profiles (household_id);
-create index foods_household_id_idx on public.foods (household_id);
+-- foods needs no household_id index: unique (household_id, source, source_id) already provides one.
 
 -- Row Level Security (no policies yet)
 alter table public.households enable row level security;

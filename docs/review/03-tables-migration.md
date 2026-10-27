@@ -111,3 +111,36 @@ It must create these six tables, in this order, with exactly these columns. Use 
 2. Re-read the file once against this brief and confirm every table, column, default, constraint, index and `enable row level security` line is there.
 
 Your SQL will be executed against a real Postgres 17 database afterwards, so it must run without errors from top to bottom. Reply with a short summary: the tables created, the indexes, and anything in this brief you were unsure about.
+
+## Run
+- Model / effort: `qwen3.6:35b-a3b-128k`, High, via the web UI (session "Tables Migration Brief Execution"), Workspace Write. No commands were needed.
+- Wall time: **1 min 19 s**, 4 steps, ~86 tok/s, 48K tokens
+- Outcome: finished, and reported "no uncertainties".
+- Harness output committed unchanged as `cfaf423`.
+
+## Result
+I ran the migration on **PGlite** (real Postgres, version 18.6, in WASM) with a stub `auth.users`, plus a 40-check script covering:
+- every column of all six tables
+- RLS enabled with no policies, and no functions or triggers
+- all indexes
+- defaults (invite code, profile goals, meal prep status/duration/servings/ingredients)
+- 14 constraint rejections (bad enums, zero or negative values, duplicate USDA food, missing FK)
+- delete behaviour (food delete keeps logs, user delete cascades, meal prep survives its creator, household delete nulls profiles and removes foods and prep)
+
+**40/40 passed on the harness's original file.** The checker lives in Claude's scratchpad (`pgcheck/check-tables.mjs`), not the repo.
+
+## What I changed
+- `profiles`: removed a table-level `check (goal_calories > 0 and ...)` that **duplicated** the four per-column checks the model had also written. Harmless, but every insert was checked twice, and errors named the vague `profiles_check` instead of the column.
+- `foods`: removed the `foods (household_id)` index. **This was my brief's mistake, not the model's.** The unique constraint on `(household_id, source, source_id)` already creates an index that starts with `household_id`, so a second one only costs writes. Left a comment in its place.
+- Re-ran the checker after both changes: still 40/40.
+
+## How I would have done it
+Essentially this file. The brief was a near-complete spec, and the model transcribed it accurately, choosing sensible index names. Differences:
+- I wouldn't have asked for the redundant `foods` index.
+- I'd have written each multi-column check as a named constraint (e.g. `constraint meal_logs_nutrition_nonneg check (...)`). Then a failure reads clearly in app error messages, instead of `meal_logs_check` / `foods_check`.
+- I'd have validated against a real Postgres before calling it done. The model couldn't, since there's no database in the harness. That's why the PGlite run is my step.
+
+## Verdict
+Usable after a trivial fix. The fastest task so far, with zero spec drift. **Lessons:**
+1. When a brief is a precise spec, the 35B follows it very closely, including the brief's own mistakes. So spec errors are my responsibility to catch.
+2. Task 04 (RLS, trigger, household functions) is the first one where the model has to *design* rather than transcribe. It's the head-to-head between the 27B and Swift, and the PGlite checker gets extended there with tests that sign in as different users.
