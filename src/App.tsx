@@ -1,8 +1,15 @@
-import { Routes, Route } from 'react-router'
+import { Routes, Route, NavLink } from 'react-router'
 import Today from './pages/Today'
 import Prep from './pages/Prep'
 import Plan from './pages/Plan'
 import Us from './pages/Us'
+
+const tabs = [
+  { to: '/', label: 'Today' },
+  { to: '/prep', label: 'Prep' },
+  { to: '/plan', label: 'Plan' },
+  { to: '/us', label: 'Us' },
+]
 
 export default function App() {
   return (
@@ -19,10 +26,18 @@ export default function App() {
         </Routes>
       </main>
       <nav className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 flex justify-around py-2">
-        <a href="/" className="text-xs text-gray-400 hover:text-white">Today</a>
-        <a href="/prep" className="text-xs text-gray-400 hover:text-white">Prep</a>
-        <a href="/plan" className="text-xs text-gray-400 hover:text-white">Plan</a>
-        <a href="/us" className="text-xs text-gray-400 hover:text-white">Us</a>
+        {tabs.map((tab) => (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            end
+            className={({ isActive }) =>
+              `text-xs ${isActive ? 'text-white font-semibold' : 'text-gray-400 hover:text-white'}`
+            }
+          >
+            {tab.label}
+          </NavLink>
+        ))}
       </nav>
     </div>
   )
