@@ -57,10 +57,9 @@ export function parseCustomFood(input: CustomFoodInput, id: string): CustomFoodR
   const numMap: Partial<Record<CustomFoodField, number>> = {}
   for (const f of fields) {
     const n = readNum(input[f])
-    if (f in input && input[f] === '') {
-      // blank becomes 0, no error
+    if (n.blank) {
       numMap[f] = 0
-    } else if (n.blank || n.invalid || n.value < 0 || n.value > 1000) {
+    } else if (n.invalid || n.value < 0 || n.value > 1000) {
       errors[f] = 'Enter grams (0–1000).'
     } else {
       numMap[f] = n.value

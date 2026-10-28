@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FoodResult } from './types'
 import type { CustomFoodInput } from './customFood'
 import { parseCustomFood } from './customFood'
+import { foodRow } from './rows'
 import { supabase } from '../lib/supabase'
 import { useProfile } from '../household/useProfile'
 
@@ -27,10 +28,6 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     }
   }
 
-  const handleUpdateNumber = (field: keyof CustomFoodInput) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput({ ...input, [field]: e.target.value })
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaveError('')
@@ -39,31 +36,13 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
       setErrors(result.errors)
       return
     }
+    if (!householdId) { setSaveError('Join or create a household first.'); return }
     setSaving(true)
-    try {
-      await supabase.from('foods').insert({
-        household_id: householdId!,
-        source: 'custom' as const,
-        source_id: result.food.sourceId,
-        name: result.food.name,
-        brand: result.food.brand,
-        serving_g: result.food.servingG,
-        serving_label: result.food.servingLabel,
-        kcal_100g: result.food.kcal100g,
-        protein_100g: result.food.protein100g,
-        carbs_100g: result.food.carbs100g,
-        fat_100g: result.food.fat100g,
-        fiber_100g: result.food.fiber100g,
-        sugar_100g: result.food.sugar100g,
-        sodium_mg_100g: result.food.sodiumMg100g,
-        is_favorite: false,
-      })
-      onSaved(result.food)
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to save food')
-    } finally {
-      setSaving(false)
-    }
+    // Supabase reports failures in `error`; it doesn't throw.
+    const { error } = await supabase.from('foods').insert(foodRow(result.food, householdId))
+    setSaving(false)
+    if (error) { setSaveError(error.message); return }
+    onSaved(result.food)
   }
 
   const fieldClass = 'w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500'
@@ -88,7 +67,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
 
       <div>
         <label htmlFor="cf-weight" className="block text-gray-400 text-sm mb-1">Serving weight (g)</label>
-        <input id="cf-weight" type="text" inputMode="decimal" value={input.servingG} onChange={handleUpdateNumber('servingG')}
+        <input id="cf-weight" type="text" inputMode="decimal" value={input.servingG} onChange={change('servingG')}
           className={fieldClass} />
         {errors.servingG && <p className="text-red-400 text-xs">{errors.servingG}</p>}
       </div>
@@ -96,25 +75,25 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label htmlFor="cf-kcal" className="block text-gray-400 text-sm mb-1">Calories</label>
-          <input id="cf-kcal" type="text" inputMode="decimal" value={input.kcal} onChange={handleUpdateNumber('kcal')}
+          <input id="cf-kcal" type="text" inputMode="decimal" value={input.kcal} onChange={change('kcal')}
             className={fieldClass} />
           {errors.kcal && <p className="text-red-400 text-xs">{errors.kcal}</p>}
         </div>
         <div>
           <label htmlFor="cf-protein" className="block text-gray-400 text-sm mb-1">Protein (g)</label>
-          <input id="cf-protein" type="text" inputMode="decimal" value={input.protein} onChange={handleUpdateNumber('protein')}
+          <input id="cf-protein" type="text" inputMode="decimal" value={input.protein} onChange={change('protein')}
             className={fieldClass} />
           {errors.protein && <p className="text-red-400 text-xs">{errors.protein}</p>}
         </div>
         <div>
           <label htmlFor="cf-carbs" className="block text-gray-400 text-sm mb-1">Carbs (g)</label>
-          <input id="cf-carbs" type="text" inputMode="decimal" value={input.carbs} onChange={handleUpdateNumber('carbs')}
+          <input id="cf-carbs" type="text" inputMode="decimal" value={input.carbs} onChange={change('carbs')}
             className={fieldClass} />
           {errors.carbs && <p className="text-red-400 text-xs">{errors.carbs}</p>}
         </div>
         <div>
           <label htmlFor="cf-fat" className="block text-gray-400 text-sm mb-1">Fat (g)</label>
-          <input id="cf-fat" type="text" inputMode="decimal" value={input.fat} onChange={handleUpdateNumber('fat')}
+          <input id="cf-fat" type="text" inputMode="decimal" value={input.fat} onChange={change('fat')}
             className={fieldClass} />
           {errors.fat && <p className="text-red-400 text-xs">{errors.fat}</p>}
         </div>
@@ -130,7 +109,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
           {saving ? 'Saving…' : 'Save'}
         </button>
         <button type="button" onClick={onCancel} disabled={saving}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded text-white font-semibold">
+          className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold">
           Cancel
         </button>
       </div>

@@ -46,7 +46,6 @@ export function recentFoods(rows: RecentLogRow[], limit = 10): FoodResult[] {
 
   for (const row of rows) {
     if (row.foods === null) continue
-
     const key = row.foods.id
     if (seen.has(key)) continue
     seen.add(key)

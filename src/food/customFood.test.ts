@@ -50,6 +50,11 @@ describe('parseCustomFood', () => {
     })
   })
 
+  it('whitespace-only macros count as blank', () => {
+    const result = parseCustomFood(base({ protein: '  ', carbs: ' ', fat: '\t' }), 'id-1')
+    expect(result.ok && [result.food.protein100g, result.food.carbs100g, result.food.fat100g]).toEqual([0, 0, 0])
+  })
+
   it('comma decimal works', () => {
     const result = parseCustomFood(base({ servingG: '100', kcal: '12,5' }), 'id-1')
     expect(result).toEqual({
