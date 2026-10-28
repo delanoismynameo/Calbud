@@ -136,7 +136,7 @@ Two runs. The brief changed between them: after the first run, I added the "How 
 | Steps / tokens / speed | 158 steps, 4.4M tokens, ~70 tok/s | 25 steps, 1.2M tokens, 8.2 tok/s |
 | My intervention | One answer mid-run. After its context was compacted, it asked where the brief was; I gave the path and told it to keep its placeholder approach. | None |
 | Ending | Stopped with to-dos open | Hit the output-token limit before its closing reply (the file was finished) |
-| Saved as | branch `task05-35b`, `639e930` | branch `task05-27b`, `3767b85` (main fast-forwarded to it) |
+| Saved as | branch `task05-35b`, `b74ced0` | branch `task05-27b`, `1eba6e6` (main fast-forwarded to it) |
 
 ## Result
 **Run 1 (35B) was unusable:**

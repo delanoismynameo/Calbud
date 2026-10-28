@@ -129,7 +129,7 @@ Reply with: the files created and changed, the build result, and anything you we
 - **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access (enabled by the user), web UI.
 - **Wall time:** **8 min 51 s**, 38 steps, 1.5M tokens, ~68 tok/s. It reached 33% of its context, with no compactions.
 - **Outcome:** finished with a file table. It reported the build and `npm run test:db` passing, and named no doubts.
-- **Saved:** harness output committed unchanged as `06e9dca`.
+- **Saved:** harness output committed unchanged as `c3bfb8c`.
 
 ## Result
 The files and structure match the brief, nothing outside the brief was touched, and the profile update sends only the allowed columns. The build passes and the database tests are still 31/31. But reading the code turned up more real bugs than task 06:

@@ -101,7 +101,7 @@ Reply with: the files created and changed, the build result, and anything you we
 - **Context:** the first 35B run after the compaction fix from 2026-10-28. It reached 30% of the listed 176K window, with no compactions.
 - **Wall time:** **8 min 58 s**, 66 steps, 2M tokens, ~72 tok/s.
 - **Outcome:** finished with a clear file table, ran `npm run build` and `npm run test:db` (both passing), and reported "None" under doubts.
-- **Saved:** harness output committed unchanged as `7d63d68`.
+- **Saved:** harness output committed unchanged as `bab2d05`.
 
 ## Result
 Every file in the brief was created or changed, nothing else was touched, and no keys or `.env` files were written. supabase-js was pinned at `2.118.0`. The build passes, and `npm run test:db` still prints 31/31.

@@ -48,7 +48,7 @@ Reply with a short summary: the file you created, and the result of each check, 
 - Model / effort: `qwen3.6:35b-a3b-128k`, High, via the web UI (session "Deploy Workflow Brief")
 - Wall time: 1 min 57 s, 14 steps, ~74 tok/s, 196K tokens
 - Outcome: finished, but **checks 2 and 3 were not run**. The session was in **Workspace Write** mode (new sessions default to it, even after full access was turned on in the task 01 session), and the sandbox blocked Node from spawning processes (EPERM). The model reported this honestly and fell back to reading `vite.config.ts`, plus quoting the old `dist/index.html`.
-- Harness output committed unchanged as `3742c70`.
+- Harness output committed unchanged as `cf499fa`.
 
 ## Result
 - `.github/workflows/deploy.yml` matches the brief exactly: triggers, permissions, concurrency, both jobs, action versions, and `BASE_PATH` from `github.event.repository.name`.

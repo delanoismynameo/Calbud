@@ -53,7 +53,7 @@ Run `npm run build` yourself, check those four points, fix anything that fails, 
 - Model / effort: `qwen3.6:35b-a3b-128k`, High, via the web UI (Calbud workspace, session "Execute Scaffold Brief Instructions")
 - Wall time: 6 min 45 s, 25 steps, ~77 tok/s, 385K tokens (95% cache hits)
 - Outcome: finished. One stop: `npm install` hit the sandbox (npm's global cache is outside the workspace), the model asked for full access, and the user approved it once. The harness has since been switched to full access.
-- Harness output committed unchanged as `e822094`.
+- Harness output committed unchanged as `f44edee`.
 
 ## Result
 - Builds: yes, also from a clean `dist/`.

@@ -76,7 +76,7 @@ The same brief and message went to two models, one after the other, each in a fr
 | File | 364 lines | 345 lines |
 | Checker (79 original checks) | 79/79 | 79/79 |
 | Checker (81, after two probes I added) | 80/81 | 80/81 |
-| Saved as | branch `task04-27b`, `f1cd34f` | branch `task04-swift`, `affe3a1` |
+| Saved as | branch `task04-27b`, `88ea025` | branch `task04-swift`, `3d6e768` |
 
 Both outputs are kept unchanged on their branches. Main was fast-forwarded to `task04-27b`.
 

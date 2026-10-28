@@ -116,7 +116,7 @@ Your SQL will be executed against a real Postgres 17 database afterwards, so it 
 - Model / effort: `qwen3.6:35b-a3b-128k`, High, via the web UI (session "Tables Migration Brief Execution"), Workspace Write. No commands were needed.
 - Wall time: **1 min 19 s**, 4 steps, ~86 tok/s, 48K tokens
 - Outcome: finished, and reported "no uncertainties".
-- Harness output committed unchanged as `cfaf423`.
+- Harness output committed unchanged as `a0e7b31`.
 
 ## Result
 I ran the migration on **PGlite** (real Postgres, version 18.6, in WASM) with a stub `auth.users`, plus a 40-check script covering:

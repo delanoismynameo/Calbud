@@ -64,7 +64,7 @@ Reply with: the files created, changed and deleted, the build result, and anythi
 - **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access (enabled by the user), web UI.
 - **Wall time:** **4 min 3 s**, the fastest run so far.
 - **Outcome:** finished with a checklist mapping every brief point to its change, and named one honest doubt (the data type, see below).
-- **Saved:** harness output committed unchanged as `450b2a4`.
+- **Saved:** harness output committed unchanged as `5cec680`.
 
 ## Result
 **This is the closest any run has come to the brief.**
