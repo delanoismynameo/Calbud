@@ -89,17 +89,38 @@ Usable as-is / usable after small fixes / rewritten. One-line lesson for future 
 - [x] `git init` in the Calbud folder, with one commit for the plan docs, so every harness run has a clean diff.
 - [x] Calbud workspace in the harness: already exists (`Documents\Calbud`, created 2026-10-27, one session).
 - [x] Local-model overlay `local-llm-tools\deepseek-harness\calbud-local.yml` (instead of a separate profile): 35B default, swap proxy, web profile's search settings.
-- [ ] The swap proxy running (`start-deepseek-harness.bat` starts it; a headless run needs it started separately).
+- [x] The swap proxy running (`start-deepseek-harness.bat` starts it; a headless run needs it started separately).
 - [x] Smoke test (2026-10-27): the 35B created `smoke-test.txt` with "ok" in 42 s, two steps, no extra files touched. The session was saved under `home\sessions\--C-Users-orgo1-Documents-Calbud--\` but not added to the Calbud workspace's session list, so it may not show in the web view.
 
-## Planned Task Order (Phase 1 of GAME_PLAN.md)
+## Task Log
 
-| # | Task | First model |
-|---|---|---|
-| 01 | Scaffold Vite + React + TS + Tailwind + PWA plugin, HashRouter, `base` path | 35B |
-| 02 | GitHub Actions deploy workflow for Pages | 35B |
-| 03 | Supabase migration: tables only | 35B |
-| 04 | Supabase migration: RLS, profile trigger, household functions | 27B vs Swift head-to-head |
-| 05 | RLS test script (three users) | 35B |
-| 06 | Supabase client (PKCE) + auth screens | 35B |
-| 07 | Household wizard and join flow | 35B |
+The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each task's brief and review is in this folder.
+
+| # | Task | Model (effort) | Result |
+|---|---|---|---|
+| 01 | Scaffold Vite + React + TS + Tailwind + PWA, HashRouter | 35B | Usable after small fixes |
+| 02 | GitHub Actions deploy workflow | 35B | Usable |
+| 03 | Supabase migration: tables | 35B | Usable after a trivial fix |
+| 04 | Migration: RLS, profile trigger, household functions | 27B vs Swift | Both correct; the 27B was kept |
+| 05 | RLS test script | 35B (Default), then 27B | The 35B failed; the 27B was usable |
+| 06 | Supabase client (PKCE) and auth screens | 35B (High) | Usable after real fixes |
+| 07 | First-run setup (profile, household, invite code) | 35B (High) | Usable after real fixes |
+| 08 | Profile loading on TanStack Query | 35B (High) | Usable after a 2-line fix |
+| 09 | USDA / Open Food Facts clients and macro scaling | 35B (High), twice | Run 1 invented fixtures; run 2 was usable |
+| 10 | Add-food flow (search, portion, log) | 35B (High) | Usable after real fixes |
+| 11 | USDA Branded replaces Open Food Facts text search | 35B (High) | Usable as delivered |
+
+## Lessons That Change How Briefs Are Written
+These come from the review notes and override the earlier guesses above where they differ.
+- **Model roles in practice:**
+  - **The 35B at High** is the default for spec-following work.
+  - **The 27B** is for security-critical SQL, and as the second attempt when the 35B fails a long task.
+  - **Swift** is a faster second opinion that misses subtle issues.
+  - **Always set the effort level.** The 35B's "Default" in the web profile means Low.
+- **Supply real data.** When outside data is involved, Claude downloads real fixtures first (`scripts/save-food-fixtures.mjs`), and the brief forbids downloading or inventing them. The 35B fabricated fixtures when the network failed.
+- **Check external URLs live, from a browser origin, before putting them in a brief.** Open Food Facts search works from scripts but is blocked by CORS in browsers.
+- **Write state rules as rules,** e.g. "`loading` must stay true until the first load finishes". When they were written that way (task 08), the 35B got them right.
+- **Long files need explicit writing steps:** a skeleton with a `// ADD TESTS HERE` marker, then one edit per group.
+- **Every UI task gets a click-through** against `scripts/dev/mock-supabase.mjs`. The 35B's React wiring bugs (a button with no handler, a wrong link) are invisible to the build.
+- **Mutation-check any "must never" rule.** A test named after the API-key rule couldn't fail.
+- **Its self-reports misquote the brief at times.** Check every claim against the code.

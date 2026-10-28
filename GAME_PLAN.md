@@ -270,29 +270,31 @@ calbud/
 ## Build Order
 
 ### Phase 1: Foundation
-1. Scaffold Vite + React + TS + Tailwind + PWA plugin; get an installable shell deploying to Pages **first**, so deployment issues surface early.
-2. Create the Supabase project; write migrations for the schema, RLS, the profile trigger and the household functions.
-3. Test RLS with three test users (two in one household, one outsider): can see partner's logs, cannot write them, cannot see the outsider's.
-4. Auth screens (PKCE) and household wizard/join flow; confirm sign-up and password reset work on the deployed Pages URL, not just localhost.
+Status as of 2026-10-28. ✅ = done, 🟡 = partly done, ⬜ = not started. Details are in [`docs/STATUS.md`](docs/STATUS.md).
+
+1. ✅ Scaffold Vite + React + TS + Tailwind + PWA plugin; get an installable shell deploying to Pages **first**, so deployment issues surface early. *(Tasks 01–02. Live at https://delanoismynameo.github.io/Calbud/.)*
+2. ✅ Create the Supabase project; write migrations for the schema, RLS, the profile trigger and the household functions. *(Tasks 03–04. Applied to the real project through the SQL Editor.)*
+3. ✅ Test RLS with three test users (two in one household, one outsider): can see partner's logs, cannot write them, cannot see the outsider's. *(Task 05: `npm run test:db`, 31 tests; plus `scripts/dev/check-security.mjs`, 81 checks.)*
+4. 🟡 Auth screens (PKCE) and household wizard/join flow; confirm sign-up and password reset work on the deployed Pages URL, not just localhost. *(Tasks 06–08. Sign-up and household creation work live. Password reset hasn't been tested live yet: "Confirm email" is off, and the built-in sender is rate-limited.)*
    - **To do (found 2026-10-28):** "Join a different household". Someone who is alone in their household (e.g. created one by mistake) must be able to join their partner's from the Us page. This needs a `join_household` change: if the caller's current household has only them, move them and delete that empty household, keeping their meal logs. Update the RLS tests to match. Until then, `supabase/snippets/move-partner-into-household.sql` fixes it by hand. Also find out what the second phone showed when "Join with a code" seemed missing.
 
 ### Phase 2: Calorie Tracking
-5. `usda.ts` and `off.ts` clients plus merged search with debounce. *(Done. Text search uses USDA generic + USDA Branded, because Open Food Facts search blocks browsers (no CORS). OFF is used only for barcode lookup.)*
-6. Serving picker with macro scaling; `foods` caching; meal log insert with snapshot.
-7. Day view with totals, recents, favorites, custom foods.
-8. Barcode scanning.
+5. ✅ `usda.ts` and `off.ts` clients plus merged search with debounce. *(Tasks 09 and 11. Text search uses USDA generic + USDA Branded, because Open Food Facts search blocks browsers (no CORS). OFF is used only for barcode lookup.)*
+6. ✅ Serving picker with macro scaling; `foods` caching; meal log insert with snapshot. *(Task 10. In main, not yet pushed live.)*
+7. ⬜ Day view with totals, recents, favorites, custom foods. *(Next: the Today screen, with logged meals and totals against goals.)*
+8. ⬜ Barcode scanning. *(`lookupBarcode` for Open Food Facts is ready; USDA `gtinUpc` is a possible fallback.)*
 
 ### Phase 3: Planning and Export
-9. Meal prep board + grocery list + Realtime.
-10. Activity planner (week grid, both people).
-11. `.ics` export with unit tests (check output imports cleanly into Google Calendar and an iPhone).
+9. ⬜ Meal prep board + grocery list + Realtime.
+10. ⬜ Activity planner (week grid, both people).
+11. ⬜ `.ics` export with unit tests (check output imports cleanly into Google Calendar and an iPhone).
 
 ### Phase 4: Sharing, Polish
-12. Me / Partner / Us toggle and Us dashboard with streak.
-13. PWA hardening: install prompt (iOS has none; show "Share → Add to Home Screen" instructions), offline app shell, and a service-worker update prompt so new deploys actually reach installed copies.
-14. *Optional:* an offline write queue for meal logs (IndexedDB) that syncs when connectivity returns. Real work with conflict edge cases; skip unless you log in places with bad signal.
-15. Settings: goals, timezone, data export, rotate invite code.
-16. Test install and the full flow on both of your actual phones (especially if one is iPhone and one Android).
+12. ⬜ Me / Partner / Us toggle and Us dashboard with streak.
+13. ⬜ PWA hardening: install prompt (iOS has none; show "Share → Add to Home Screen" instructions), offline app shell, and a service-worker update prompt so new deploys actually reach installed copies.
+14. ⬜ *Optional:* an offline write queue for meal logs (IndexedDB) that syncs when connectivity returns. Real work with conflict edge cases; skip unless you log in places with bad signal.
+15. ⬜ Settings: goals, timezone, data export, rotate invite code.
+16. ⬜ Test install and the full flow on both of your actual phones (especially if one is iPhone and one Android).
 
 *Timeline is flexible; a solid MVP is Phases 1–2 plus the `.ics` export.*
 
