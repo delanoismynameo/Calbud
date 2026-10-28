@@ -27,6 +27,8 @@ export function useFoodSearch(query: string) {
     results: (result.data ?? { results: [] as FoodResult[], errors: [] }).results,
     errors: (result.data ?? { results: [] as FoodResult[], errors: [] }).errors,
     isSearching: result.isFetching,
+    // True once the current debounced query has finished loading (used for "No foods found.").
+    settled: !tooShort && debounced === trimmed && result.isSuccess && !result.isFetching && !result.isPlaceholderData,
     failed,
     tooShort,
     refetch: result.refetch,
