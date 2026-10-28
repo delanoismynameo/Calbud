@@ -3,6 +3,7 @@ import Today from './pages/Today'
 import Prep from './pages/Prep'
 import Plan from './pages/Plan'
 import Us from './pages/Us'
+import AddFood from './pages/AddFood'
 import ResetPassword from './auth/ResetPassword'
 import { isConfigured } from './lib/env'
 import { useAuth } from './auth/AuthProvider'
@@ -81,6 +82,7 @@ function SignedInApp() {
       <main className="px-4 py-6">
         <Routes>
           <Route path="/" element={<Today />} />
+          <Route path="/add" element={<AddFood />} />
           <Route path="/prep" element={<Prep />} />
           <Route path="/plan" element={<Plan />} />
           <Route path="/us" element={<Us />} />

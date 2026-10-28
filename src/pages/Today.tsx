@@ -2,7 +2,7 @@ export default function Today() {
   return (
     <div className="text-center">
       <h1 className="text-2xl font-bold mb-4">Today</h1>
-      <p className="text-gray-400">Placeholder for the Today page.</p>
+      <a href="/add" className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg">Add food</a>
     </div>
   )
 }
