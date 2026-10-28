@@ -111,6 +111,8 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 12 | Today screen (totals, edit, delete) | 35B (High) | Usable after small fixes; falsely reported a clean build |
 | 13 | `join_household` switch (SQL + DB tests) | 27B tuned (High) | Correct SQL; added 1 missing test. 1 h 5 min |
 | 14 | "Join your partner's household" on the Us page | 35B (High) | Usable as delivered. 3 min |
+| 15 | Recent foods on Add food | 35B (High) | Usable as delivered. 4 min |
+| 15b | `friendlyError` tests (side trial, alongside 15) | 4B on the 3050, headless | Test file correct; the run broke on my worktree setup (see note 15) |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
@@ -127,4 +129,5 @@ These come from the review notes and override the earlier guesses above where th
 - **Mutation-check any "must never" rule.** A test named after the API-key rule couldn't fail.
 - **Its self-reports misquote the brief at times.** Check every claim against the code.
 - **Its "build passes" can be false** (task 12: two TypeScript errors). Ask it to paste the last lines of `npm run build`, and always rebuild before reviewing.
+- **The 4B on the RTX 3050 can run alongside the big model** (its own Ollama on port 11435, not the swap proxy), but only on tiny one-file jobs in a separate worktree with its own `npm ci`. **Never link `node_modules` into a worktree with a junction:** the sandbox blocks it, and `git worktree remove --force` deletes through it.
 - **Pointing the model at the brief file works** ("Your task is in `docs/review/NN-….md`; read that whole file first"), so the brief doesn't need pasting into the chat box.

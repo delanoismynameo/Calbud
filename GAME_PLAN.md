@@ -281,7 +281,7 @@ Status as of 2026-10-28. ✅ = done, 🟡 = partly done, ⬜ = not started. Deta
 ### Phase 2: Calorie Tracking
 5. ✅ `usda.ts` and `off.ts` clients plus merged search with debounce. *(Tasks 09 and 11. Text search uses USDA generic + USDA Branded, because Open Food Facts search blocks browsers (no CORS). OFF is used only for barcode lookup.)*
 6. ✅ Serving picker with macro scaling; `foods` caching; meal log insert with snapshot. *(Task 10. Live.)*
-7. 🟡 Day view with totals, recents, favorites, custom foods. *(Task 12: the Today screen, with meals, totals against goals, edit and delete. Recents, favorites and custom foods are still to do.)*
+7. 🟡 Day view with totals, recents, favorites, custom foods. *(Task 12: the Today screen, with meals, totals against goals, edit and delete. Task 15: recents on Add food. Favorites and custom foods are still to do.)*
 8. ⬜ Barcode scanning. *(`lookupBarcode` for Open Food Facts is ready; USDA `gtinUpc` is a possible fallback.)*
 
 ### Phase 3: Planning and Export

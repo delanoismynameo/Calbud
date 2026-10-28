@@ -88,3 +88,27 @@ Keep everything that's there. Add:
 3. You have re-read this brief, and checked each numbered section against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** **4 min 5 s**, 25 steps.
+- **Outcome:** finished. Its report was accurate: 72 tests, and the build lines were real, though again not exactly the last 5.
+
+## Result
+- **Builds:** yes. **Tests:** 72 passing (63 + 9).
+- **Click-through** at 375 px against the mock (`--in-household --with-logs`):
+  - an empty search box shows Recent: yogurt, oatmeal, pasta. That's newest first, oatmeal (logged twice) appears once, and Bob's burger is left out.
+  - tapping pasta and logging it, then going back to Add food, puts pasta at the top
+  - one letter typed shows "Type at least 2 letters." and hides the list
+
+## What I changed
+- Nothing in the app. Before the run, the mock learned `foods(*)` embedding, `not.is.null`, `order=…desc` and `limit`, and seeds foods behind Alice's logs.
+
+## Verdict
+Usable as delivered.
+
+## Side trial: Qwen 3.5 4B on the RTX 3050, during this run
+- **Task:** 5 Vitest tests for `friendlyError`, in a separate git worktree, run headless on the 3050's own Ollama (port 11435). It ran alongside the 35B without unloading it.
+- **Result:** it wrote a **correct** test file in about 2 minutes. Its run then failed because of **my setup**: the worktree's `node_modules` was a junction into the main repo, outside the harness sandbox, so vitest failed with EPERM. While trying to fix it, the 4B also created a `vitest.config.ts`, which the brief had forbidden. I stopped it, kept the test file (it passes 5/5 in the main repo), and dropped the rest.
+- **Cleanup accident:** `git worktree remove --force` followed the junction and emptied the main repo's `node_modules`. `npm ci` restored it, and everything passes again. **Next time:** give a trial worktree its own `npm ci`, or point the harness at a scratch copy. Never link `node_modules` with a junction.
+- **Verdict on the 4B:** fine for tiny, fully specified, one-file jobs. When something unexpected happens, it breaks the rules instead of stopping.
