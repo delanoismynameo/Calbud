@@ -1,4 +1,5 @@
 import { searchUsda } from './usda'
+import { splitQuery, rankResults } from './rank'
 import type { FoodResult } from './types'
 
 export function usdaApiKey(): string {
@@ -27,9 +28,10 @@ export async function searchFoods(
   }
 
   const key = apiKey ?? usdaApiKey()
+  const { core } = splitQuery(trimmed)
 
   const [genericResult, brandedResult] = await Promise.allSettled([
-    searchUsda(trimmed, { apiKey: key, fetchFn, signal, kind: 'generic' }),
+    searchUsda(core, { apiKey: key, fetchFn, signal, kind: 'generic' }),
     searchUsda(trimmed, { apiKey: key, fetchFn, signal, kind: 'branded' }),
   ])
 
@@ -39,7 +41,6 @@ export async function searchFoods(
 
   if (genericResult.status === 'fulfilled') {
     for (const r of genericResult.value) {
-      if (results.length >= 30) break
       const dk = dedupKey(r)
       if (!seen.has(dk)) {
         seen.add(dk)
@@ -52,7 +53,6 @@ export async function searchFoods(
 
   if (brandedResult.status === 'fulfilled') {
     for (const r of brandedResult.value) {
-      if (results.length >= 30) break
       const dk = dedupKey(r)
       if (!seen.has(dk)) {
         seen.add(dk)
@@ -68,5 +68,5 @@ export async function searchFoods(
     throw new Error(errors.join('; '))
   }
 
-  return { results: results.slice(0, 30), errors }
+  return { results: rankResults(results, trimmed).slice(0, 30), errors }
 }

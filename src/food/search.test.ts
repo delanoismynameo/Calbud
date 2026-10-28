@@ -195,6 +195,97 @@ describe('searchFoods', () => {
     const results = await searchFoods('milk', { fetchFn: mockFetch })
     expect(results.results.length).toBe(1)
   })
+
+  it("the generic search drops the cooking word; the branded one keeps it", async () => {
+    const usdaGenericFood = {
+      fdcId: 10001,
+      description: 'Vegetables',
+      foodNutrients: [
+        { nutrientId: 1008, value: 100 },
+        { nutrientId: 1003, value: 5 },
+        { nutrientId: 1004, value: 2 },
+        { nutrientId: 1005, value: 20 },
+      ],
+    }
+
+    const usdaBrandedFood = {
+      fdcId: 20001,
+      description: 'Steamed Vegetables',
+      brandOwner: 'Test Co',
+      foodNutrients: [
+        { nutrientId: 1008, value: 110 },
+        { nutrientId: 1003, value: 6 },
+        { nutrientId: 1004, value: 3 },
+        { nutrientId: 1005, value: 22 },
+      ],
+    }
+
+    let callCount = 0
+    const capturedQueries: string[] = []
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      callCount++
+      if (init?.body) {
+        const body = JSON.parse(String(init.body))
+        capturedQueries.push(body.query)
+      }
+      if (callCount === 1) return makeUsdaResponse([usdaGenericFood])
+      return makeUsdaResponse([usdaBrandedFood])
+    }) as unknown as typeof fetch
+
+    await searchFoods('Steamed vegetables', { fetchFn: mockFetch })
+
+    expect(capturedQueries[0]).toBe('vegetables')
+    expect(capturedQueries[1]).toBe('Steamed vegetables')
+  })
+
+  it("results are ranked by match across both sources", async () => {
+    const usdaGenericFood = {
+      fdcId: 10001,
+      description: 'Babyfood, vegetables, mix vegetables junior',
+      foodNutrients: [
+        { nutrientId: 1008, value: 100 },
+        { nutrientId: 1003, value: 5 },
+        { nutrientId: 1004, value: 2 },
+        { nutrientId: 1005, value: 20 },
+      ],
+    }
+
+    const usdaGenericFood2 = {
+      fdcId: 10002,
+      description: 'Classic mixed vegetables, cooked',
+      foodNutrients: [
+        { nutrientId: 1008, value: 95 },
+        { nutrientId: 1003, value: 4 },
+        { nutrientId: 1004, value: 3 },
+        { nutrientId: 1005, value: 15 },
+      ],
+    }
+
+    const usdaBrandedFood = {
+      fdcId: 20001,
+      description: 'Steamed Mixed Vegetables',
+      brandOwner: 'Test Co',
+      foodNutrients: [
+        { nutrientId: 1008, value: 80 },
+        { nutrientId: 1003, value: 3 },
+        { nutrientId: 1004, value: 2 },
+        { nutrientId: 1005, value: 10 },
+      ],
+    }
+
+    let callCount = 0
+    const mockFetch = vi.fn(async (_url: string) => {
+      callCount++
+      if (callCount === 1) return makeUsdaResponse([usdaGenericFood, usdaGenericFood2])
+      return makeUsdaResponse([usdaBrandedFood])
+    }) as unknown as typeof fetch
+
+    const results = await searchFoods('steamed vegetables', { fetchFn: mockFetch })
+
+    expect(results.results[0].name).toBe('Steamed Mixed Vegetables')
+    expect(results.results[1].name).toBe('Classic mixed vegetables, cooked')
+    expect(results.results[2].name).toBe('Babyfood, vegetables, mix vegetables junior')
+  })
 })
 
 describe('usdaApiKey', () => {
