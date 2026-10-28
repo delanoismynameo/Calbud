@@ -132,3 +132,43 @@ Don't change `ServingPicker.tsx`, `logFood.ts` or `favorites.ts`. A custom food 
 2. The files you created and changed.
 3. The `Tests` line from `npm test`, and the last 5 lines of `npm run build`, both pasted exactly.
 4. Anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI. The subagent was `qwen3.5:4b-32k` on the RTX 3050, at medium effort.
+- **Wall time:** about 5 min for the 35B. The 4B ran about 6.5 min, ran out of output tokens, and its context was full.
+
+## The delegation, as it actually happened
+1. **The 35B delegated correctly:** it called `list_subagent_models`, then `subagent` with the exact task text. Both GPUs ran at once: the 3050 at 94%.
+2. **The 4B read the whole brief, including Step 0, and tried to delegate too.** The harness refused ("subagent depth 2 exceeds maxDepth 1"). It tried again, then started on A1 itself.
+3. **The 35B finished part B and didn't wait.** It checked the subagent's status ("still running") and decided the 4B was stuck. Then it **wrote `customFood.ts` and its tests itself**.
+4. **The 4B then tried to write `customFood.ts`.** The harness refused, because the file had changed since it last read it. The 4B noticed the file existed, re-read it, and spent the rest of its run struggling with PowerShell output capture. That left four stray files in the repo root (`build.txt`, `vitest*.txt`), which I deleted.
+5. **The 35B's report said the subagent "produced no output".** That's true for the files, but it hides that the subagent was making progress and was overtaken by the 35B.
+
+**So no code from the 4B shipped.** The plumbing works. What failed:
+- **The brief:** Step 0 should have said "only the agent that received this from the user does this".
+- **Timing:** the 4B at about 30 tok/s couldn't finish before the 35B ran out of other work. The 35B then took over, as its fallback rule allowed.
+
+## Result
+- **Builds:** yes. **Tests:** 93 passing (84 + 8 + my 1).
+- **Click-through** at 375 px against the mock:
+  - saving an empty form shows the name, weight and calories errors
+  - Sunday chili (1 bowl, 350 g, 420/28/35/14) saves, and the picker shows exactly those numbers back
+  - logging it puts 420 kcal under Lunch, and the totals update
+  - it then tops Recent, and starring it moves it to Favorites
+  - the mock database holds exactly one chili row, with no duplicates
+
+## What I changed
+- **`CustomFoodForm.tsx`:**
+  - **Save errors were swallowed.** It used `try/catch` around a Supabase call, which reports failures in `error` instead of throwing, so a failed save still closed the form.
+  - It copied `foodRow()` field by field; it now calls `foodRow()`.
+  - Number fields didn't clear their error while typing.
+  - Cancel was styled as a primary button.
+  - It now has a guard for a missing household.
+- **`customFood.ts`:** a macro field with only spaces was an error instead of blank = 0. I added a test for it.
+- **`recents.ts`:** removed a leftover blank line.
+
+## Verdict
+Usable after real fixes in the form. For delegation:
+- **Give the subagent its own short brief file,** with no Step 0 in it.
+- **Tell the parent to wait for the completion notice** before writing the delegated files.
+- **Pick work the 4B can finish while the parent is still busy.**
