@@ -46,6 +46,7 @@ create publication supabase_realtime;
 // Load the app's two migrations, in order (read with fs.readFileSync, run with db.exec).
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261027000001_tables.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261027000002_security.sql'), 'utf8'));
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000001_join_switch.sql'), 'utf8'));
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:
@@ -306,6 +307,116 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
   const anonFn = await as(null, "select create_household('x')");
   ok('anon cannot call household functions', anonFn.error !== undefined,
      anonFn.error ? `error: ${anonFn.error}` : 'no error; result ' + JSON.stringify(anonFn.rows));
+}
+
+// ---- Switching households ---------------------------------------------------
+{
+  const ERIN = '00000000-0000-0000-0000-00000000000e';
+  const FRANK = '00000000-0000-0000-0000-00000000000f';
+  const GINA = '00000000-0000-0000-0000-000000000010';
+  await newUser(ERIN, 'erin@example.com', '{"display_name":"Erin"}');
+  await newUser(FRANK, 'frank@example.com', '{"display_name":"Frank"}');
+  await newUser(GINA, 'gina@example.com', '{"display_name":"Gina"}');
+
+  const erinCreate = await as(ERIN, "select create_household('Erin')");
+  const frankCreate = await as(FRANK, "select create_household('Frank')");
+  if (erinCreate.error) throw new Error(`setup failed: Erin create_household: ${erinCreate.error}`);
+  if (frankCreate.error) throw new Error(`setup failed: Frank create_household: ${frankCreate.error}`);
+  const erinHh = (await db.query('select household_id from profiles where id = $1', [ERIN])).rows[0].household_id;
+  const frankHh = (await db.query('select household_id from profiles where id = $1', [FRANK])).rows[0].household_id;
+
+  // Seed data as the superuser: Erin's household has foods A and B, one
+  // meal_prep row, and two of Erin's meal logs for today (one per food).
+  // Frank's household already has B2, a copy of B (same source and source_id).
+  const foodA = (await db.query(
+    `insert into foods (household_id, source, source_id, name, kcal_100g, protein_100g, carbs_100g, fat_100g)
+     values ($1, 'usda', '111', 'A', 100, 5, 5, 5) returning id`, [erinHh])).rows[0].id;
+  const foodB = (await db.query(
+    `insert into foods (household_id, source, source_id, name, kcal_100g, protein_100g, carbs_100g, fat_100g)
+     values ($1, 'usda', '222', 'B', 100, 5, 5, 5) returning id`, [erinHh])).rows[0].id;
+  const foodB2 = (await db.query(
+    `insert into foods (household_id, source, source_id, name, kcal_100g, protein_100g, carbs_100g, fat_100g)
+     values ($1, 'usda', '222', 'B2', 100, 5, 5, 5) returning id`, [frankHh])).rows[0].id;
+  const prepId = (await db.query(
+    `insert into meal_prep (household_id, title, scheduled_date) values ($1, 'Erin Prep', '2026-10-28') returning id`,
+    [erinHh])).rows[0].id;
+  await db.query(
+    `insert into meal_logs (user_id, logged_on, meal_type, food_id, name, quantity_g, kcal, protein_g, carbs_g, fat_g)
+     values ($1, '2026-10-28', 'breakfast', $2, 'Erin A', 100, 100, 5, 5, 5)`, [ERIN, foodA]);
+  await db.query(
+    `insert into meal_logs (user_id, logged_on, meal_type, food_id, name, quantity_g, kcal, protein_g, carbs_g, fat_g)
+     values ($1, '2026-10-28', 'lunch', $2, 'Erin B', 100, 100, 5, 5, 5)`, [ERIN, foodB]);
+
+  const frankCodeBefore = (await db.query('select invite_code from households where id = $1', [frankHh])).rows[0].invite_code;
+  const erinJoin = await as(ERIN, 'select join_household($1)', [frankCodeBefore]);
+  const erinHhNow = (await db.query('select household_id from profiles where id = $1', [ERIN])).rows[0].household_id;
+  ok('solo member can switch households',
+     erinJoin.error === undefined && erinHhNow === frankHh,
+     `error: ${erinJoin.error ?? 'none'}; Erin household now ${erinHhNow}, want ${frankHh}`);
+
+  const oldHhRows = (await db.query('select id from households where id = $1', [erinHh])).rows;
+  ok('old solo household is deleted', oldHhRows.length === 0,
+     `old household ${erinHh} rows: ${JSON.stringify(oldHhRows)}`);
+
+  const logsNow = (await db.query('select id, food_id from meal_logs where user_id = $1 order by id', [ERIN])).rows;
+  ok('meal logs survive the switch',
+     logsNow.length === 2 && logsNow.every(r => r.food_id !== null),
+     `Erin has ${logsNow.length} logs; food_ids: ${logsNow.map(r => r.food_id ?? 'null').join(', ')}`);
+
+  const foodARow = (await db.query('select household_id from foods where id = $1', [foodA])).rows;
+  const aLog = logsNow.find(r => r.food_id === foodA);
+  ok('new foods move with her',
+     foodARow.length === 1 && foodARow[0].household_id === frankHh && aLog !== undefined,
+     `food A household: ${foodARow[0]?.household_id ?? 'none'}, want ${frankHh}; log pointing at A: ${aLog ? aLog.id : 'none'}`);
+
+  const foodBRows = (await db.query('select id from foods where id = $1', [foodB])).rows;
+  const b2Log = logsNow.find(r => r.food_id === foodB2);
+  ok("duplicate foods re-point to the partner's copy",
+     foodBRows.length === 0 && b2Log !== undefined,
+     `food B rows: ${foodBRows.length} (want 0); log pointing at B2: ${b2Log ? b2Log.id : 'none'}`);
+
+  const prepNow = (await db.query('select household_id from meal_prep where id = $1', [prepId])).rows;
+  ok('meal prep moves with her',
+     prepNow.length === 1 && prepNow[0].household_id === frankHh,
+     `meal_prep household: ${prepNow[0]?.household_id ?? 'none'}, want ${frankHh}`);
+
+  const frankCodeAfter = (await db.query('select invite_code from households where id = $1', [frankHh])).rows[0].invite_code;
+  ok('code rotates after a switch', frankCodeAfter !== frankCodeBefore,
+     `code before: ${frankCodeBefore}; code after: ${frankCodeAfter}`);
+
+  const ownCode = (await db.query('select invite_code from households where id = $1', [frankHh])).rows[0].invite_code;
+  const erinAgain = await as(ERIN, 'select join_household($1)', [ownCode]);
+  const erinHhStill = (await db.query('select household_id from profiles where id = $1', [ERIN])).rows[0].household_id;
+  ok('cannot rejoin your own household',
+     erinAgain.error !== undefined && erinHhStill === frankHh,
+     `error: ${erinAgain.error ?? 'none'}; Erin household now ${erinHhStill}, want ${frankHh}`);
+
+  const ginaCreate = await as(GINA, "select create_household('Gina')");
+  if (ginaCreate.error) throw new Error(`setup failed: Gina create_household: ${ginaCreate.error}`);
+  const ginaHh = (await db.query('select household_id from profiles where id = $1', [GINA])).rows[0].household_id;
+  const ginaCode = (await db.query('select invite_code from households where id = $1', [ginaHh])).rows[0].invite_code;
+  const aliceHhBefore = (await db.query('select household_id from profiles where id = $1', [ALICE])).rows[0].household_id;
+  const aliceTries = await as(ALICE, 'select join_household($1)', [ginaCode]);
+  const aliceHhAfter = (await db.query('select household_id from profiles where id = $1', [ALICE])).rows[0].household_id;
+  const ginaMembers = (await db.query('select count(*)::int as n from profiles where household_id = $1', [ginaHh])).rows[0].n;
+  ok('cannot leave a partner behind',
+     aliceTries.error !== undefined && aliceHhAfter === aliceHhBefore && ginaMembers === 1,
+     `error: ${aliceTries.error ?? 'none'}; Alice household now ${aliceHhAfter}, want ${aliceHhBefore}; Gina members: ${ginaMembers} (want 1)`);
+
+  const frankCodeNow = (await db.query('select invite_code from households where id = $1', [frankHh])).rows[0].invite_code;
+  const ginaFull = await as(GINA, 'select join_household($1)', [frankCodeNow]);
+  const ginaHhStill = (await db.query('select household_id from profiles where id = $1', [GINA])).rows[0].household_id;
+  const ginaHhRows = (await db.query('select id from households where id = $1', [ginaHh])).rows;
+  ok('full household refuses a solo member',
+     ginaFull.error !== undefined && ginaHhStill === ginaHh && ginaHhRows.length === 1,
+     `error: ${ginaFull.error ?? 'none'}; Gina household now ${ginaHhStill}, want ${ginaHh}; household rows: ${ginaHhRows.length} (want 1)`);
+
+  const ginaBad = await as(GINA, 'select join_household($1)', ['nope1234']);
+  const ginaHhStill2 = (await db.query('select household_id from profiles where id = $1', [GINA])).rows[0].household_id;
+  const ginaHhRows2 = (await db.query('select id from households where id = $1', [ginaHh])).rows;
+  ok('bad code keeps the solo household',
+     ginaBad.error !== undefined && ginaHhStill2 === ginaHh && ginaHhRows2.length === 1,
+     `error: ${ginaBad.error ?? 'none'}; Gina household now ${ginaHhStill2}, want ${ginaHh}; household rows: ${ginaHhRows2.length} (want 1)`);
 }
 
 // ---- summary ----------------------------------------------------------------
