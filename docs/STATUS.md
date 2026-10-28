@@ -9,14 +9,15 @@
 - **Task 15 (recent foods on Add food) is live** (pushed 2026-10-28), with the 4B's `friendlyError` tests.
 - **Task 16 (favorite foods) is live** (pushed 2026-10-28).
 - **Task 17 (custom foods) is live** (pushed 2026-10-28).
-- **Task 18 (barcode scanning: "Scan a barcode" on Add food, camera via `@zxing/browser`, or a typed code, looked up in Open Food Facts) is committed locally, not pushed.** The camera can only be tested on a phone after deploying.
+- **Task 18 (barcode scanning: "Scan a barcode" on Add food, camera via `@zxing/browser`, or a typed code, looked up in Open Food Facts) is live** (pushed 2026-10-28). The camera still needs a test on a real phone.
+- **Task 19 (Open Food Facts serving labels no longer repeat the grams) is committed locally, not pushed.**
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All three migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 101 passing |
+  | `npm test` | 110 passing |
   | `npm run test:db` | 43 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -43,11 +44,11 @@ Before sending a task to the harness:
 | 16 | Favorite foods | [16](review/16-favorites.md) |
 | 17 | Custom foods (+ the first 35B → 4B delegation) | [17](review/17-custom-foods.md) |
 | 18 | Barcode scanning | [18](review/18-barcode-scanning.md) |
+| 19 | Open Food Facts serving labels without repeated grams | [19](review/19-off-serving-label.md) |
 
 ## Next, in order
-1. **Push task 18** when the user says so, then **try the camera on a phone** (iPhone and Android if possible).
-2. **Small fix:** Open Food Facts serving labels repeat the grams, for example `0.75 cup (50 g) (50 g)`, in `normalizeOffProduct` in `src/food/off.ts`.
-3. **Meal prep** (GAME_PLAN step 9), as GAME_PLAN §3 describes it. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
+1. **Try the barcode camera on a phone** (iPhone and Android if possible), and **push task 19** when the user says so.
+2. **Meal prep** (GAME_PLAN step 9), as GAME_PLAN §3 describes it. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

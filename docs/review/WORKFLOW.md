@@ -116,6 +116,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 16 | Favorite foods (star, Favorites list) | 35B (High) | Silent stop, finished after "continue"; empty-state logic fixed. ~12 min |
 | 17 | Custom foods (form, validator) | 35B (High), 4B as its subagent | Delegation started, but the 35B wrote the 4B's part itself; form fixes. ~5 min |
 | 18 | Barcode scanning (camera, typed code, Open Food Facts lookup) | 35B (High), 4B as its subagent | The 35B interrupted the 4B and wrote its part; camera-handling fixes. ~20 min |
+| 19 | Open Food Facts serving labels without repeated grams | 35B (High) | Usable as delivered; its integration test caught its own bug. ~4 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

@@ -53,3 +53,19 @@ Then one more `it` that goes through `normalizeOffProduct`: build a product inli
 3. You have re-read this brief and checked each numbered section against your code.
 
 Reply with: the files changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** about **4 min**, 17 steps.
+- **Outcome:** finished. At first it called `offServingLabel(...)` without assigning the result. Its own integration test caught that, and it fixed it. Its report was accurate: 110 tests, and the build lines were real.
+
+## Result
+- **Builds:** yes. **Tests:** 110 passing (101 + 9).
+- Every case in the brief's table matches. Only `off.ts` and `off.test.ts` changed, and no stray files were created.
+- **No click-through:** the change is a pure function, and `ServingPicker` shows the label as it is.
+
+## What I changed
+- `off.test.ts`: renamed two tests that described the wrong thing ("gr without space" for `30g`, and "trims" for a case with nothing to trim).
+
+## Verdict
+Usable as delivered. The integration test through `normalizeOffProduct` paid off: it caught the missing assignment, which the unit tests alone would have missed.
