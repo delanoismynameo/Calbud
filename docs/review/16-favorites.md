@@ -80,3 +80,28 @@ In the existing "search box empty" block, keep the current pending, error and em
 3. You have re-read this brief and checked each numbered section against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** 5 min 23 s. Then it **stopped silently**: the session said "Completed", but there was no report and `AddFood.tsx` had only got its imports, one of them duplicated. The user sent "continue", and it finished in another ~6.5 min, with long thinking stretches (40 steps in total).
+- **Report:** it misreported one thing. It claimed the empty message shows "only when both lists load and are empty"; it didn't. It also added a 7th test (fine).
+
+## Result
+- **Builds:** yes. **Tests:** 84 passing.
+- `favorites.ts`, `useFavoriteFoods.ts`, the tests and the star in `ServingPicker` were correct as delivered.
+- **Click-through** at 375 px against the mock (`--in-household --with-logs`):
+  - Favorites showed banana and yogurt, and Recent showed only oatmeal and pasta, so yogurt wasn't listed twice
+  - starring oatmeal moved it to Favorites
+  - starring pasta, the last recent, removed the Recent section completely
+  - unstarring banana worked
+  - the mock's saved data was right, with no duplicate foods or extra logs
+
+## What I changed
+- **`AddFood.tsx`:** I rewrote the empty-search block:
+  - "Foods you log will show up here." showed whenever there were no recents, **even with favorites listed**. It now shows only when both lists are empty.
+  - The "Recent" heading showed with nothing under it when every recent was a favorite. It now hides.
+  - A recents error no longer hides the favorites.
+  - The two lists now share one button builder instead of two copies of the same JSX.
+
+## Verdict
+Usable after a real fix in the one piece of layout logic. Lesson: when a screen has several list states, **give the brief a small truth table** (favorites empty or not × recents empty or not → what shows). Prose conditions were misread.

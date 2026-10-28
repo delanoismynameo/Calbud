@@ -6,14 +6,15 @@
 - **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
 - **Task 12 (the Today screen) is live** (pushed 2026-10-28).
 - **Tasks 13–14 (switching to a partner's household) are live** (pushed 2026-10-28; the migration is applied).
-- **Task 15 (recent foods on Add food) is committed locally, not pushed.** It also brings in the 4B's `friendlyError` tests.
+- **Task 15 (recent foods on Add food) is live** (pushed 2026-10-28), with the 4B's `friendlyError` tests.
+- **Task 16 (favorite foods: a star in the serving picker, a Favorites list above Recent, shared by the household) is committed locally, not pushed.**
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All three migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 77 passing |
+  | `npm test` | 84 passing |
   | `npm run test:db` | 43 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -37,10 +38,11 @@ Before sending a task to the harness:
 | 13 | `join_household` lets a solo member switch households (SQL + 12 DB tests) | [13](review/13-switch-household.md) |
 | 14 | "Join your partner's household instead" on the Us page | [14](review/14-switch-household-ui.md) |
 | 15 | Recent foods on Add food (+ a 4B side trial) | [15](review/15-recent-foods.md) |
+| 16 | Favorite foods | [16](review/16-favorites.md) |
 
 ## Next, in order
-1. **Push task 15** when the user says so.
-2. **The rest of the build plan,** from step 7: favorites, then custom foods, then barcode scanning. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
+1. **Push task 16** when the user says so.
+2. **Task 17, custom foods:** the 35B builds it and delegates the validator and its tests to the 4B with its `subagent` tool (the user's request, 2026-10-28). Then barcode scanning. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

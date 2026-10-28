@@ -113,6 +113,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 14 | "Join your partner's household" on the Us page | 35B (High) | Usable as delivered. 3 min |
 | 15 | Recent foods on Add food | 35B (High) | Usable as delivered. 4 min |
 | 15b | `friendlyError` tests (side trial, alongside 15) | 4B on the 3050, headless | Test file correct; the run broke on my worktree setup (see note 15) |
+| 16 | Favorite foods (star, Favorites list) | 35B (High) | Silent stop, finished after "continue"; empty-state logic fixed. ~12 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
@@ -130,4 +131,6 @@ These come from the review notes and override the earlier guesses above where th
 - **Its self-reports misquote the brief at times.** Check every claim against the code.
 - **Its "build passes" can be false** (task 12: two TypeScript errors). Ask it to paste the last lines of `npm run build`, and always rebuild before reviewing.
 - **The 4B on the RTX 3050 can run alongside the big model** (its own Ollama on port 11435, not the swap proxy), but only on tiny one-file jobs in a separate worktree with its own `npm ci`. **Never link `node_modules` into a worktree with a junction:** the sandbox blocks it, and `git worktree remove --force` deletes through it.
+- **For screens with several list states, put a truth table in the brief** (which lists are empty → what shows). Task 16's prose conditions were misread, and the model then reported them as met.
+- **A "Completed" with no report is a silent stop.** Check its to-do count; "continue" in the same session finished it.
 - **Pointing the model at the brief file works** ("Your task is in `docs/review/NN-….md`; read that whole file first"), so the brief doesn't need pasting into the chat box.
