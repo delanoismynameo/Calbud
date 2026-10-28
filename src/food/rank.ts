@@ -20,9 +20,11 @@ export function splitQuery(query: string): { core: string; methods: string[] } {
   const core: string[] = []
 
   for (const piece of pieces) {
-    if (COOKING_WORDS.includes(piece) && !seen.has(piece)) {
-      methods.push(piece)
-      seen.add(piece)
+    if (COOKING_WORDS.includes(piece)) {
+      if (!seen.has(piece)) {
+        methods.push(piece)
+        seen.add(piece)
+      }
     } else {
       core.push(piece)
     }

@@ -58,6 +58,10 @@ describe('splitQuery', () => {
   it("'  Raw  Broccoli '", () => {
     expect(splitQuery('  Raw  Broccoli ')).toEqual({ core: 'broccoli', methods: ['raw'] })
   })
+
+  it("a repeated cooking word stays out of core ('steamed steamed broccoli')", () => {
+    expect(splitQuery('steamed steamed broccoli')).toEqual({ core: 'broccoli', methods: ['steamed'] })
+  })
 })
 
 describe('matchScore', () => {
