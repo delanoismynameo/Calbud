@@ -28,48 +28,40 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const userId = session?.user.id
+
+  // Loads own profile, then household and partner. loading only covers the first load.
   const refresh = useCallback(async () => {
-    if (!session) return
-    const userId = session.user.id
+    if (!userId) return
+    try {
+      const { data: userProf, error: profErr } = await supabase
+        .from('profiles').select('*').eq('id', userId).single()
+      if (profErr) { setError(profErr.message); return }
 
-    const { data: userProf, error: profErr } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
+      let hh: Household | null = null
+      let part: Profile | null = null
+      if (userProf.household_id) {
+        const hhRes = await supabase
+          .from('households').select('*').eq('id', userProf.household_id).single()
+        if (hhRes.error) { setError(hhRes.error.message); return }
+        const partRes = await supabase
+          .from('profiles').select('*')
+          .eq('household_id', userProf.household_id).neq('id', userId).maybeSingle()
+        if (partRes.error) { setError(partRes.error.message); return }
+        hh = hhRes.data
+        part = partRes.data
+      }
 
-    if (profErr) { setError(profErr.message); return }
-    setProfile(userProf)
-
-    if (userProf.household_id) {
-      const { data: hh, error: hhErr } = await supabase
-        .from('households')
-        .select('*')
-        .eq('id', userProf.household_id)
-        .single()
-      setHousehold(hh ?? null)
-      if (hhErr) setError(hhErr.message)
-
-      const { data: part, error: partErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('household_id', hh?.id ?? '')
-        .neq('id', userId)
-        .maybeSingle()
-      setPartner(part ?? null)
-    } else {
-      setHousehold(null)
-      setPartner(null)
+      setProfile(userProf)
+      setHousehold(hh)
+      setPartner(part)
+      setError(null)
+    } finally {
+      setLoading(false)
     }
-
-    if (!profErr) setError(null)
-  }, [session])
-
-  const firstLoadRef = useState(true)[0]
+  }, [userId])
 
   useEffect(() => { refresh() }, [refresh])
-
-  useEffect(() => { setLoading(false) }, [])
 
   useEffect(() => {
     const onVis = () => {

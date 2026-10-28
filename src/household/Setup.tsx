@@ -12,18 +12,12 @@ export default function Setup() {
         {step === 1 ? (
           <ProfileStep onDone={() => setStep(2)} />
         ) : (
-          <HouseholdStep />
+          <HouseholdStep onBack={() => setStep(1)} />
         )}
 
-        <div className="flex justify-between mt-4">
-          {step === 2 && (
-            <button onClick={() => setStep(1)}
-              className="text-xs text-gray-400 hover:text-white">
-              Back
-            </button>
-          )}
+        <div className="flex justify-end mt-4">
           <button onClick={() => supabase.auth.signOut()}
-            className="text-xs text-gray-400 hover:text-white ml-auto">
+            className="text-xs text-gray-400 hover:text-white">
             Sign out
           </button>
         </div>

@@ -1,123 +1,100 @@
-import { useState, useCallback } from 'react'
-import { useAuth } from '../auth/AuthProvider'
+import { useState } from 'react'
 import { useProfile } from './ProfileProvider'
 import { supabase } from '../lib/supabase'
 import { friendlyError } from '../lib/errors'
+import CopyCode from './CopyCode'
 
-export default function HouseholdStep() {
+type Mode = 'choice' | 'create' | 'join'
+
+const inputClass = 'w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500'
+const primaryClass = 'w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded text-white font-semibold'
+const choiceClass = 'w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold'
+
+export default function HouseholdStep({ onBack }: { onBack: () => void }) {
   const { profile, refresh } = useProfile()
-  const { session } = useAuth()
-  type Mode = 'choice' | 'create' | 'join'
   const [mode, setMode] = useState<Mode>('choice')
   const [hhName, setHhName] = useState(`${profile?.display_name ?? ''}'s household`)
   const [code, setCode] = useState('')
   const [running, setRunning] = useState(false)
-  const [result, setResult] = useState<{ code: string } | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [newCode, setNewCode] = useState<string | null>(null)
 
-  const copyCode = useCallback(async () => {
-    if (!result) return
-    try {
-      await navigator.clipboard.writeText(result.code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      setCopied(false)
-    }
-  }, [result])
+  const go = (m: Mode) => { setError(null); setMode(m) }
 
-  const handleCreate = async () => {
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!hhName.trim()) return
+    setError(null)
     setRunning(true)
-    const { data, error } = await supabase.rpc('create_household', { p_name: hhName.trim() })
-    if (error) {
-      alert(friendlyError(error.message))
-      setRunning(false)
-      return
-    }
-    // read the household to get the invite code
-    const { data: hh } = await supabase
-      .from('households')
-      .select('*')
-      .eq('id', data)
-      .single()
-    setResult(hh ? { code: hh.invite_code } : null)
+    const { data: id, error: rpcErr } = await supabase.rpc('create_household', { p_name: hhName.trim() })
+    if (rpcErr) { setError(friendlyError(rpcErr.message)); setRunning(false); return }
+    const { data: hh } = await supabase.from('households').select('invite_code').eq('id', id).single()
     setRunning(false)
+    // The household exists either way; if its code can't be read, go straight in (Us shows it).
+    if (hh) setNewCode(hh.invite_code)
+    else await refresh()
   }
 
-  const handleJoin = async () => {
-    if (!code.trim()) { alert(friendlyError('Enter the code your partner shared.')); return }
+  const handleJoin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!code.trim()) { setError('Enter the code your partner shared.'); return }
+    setError(null)
     setRunning(true)
-    const errData = await supabase.rpc('join_household', { p_code: code.trim().toLowerCase() })
-    if (errData.error) {
-      alert(friendlyError(errData.error.message))
-      setRunning(false)
-      return
-    }
+    const { error: rpcErr } = await supabase.rpc('join_household', { p_code: code.trim().toLowerCase() })
+    if (rpcErr) { setError(friendlyError(rpcErr.message)); setRunning(false); return }
     await refresh()
   }
 
-  const handleDone = async () => {
-    await refresh()
+  const back = (
+    <button type="button" onClick={() => (mode === 'choice' ? onBack() : go('choice'))} disabled={running}
+      className="text-xs text-gray-400 hover:text-white">Back</button>
+  )
+
+  if (newCode) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-gray-400">Step 2 of 2</p>
+        <p className="text-gray-400 text-sm">Share this code with your partner:</p>
+        <CopyCode code={newCode} large />
+        <button type="button" onClick={() => refresh()} className={primaryClass}>Done</button>
+      </div>
+    )
   }
 
   return (
-    <div>
-      <p className="text-sm text-gray-400 mb-4">Step 2 of 2</p>
+    <div className="space-y-3">
+      <p className="text-sm text-gray-400">Step 2 of 2</p>
 
       {mode === 'choice' && (
-        <div className="space-y-3">
-          <button onClick={() => setMode('create')}
-            className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold"
-            disabled={running}>Create a household</button>
-          <button onClick={() => setMode('join')}
-            className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold"
-            disabled={running}>Join with a code</button>
-        </div>
+        <>
+          <button type="button" onClick={() => go('create')} className={choiceClass}>Create a household</button>
+          <button type="button" onClick={() => go('join')} className={choiceClass}>Join with a code</button>
+        </>
       )}
 
       {mode === 'create' && (
-        <div className="space-y-3">
+        <form onSubmit={handleCreate} className="space-y-3">
           <div><label htmlFor="hhn" className="block text-gray-400 text-sm mb-1">Household name</label>
-            <input id="hhn" type="text" value={hhName} onChange={(e) => setHhName(e.target.value)} required maxLength={80}
-              className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" /></div>
-
-          {result ? (
-            <div className="space-y-2">
-              <p className="text-gray-400 text-sm">Share this code with your partner:</p>
-              <p className="text-xl font-mono text-center bg-slate-900 rounded p-3 break-all">{result.code}</p>
-              <div className="flex gap-2">
-                <button onClick={copyCode}
-                  className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm disabled:opacity-50"
-                  disabled={!result || copied}>
-                  {copied ? 'Copied' : 'Copy'}
-                </button>
-                <button onClick={handleDone} className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold">Done</button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={handleCreate} disabled={running || !hhName.trim()}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 rounded text-white font-semibold cursor-not-allowed">
-              {running ? 'Creating...' : 'Create'}
-            </button>
-          )}
-          <button onClick={() => setMode('choice')} className="text-xs text-gray-400 hover:text-white -mt-2">Back</button>
-        </div>
+            <input id="hhn" type="text" value={hhName} onChange={(e) => setHhName(e.target.value)} required maxLength={80} className={inputClass} /></div>
+          <button type="submit" disabled={running || !hhName.trim()} className={primaryClass}>
+            {running ? 'Creating…' : 'Create'}
+          </button>
+        </form>
       )}
 
       {mode === 'join' && (
-        <div className="space-y-3">
+        <form onSubmit={handleJoin} className="space-y-3">
           <div><label htmlFor="code" className="block text-gray-400 text-sm mb-1">Invite code</label>
             <input id="code" type="text" value={code} onChange={(e) => setCode(e.target.value)}
-              autoComplete="off" autoCapitalize="none" spellCheck={false} required maxLength={20}
-              className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" /></div>
-          <button onClick={handleJoin} disabled={running || !code.trim()}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 rounded text-white font-semibold cursor-not-allowed">
-            {running ? 'Joining...' : 'Join'}
+              autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={20} className={inputClass} /></div>
+          <button type="submit" disabled={running} className={primaryClass}>
+            {running ? 'Joining…' : 'Join'}
           </button>
-          <button onClick={() => setMode('choice')} className="text-xs text-gray-400 hover:text-white -mt-2">Back</button>
-        </div>
+        </form>
       )}
+
+      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {back}
     </div>
   )
 }

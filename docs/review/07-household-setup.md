@@ -124,3 +124,70 @@ Match `AuthScreen.tsx`: a centred `max-w-sm` `bg-slate-800` card, labels in `tex
 3. You have re-read this brief section by section and confirmed every file and behaviour is there.
 
 Reply with: the files created and changed, the build result, and anything you were unsure about.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access (enabled by the user), web UI.
+- **Wall time:** **8 min 51 s**, 38 steps, 1.5M tokens, ~68 tok/s. It reached 33% of its context, with no compactions.
+- **Outcome:** finished with a file table. It reported the build and `npm run test:db` passing, and named no doubts.
+- **Saved:** harness output committed unchanged as `06e9dca`.
+
+## Result
+The files and structure match the brief, nothing outside the brief was touched, and the profile update sends only the allowed columns. The build passes and the database tests are still 31/31. But reading the code turned up more real bugs than task 06:
+
+1. **`loading` was wrong, the worst one.** `ProfileProvider` set `loading` to false in a mount effect, before the first load finished. `App.tsx` papered over it with an `everLoaded` flag that also flipped on the first effect. Two effects followed:
+   - Every signed-in user briefly saw the setup screen.
+   - A new user's profile form was **empty**, not prefilled. Its `useState` initial values read the still-`null` profile and never updated.
+2. **Us page: the Copy button was `disabled={!copied}`.** That's inverted: it could never be clicked.
+3. **`HouseholdStep` reported errors with `alert()`** instead of red text, and the brief's "Copy failed" message was missing.
+4. **Two "Back" buttons** (one from `Setup`, one from `HouseholdStep`) showed in Create and Join, and one stayed after the invite code was shown. Pressing it and then Create again would hit "already in a household".
+5. **If reading the new household failed after creating it,** the screen fell back to the Create button. That was a dead end, since a second Create errors.
+6. **Invalid goals failed silently:** Continue did nothing, with no message.
+7. **Smaller issues:**
+   - The goal inputs had no `<label>`, so screen readers announced them by their value.
+   - The error screen put the message and Retry button side by side.
+   - The Create button always showed the not-allowed cursor.
+   - `refresh()` could clear a household error it had just set, and queried the partner with an empty id when the household read failed.
+
+## What I changed
+- **`ProfileProvider.tsx`:** rewrote `refresh()`:
+  - It loads profile, household and partner, then sets all three together, or sets `error` and stops at the first failure.
+  - `loading` turns off in a `finally` after the first load.
+  - It depends on the user id, not the whole session object, so a token refresh doesn't trigger a reload.
+- **`App.tsx`:** removed the `everLoaded` workaround and stacked the error screen vertically.
+- **New `src/household/CopyCode.tsx`:** one component for the code plus Copy, with "Copied" and the "Copy failed. Select the code instead." fallback. The read-only input selects all on focus. Setup and the Us page both use it.
+- **`HouseholdStep.tsx`, rewritten:**
+  - Errors show as red text.
+  - Real `<form>`s, so Enter submits.
+  - A single Back button: to the choice, or to step 1 via a new `onBack` prop.
+  - No Back once the code is shown.
+  - If the code can't be read after creating, it goes straight into the app, where the Us page shows the code.
+- **`Setup.tsx`:** its own Back button is gone; it passes `onBack` instead.
+- **`ProfileStep.tsx`:** a goal error message, and real `<label htmlFor>` on the goal inputs.
+- **`Us.tsx`:** uses `CopyCode`.
+
+### Checked in the browser
+I used a small **mock Supabase server** (`mock-supabase.mjs` in Claude's scratchpad). It's an in-memory version of the profile and household REST calls and both functions, which also rejects updates to protected columns. I paired it with a fake signed-in session in the preview tab's storage, then walked through the whole flow:
+- **Step 1 loads prefilled** from the profile. That proves the loading fix: before it, these fields would have been empty.
+- A calorie goal of `0` shows "Goals must be whole numbers of at least 1."
+- **Saving sends only the allowed columns,** checked in the mock's request log, with the browser's real timezone (`America/Denver`).
+- **Join with `wrongcode`** shows "No household has that invite code."
+- **Create** shows the code in large monospace. Copy failed in the preview pane (it has no clipboard permission), and the fallback message showed.
+- **Done** leads into the app. The Us page shows "Alice's household", Alice's pink card, "Waiting…", and the code with Copy.
+- After resetting the mock, step 1 is prefilled with the **saved** values (Alice, pink, 1900).
+- **Join with `  ABCD1234 `** (trimmed and lower-cased) leads into the app with "Bob's household" and both cards, and no code shown.
+
+Afterwards I removed the fake session, stopped the mock and rebuilt without the test values. The build passes, the database tests are 31/31, and no test values are left in `dist`.
+
+**Not covered:** the real Supabase and RLS behaviour (`npm run test:db` covers it at the database level), and the visibility-change refresh between two real devices.
+
+## How I would have done it
+- **TanStack Query** (it's in the game plan's stack) for the profile, household and partner loading: one `useQuery` with `refetchOnWindowFocus` covers loading, error, retry and the visibility refresh, all of which were hand-written here and buggy. I kept the brief to plain React to limit scope, which was a trade-off. The hand-written loader is where the worst bug was. **Task 08 should move this to TanStack Query** before more data screens get built on it.
+- **Key the profile form on the profile id** (`<ProfileStep key={profile.id} />`), or only render it once the profile is loaded, so it can never capture a null profile.
+- **A shared `CopyCode` from the start.** The brief described the same behaviour twice, and the model wrote it twice, one copy with a bug.
+
+## Verdict
+**Usable after real fixes. The structure was right; the state handling wasn't.** Lessons:
+1. **The 35B at High is fast and follows file layouts well, but React state timing is its weak spot.** In task 06 it was effect ordering; here, `loading` and the form's initial values. These are invisible to `npm run build`.
+2. **A mock backend in the browser is worth the five minutes.** It turned "looks right" into a walk through every path, and confirmed the loading fix.
+3. **Briefs should name state invariants as rules,** e.g. "`loading` must stay true until the first load has finished", not just describe the behaviour.
+4. **Where two screens share behaviour, the brief should ask for one shared component.**

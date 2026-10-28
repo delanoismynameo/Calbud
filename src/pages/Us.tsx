@@ -1,23 +1,11 @@
-import { useState, useCallback } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../household/ProfileProvider'
 import { supabase } from '../lib/supabase'
+import CopyCode from '../household/CopyCode'
 
 export default function Us() {
   const { session } = useAuth()
   const { profile, household, partner } = useProfile()
-  const [copied, setCopied] = useState(false)
-
-  const copyCode = useCallback(async () => {
-    if (!household?.invite_code) return
-    try {
-      await navigator.clipboard.writeText(household.invite_code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // ignore
-    }
-  }, [household])
 
   return (
     <div className="text-center">
@@ -50,13 +38,11 @@ export default function Us() {
                 </div>
               </div>
 
-              {!partner && household.invite_code && (
-                <p className="text-sm text-gray-400">
-                  Waiting for your partner to join. Share this code: <input type="text" readOnly value={household.invite_code}
-                    className="font-mono bg-slate-900 rounded px-2 py-1 mx-1 w-28 text-center" />
-                  <button onClick={copyCode} disabled={!copied}
-                    className="ml-1 text-blue-400 hover:text-blue-300 underline disabled:opacity-50">{copied ? 'Copied' : 'Copy'}</button>
-                </p>
+              {!partner && (
+                <div className="max-w-sm mx-auto space-y-2">
+                  <p className="text-sm text-gray-400">Waiting for your partner to join. Share this code:</p>
+                  <CopyCode code={household.invite_code} />
+                </div>
               )}
             </div>
           )}

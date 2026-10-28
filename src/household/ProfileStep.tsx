@@ -27,7 +27,10 @@ export default function ProfileStep({ onDone }: ProfileStepProps) {
     if (!displayName.trim()) { setError('Display name is required.'); return false }
     for (const val of [goalCalories, goalProtein, goalCarbs, goalFat]) {
       const n = Number(val)
-      if (!Number.isInteger(n) || n < 1) return false
+      if (val.trim() === '' || !Number.isInteger(n) || n < 1) {
+        setError('Goals must be whole numbers of at least 1.')
+        return false
+      }
     }
     return true
   }
@@ -74,8 +77,8 @@ export default function ProfileStep({ onDone }: ProfileStepProps) {
             { key: 'Carbs (g)', val: goalCarbs, set: setGoalCarbs },
             { key: 'Fat (g)', val: goalFat, set: setGoalFat },
           ].map(({ key, val, set }) => (
-            <div key={key}><p className="text-xs text-gray-400">{key}</p>
-              <input type="number" min={1} step={1} value={val}
+            <div key={key}><label htmlFor={`goal-${key}`} className="block text-xs text-gray-400">{key}</label>
+              <input id={`goal-${key}`} type="number" min={1} step={1} value={val}
                 onChange={(e) => set(e.target.value)} required
                 className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" /></div>
           ))}</div></div>

@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { Routes, Route, NavLink } from 'react-router'
 import Today from './pages/Today'
 import Prep from './pages/Prep'
@@ -53,18 +52,7 @@ export default function App() {
 }
 
 function SignedInApp() {
-  const { profile, household, loading, error, refresh } = useProfile()
-  const [everLoaded, setEverLoaded] = useState(false)
-
-  useEffect(() => { setEverLoaded(true) }, [])
-
-  if (!everLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <p className="text-white">Loading…</p>
-      </div>
-    )
-  }
+  const { profile, loading, error, refresh } = useProfile()
 
   if (loading) {
     return (
@@ -76,7 +64,7 @@ function SignedInApp() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4">
         <p className="text-red-400 mb-3">{error}</p>
         <button onClick={refresh} className="py-2 bg-slate-700 hover:bg-slate-600 rounded text-white px-4 font-semibold">Retry</button>
       </div>
