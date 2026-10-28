@@ -119,7 +119,7 @@ Minor and left as is:
 
 ## What I changed
 - `AuthProvider.tsx`: moved the URL check inside the `getSession().then(...)`. The confirmation notice now shows only when there is still no session, the double decode is gone, and the query string is cleared only after supabase-js has had its chance to read it.
-- `AuthScreen.tsx`: removed both `clearRecovery()` calls (and the unused import). Only `ResetPassword` ends recovery now, after `updateUser` succeeds.
+- `AuthScreen.tsx`: removed both `clearRecovery()` calls. Only `ResetPassword` ends recovery now, after `updateUser` succeeds.
 - `index.css`: the `body` gets the slate-900 background and white text, so every screen is dark.
 
 ### Checked in the browser (local preview, service worker cleared)
