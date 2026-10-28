@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { scaleNutrition } from './nutrition'
 import type { FoodResult } from './types'
+import { foodKey, setFavorite } from './favorites'
+import { useFavoriteFoods } from './useFavoriteFoods'
+import { scaleNutrition } from './nutrition'
 import { defaultMealType, localDateString } from '../lib/dates'
 import { logFood } from './logFood'
 import { useAuth } from '../auth/AuthProvider'
@@ -24,6 +26,16 @@ export default function ServingPicker({ food, onLogged, onCancel }: {
   const [mealType, setMealType] = useState<MealType>(defaultMealType())
   const { session } = useAuth()
   const { profile } = useProfile()
+
+  const favoriteFoods = useFavoriteFoods()
+  const isFav = favoriteFoods.data?.some((f) => foodKey(f) === foodKey(food)) ?? false
+
+  const favoriteMutation = useMutation({
+    mutationFn: () => setFavorite(food, profile!.household_id!, !isFav),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['favorite-foods'] })
+    },
+  })
 
   const n = Number(amount)
   const grams = unit === 'serving' && servingG != null ? n * servingG : n
@@ -53,10 +65,22 @@ export default function ServingPicker({ food, onLogged, onCancel }: {
 
   return (
     <div className="bg-slate-800 rounded-lg shadow-xl p-4 space-y-4">
-      <div>
-        <p className="font-semibold">{food.name}</p>
-        {food.brand && <p className="text-gray-400 text-sm">{food.brand}</p>}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{food.name}</p>
+          {food.brand && <p className="text-gray-400 text-sm">{food.brand}</p>}
+        </div>
+        <button type="button"
+          aria-pressed={isFav}
+          aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
+          disabled={favoriteMutation.isPending || favoriteFoods.isPending}
+          onClick={() => favoriteMutation.mutate()}
+          className={`text-2xl leading-none px-2 py-1 rounded hover:bg-slate-700 ${isFav ? 'text-yellow-400' : 'text-gray-400'}`}>
+          {isFav ? '★' : '☆'}
+        </button>
       </div>
+
+      {favoriteMutation.isError && <p className="text-red-400 text-sm">{favoriteMutation.error.message}</p>}
 
       {servingG != null && (
         <div className="flex gap-2">
