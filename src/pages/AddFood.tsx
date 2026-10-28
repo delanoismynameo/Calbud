@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { useFoodSearch } from '../food/useFoodSearch'
 import ServingPicker from '../food/ServingPicker'
@@ -7,13 +7,18 @@ import { useRecentFoods } from '../food/useRecentFoods'
 import { useFavoriteFoods } from '../food/useFavoriteFoods'
 import { withoutFavorites } from '../food/favorites'
 import CustomFoodForm from '../food/CustomFoodForm'
+import BarcodeScanner from '../food/BarcodeScanner'
+import { normalizeBarcode } from '../food/barcode'
+import { lookupBarcode } from '../food/off'
 
 export default function AddFood() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  // Keep the picked food itself, not its list position: the list can refresh underneath.
   const [selected, setSelected] = useState<FoodResult | null>(null)
   const [creating, setCreating] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [lookingUp, setLookingUp] = useState(false)
+  const [scanError, setScanError] = useState<string | null>(null)
   const { results, errors, isSearching, settled, failed, tooShort, refetch } = useFoodSearch(query)
   const recents = useRecentFoods()
   const favorites = useFavoriteFoods()
@@ -30,6 +35,28 @@ export default function AddFood() {
     </button>
   )
 
+  const onCode = useCallback(async (text: string) => {
+    if (lookingUp) return
+    const code = normalizeBarcode(text)
+    if (!code) { setScanError("That doesn't look like a barcode."); return }
+    setLookingUp(true)
+    setScanError(null)
+    try {
+      const food = await lookupBarcode(code)
+      if (food) { setSelected(food); setScanning(false) }
+      else { setScanError(`No match for ${code} in Open Food Facts. You can create it as a custom food.`) }
+    } catch {
+      setScanError("Couldn't look that up. Check your connection and try again.")
+    } finally {
+      setLookingUp(false)
+    }
+  }, [lookingUp])
+
+  const onScannerCancel = useCallback(() => {
+    setScanning(false)
+    setScanError(null)
+  }, [])
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-4">
@@ -41,6 +68,12 @@ export default function AddFood() {
         <ServingPicker food={selected} onLogged={() => navigate('/')} onCancel={() => setSelected(null)} />
       ) : creating ? (
         <CustomFoodForm onSaved={(food) => { setCreating(false); setSelected(food) }} onCancel={() => setCreating(false)} />
+      ) : scanning ? (
+        <div className="space-y-3">
+          <BarcodeScanner onCode={onCode} onCancel={onScannerCancel} />
+          {lookingUp && <p className="text-blue-400 text-sm text-center">Looking up…</p>}
+          {scanError && <p className="text-red-400 text-sm">{scanError}</p>}
+        </div>
       ) : (
         <>
           <input type="search" autoFocus aria-label="Search foods"
@@ -48,8 +81,12 @@ export default function AddFood() {
             value={query} onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" />
 
-          <button type="button" onClick={() => setCreating(true)}
-            className="w-full py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">+ Create a food</button>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => { setScanning(true); setScanError(null) }}
+              className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">Scan a barcode</button>
+            <button type="button" onClick={() => setCreating(true)}
+              className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">+ Create a food</button>
+          </div>
 
           {empty && (
             <div className="space-y-2">
