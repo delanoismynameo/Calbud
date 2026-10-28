@@ -117,6 +117,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 17 | Custom foods (form, validator) | 35B (High), 4B as its subagent | Delegation started, but the 35B wrote the 4B's part itself; form fixes. ~5 min |
 | 18 | Barcode scanning (camera, typed code, Open Food Facts lookup) | 35B (High), 4B as its subagent | The 35B interrupted the 4B and wrote its part; camera-handling fixes. ~20 min |
 | 19 | Open Food Facts serving labels without repeated grams | 35B (High) | Usable as delivered; its integration test caught its own bug. ~4 min |
+| 20 | Search ranking (cooking words, merged ranking) | 35B (High) | Usable after a one-line fix; it caught my brief's title-case slip. ~9 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

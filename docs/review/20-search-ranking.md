@@ -110,3 +110,29 @@ Add them inside the existing `describe('searchFoods', …)`, at its end. Leave t
 3. You have re-read this brief, and checked each numbered section and every table row against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** **9 min 20 s**, 27 steps.
+- **Outcome:** finished, and its report was accurate.
+- **One gap in my brief:** `searchUsda` title-cases all-caps names, so `STEAMED MIXED VEGETABLES` comes back as `Steamed Mixed Vegetables`. It found this by reading `usda.ts` and adjusted the mock and the expected name. That was a correct call.
+
+## Result
+- **Builds:** yes. **Tests:** 130 passing (110 + 18 + 2).
+- **Real USDA check:** I ran `searchFoods` with the real key from a throwaway script. The top results:
+
+  | Search | Top result |
+  |---|---|
+  | steamed vegetables | "Steamed Mixed Vegetables", then steamed vegetable dumplings |
+  | steamed broccoli | "Broccoli…, cooked" items |
+  | grilled chicken breast | "Chicken breast, grilled…" |
+  | baked salmon | "Fish, salmon, baked or broiled" |
+  | raw spinach | "Spinach, raw" |
+
+  Searches with no cooking word (oatmeal, greek yogurt, banana) keep USDA's order.
+
+## What I changed
+- `rank.ts`: a repeated cooking word (`steamed steamed broccoli`) went into `core`, and so into the basic-foods search. It is now skipped. Added 1 test.
+
+## Verdict
+Usable after a one-line fix. When a brief quotes names that a function will output, check how that function transforms them (here, the title-casing).

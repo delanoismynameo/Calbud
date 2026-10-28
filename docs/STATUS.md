@@ -10,14 +10,14 @@
 - **Task 16 (favorite foods) is live** (pushed 2026-10-28).
 - **Task 17 (custom foods) is live** (pushed 2026-10-28).
 - **Task 18 (barcode scanning: "Scan a barcode" on Add food, camera via `@zxing/browser`, or a typed code, looked up in Open Food Facts) is live** (pushed 2026-10-28). The camera still needs a test on a real phone.
-- **Task 19 (Open Food Facts serving labels no longer repeat the grams) is committed locally, not pushed.**
+- **Task 19 (Open Food Facts serving labels no longer repeat the grams) and task 20 (search ranking: "steamed vegetables" no longer shows steamed fish) are committed locally, not pushed.**
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All three migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 110 passing |
+  | `npm test` | 131 passing |
   | `npm run test:db` | 43 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -45,9 +45,10 @@ Before sending a task to the harness:
 | 17 | Custom foods (+ the first 35B → 4B delegation) | [17](review/17-custom-foods.md) |
 | 18 | Barcode scanning | [18](review/18-barcode-scanning.md) |
 | 19 | Open Food Facts serving labels without repeated grams | [19](review/19-off-serving-label.md) |
+| 20 | Search ranking: cooking words, one ranked list | [20](review/20-search-ranking.md) |
 
 ## Next, in order
-1. **Try the barcode camera on a phone** (iPhone and Android if possible), and **push task 19** when the user says so.
+1. **Try the barcode camera on a phone** (iPhone and Android if possible), and **push tasks 19–20** when the user says so.
 2. **Meal prep** (GAME_PLAN step 9), as GAME_PLAN §3 describes it. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
 
 ## Waiting on the user
