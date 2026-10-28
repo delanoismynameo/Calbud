@@ -108,7 +108,7 @@ describe('normalizeOffProduct', () => {
   it('throws on an HTTP 500 with a non-JSON body', async () => {
     const mockFetch: typeof fetch = (_input) => Promise.resolve(new Response('Internal Server Error', { status: 500 }))
     await expect(lookupBarcode('1234567890123', { fetchFn: mockFetch as unknown as typeof fetch })).rejects.toThrow(
-      'Open Food Facts lookup failed (500)',
+      'Open Food Facts lookup failed (HTTP 500)',
     )
   })
 })

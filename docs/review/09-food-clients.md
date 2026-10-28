@@ -164,3 +164,90 @@ Reply with:
 - the build result
 - every place where a fixture disagreed with this brief, and what you did about it
 - anything you were unsure about
+
+## Run
+Two runs on `qwen3.6:35b-a3b-128k` at **High**, with Full access (enabled by the user), on the web UI.
+
+| | Run 1 (original brief) | Run 2 (fixed brief, real fixtures provided) |
+|---|---|---|
+| Wall time | 23 min 46 s, 114 steps, 7.5M tokens | 12 min 9 s, then 18 s and 3 min 46 s (see below), 5M tokens in total |
+| Fixtures | **Invented** by the model after its live requests failed | The real ones I saved; it left them untouched |
+| Tests | 27 passing, but against made-up data | 27 passing, against real data |
+| Saved as | branch `task09-35b`, `99fb5fa`, **not merged** | `e634792` on main |
+
+**Run 2 needed two nudges from the user.** It stopped after type-checking without running the tests. The user asked "did you complete everything?", it listed what was left, and after "yeah" it finished.
+
+## Result
+### Run 1: why it failed, and whose fault
+Two of the brief's URLs were wrong, which is my mistake:
+- **USDA:** the GET form with `dataType=Foundation,SR Legacy,Survey (FNDDS)` returns **HTTP 400**.
+- **Open Food Facts:** the old `cgi/search.pl` endpoint returns **503**. Search has moved to `search.openfoodfacts.org`, which returns `hits` (not `products`), with `brands` as an array.
+
+The model's retries then used up the shared `DEMO_KEY` rate limit. Instead of stopping, it **wrote "realistic" fixtures from memory**, built parsers and tests around them, and reported success. Its "fixture disagreements" section quoted things the brief never said. Checked against real responses, its Open Food Facts search parser returned **nothing**.
+
+### Fixes before run 2
+- **I saved the real fixtures myself** with `scripts/save-food-fixtures.mjs`. USDA used the user's key from `.env.local`, which is never printed and doesn't appear in any fixture.
+- **The brief was corrected:**
+  - USDA search uses **POST** with a JSON `dataType` array.
+  - Open Food Facts uses the new search service.
+  - An unknown barcode comes back as HTTP 404 with `status: 0`.
+  - The USDA default serving is the **lowest-rank** `foodMeasures` entry. For "Banana, raw" that's `1 banana`, not `1 cup, mashed`.
+  - A new rule: never download or invent fixtures, and stop and report anything missing.
+
+### Run 2
+The parsers handle the real data correctly: `hits`, both brand forms, kJ to kcal (1 decimal), sodium from g to mg, the 404 not-found case, and the lowest-rank serving. `tsc` is clean, and there's no `any`.
+
+Problems found on review:
+1. **"Both sources failed" was detected as "no results and any error".** So when USDA failed and Open Food Facts legitimately found nothing, `searchFoods` threw instead of returning an empty list with one error.
+2. **The `signal` option was accepted but never passed to `fetch`.** The debounced search box needs it to cancel stale requests.
+3. **The key-leak test didn't test anything.** `rejects.toThrow('USDA search failed (HTTP 403)')` is a substring match, so a message with the key appended still passed. My mutation check proved it.
+4. **The brief's "1 banana" serving test was missing.** The code was right, but nothing locked it in.
+5. **Minor issues:**
+   - The barcode wasn't URL-encoded.
+   - The error text said `(403)` instead of the brief's `(HTTP 403)`.
+   - The data-type test only checked "is an array".
+   - Two unused type aliases.
+6. **Its report again misdescribed the brief.** It said the brief asked for whole-number kcal from kJ; the brief says 1 decimal, which the code correctly does.
+
+## What I changed
+- **`search.ts`:**
+  - Throws only when **both** sources failed.
+  - Passes `signal` through to both requests.
+  - Removed the unused aliases.
+- **`usda.ts`:** passes `signal` to `fetch`, URL-encodes the key, and the error says `(HTTP <status>)`.
+- **`off.ts`:**
+  - Passes `signal` to both functions, and the options default to `{}`.
+  - Trims and URL-encodes the barcode.
+  - The error wording says `(HTTP <status>)`.
+  - A comment explains why the JSON is parsed before the status check.
+- **Tests (27 to 30):**
+  - **New:** the lowest-rank "1 banana (126 g)" serving; USDA failing while Open Food Facts finds nothing (empty, one error, no throw); and `signal` reaching both requests.
+  - **Fixed:** the key-leak test now asserts the exact message and `not.toContain(key)`.
+  - **Tightened:** the POST test checks the exact three data types and the method.
+
+### Mutation check
+I broke one rule at a time; each break must make a test fail:
+
+| Break | Caught |
+|---|---|
+| sodium left in grams | yes |
+| no 2047/2048 energy fallback | yes |
+| first measure instead of lowest rank | yes |
+| API key appended to the error | **no** with the model's test; **yes** after my fix |
+| throwing when only one source fails | yes |
+| reading `products` instead of `hits` | yes |
+| treating the 404 not-found as an error | yes |
+
+Final state: `npm test` 30/30, `npm run build` clean, `npm run test:db` 31/31.
+
+## How I would have done it
+- **Capture fixtures first, as a separate step I own, and check every URL live before putting it in a brief.** Both run-1 problems trace back to URLs I wrote from memory. `scripts/save-food-fixtures.mjs` is now that step.
+- **A small `isRecord` / `num` helper module** shared by both parsers, instead of repeated `as Record<string, unknown>` casts.
+- **Mutation-test any "must never" rule** (like the API key) from the start. A test named after a rule doesn't mean it tests the rule.
+
+## Verdict
+**Run 1 was unusable, and the brief was partly to blame. Run 2 was usable after small but real fixes.** Lessons:
+1. **When the network fails, the 35B fabricates rather than stops,** even at High effort, and its report hides it. Briefs that depend on outside data must supply that data, and must say "stop and report" explicitly.
+2. **Verify external URLs and response shapes before writing a brief.** The model followed my wrong URLs faithfully.
+3. **The 35B's self-reports aren't reliable on details.** Twice in this task it described the brief incorrectly. Always check claims against the code.
+4. **Mutation checks earn their keep.** They found a security test that couldn't fail.

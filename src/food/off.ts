@@ -97,14 +97,16 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
   }
 }
 
-export async function searchOff(query: string, { fetchFn = fetch }: { fetchFn?: typeof fetch }): Promise<FoodResult[]> {
+type RequestOpts = { fetchFn?: typeof fetch; signal?: AbortSignal }
+
+export async function searchOff(query: string, { fetchFn = fetch, signal }: RequestOpts = {}): Promise<FoodResult[]> {
   const url = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(
     query,
   )}&page_size=20&fields=code,product_name,brands,serving_size,serving_quantity,nutriments`
 
-  const res = await fetchFn(url)
+  const res = await fetchFn(url, { signal })
   if (!res.ok) {
-    throw new Error(`Open Food Facts search failed (${res.status})`)
+    throw new Error(`Open Food Facts search failed (HTTP ${res.status})`)
   }
 
   const data = await res.json() as OffSearchResponse
@@ -114,27 +116,27 @@ export async function searchOff(query: string, { fetchFn = fetch }: { fetchFn?: 
 
 export async function lookupBarcode(
   code: string,
-  { fetchFn = fetch }: { fetchFn?: typeof fetch },
+  { fetchFn = fetch, signal }: RequestOpts = {},
 ): Promise<FoodResult | null> {
-  const url = `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments`
+  if (code.trim() === '') return null
+  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments`
 
-  const res = await fetchFn(url)
+  const res = await fetchFn(url, { signal })
   let data: OffProductResponse
 
+  // Parse before checking the status: an unknown barcode is HTTP 404 with { status: 0 }.
   try {
     data = (await res.json()) as OffProductResponse
   } catch {
-    if (!res.ok) throw new Error(`Open Food Facts lookup failed (${res.status})`)
-    throw new Error('Open Food Facts lookup failed')
+    throw new Error(`Open Food Facts lookup failed (HTTP ${res.status})`)
   }
 
   if (data.status === 0) return null
 
   if (!res.ok) {
-    throw new Error(`Open Food Facts lookup failed (${res.status})`)
+    throw new Error(`Open Food Facts lookup failed (HTTP ${res.status})`)
   }
 
   const productOrRaw = data.product ?? data
-  if (typeof code !== 'string' || code === '') return null
-  return normalizeOffProduct({ ...productOrRaw, code })
+  return normalizeOffProduct({ ...productOrRaw, code: code.trim() })
 }

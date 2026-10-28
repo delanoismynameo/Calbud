@@ -77,15 +77,27 @@ describe('normalizeUsdaFood', () => {
     const body = JSON.parse(callArgs[1].body as string)
     expect(body.query).toBe('eggs')
     expect(body.pageSize).toBe(25)
-    expect(Array.isArray(body.dataType)).toBe(true)
+    expect(body.dataType).toEqual(['Foundation', 'SR Legacy', 'Survey (FNDDS)'])
+    expect(callArgs[1].method).toBe('POST')
   })
 
   it('on a 403 searchUsda throws and the message does not contain the key', async () => {
     const { searchUsda } = await import('./usda')
     const mockFetch: typeof fetch = async () => new Response('Forbidden', { status: 403 })
 
-    await expect(searchUsda('eggs', { apiKey: 'SECRET_KEY_123', fetchFn: mockFetch })).rejects.toThrow(
-      'USDA search failed (403)',
-    )
+    const err = await searchUsda('eggs', { apiKey: 'SECRET_KEY_123', fetchFn: mockFetch }).catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(Error)
+    expect((err as Error).message).toBe('USDA search failed (HTTP 403)')
+    expect((err as Error).message).not.toContain('SECRET_KEY_123')
+  })
+})
+
+describe('serving from foodMeasures', () => {
+  it('picks the lowest-rank measure, not the first listed (Banana, raw -> 1 banana, 126 g)', () => {
+    const data = loadFixture('usda-search-banana.json') as { foods: { fdcId: number }[] }
+    const raw = data.foods.find((f) => f.fdcId === 2709224)
+    const result = normalizeUsdaFood(raw)
+    expect(result!.servingG).toBe(126)
+    expect(result!.servingLabel).toBe('1 banana (126 g)')
   })
 })

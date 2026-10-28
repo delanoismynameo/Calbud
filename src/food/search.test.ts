@@ -146,3 +146,24 @@ describe('usdaApiKey', () => {
     expect(key.length).toBeGreaterThan(0)
   })
 })
+
+describe('searchFoods edge cases', () => {
+  it('USDA failing while Open Food Facts finds nothing returns an empty result with one error, not a throw', async () => {
+    const fetchFn = vi.fn(async (url: string | URL | Request) =>
+      String(url).includes('api.nal.usda.gov') ? new Response('{}', { status: 500 }) : makeOffSearchResponse([]))
+    const result = await searchFoods('zzzz', { apiKey: 'k', fetchFn: fetchFn as unknown as typeof fetch })
+    expect(result.results).toEqual([])
+    expect(result.errors).toHaveLength(1)
+  })
+
+  it('passes the abort signal to both requests', async () => {
+    const seen: (AbortSignal | null | undefined)[] = []
+    const fetchFn = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      seen.push(init?.signal)
+      return String(url).includes('api.nal.usda.gov') ? makeOkResponse([]) : makeOffSearchResponse([])
+    })
+    const controller = new AbortController()
+    await searchFoods('egg', { apiKey: 'k', fetchFn: fetchFn as unknown as typeof fetch, signal: controller.signal })
+    expect(seen).toEqual([controller.signal, controller.signal])
+  })
+})

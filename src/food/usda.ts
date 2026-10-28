@@ -100,12 +100,13 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
 
 export async function searchUsda(
   query: string,
-  { apiKey, fetchFn = fetch }: { apiKey: string; fetchFn?: typeof fetch },
+  { apiKey, fetchFn = fetch, signal }: { apiKey: string; fetchFn?: typeof fetch; signal?: AbortSignal },
 ): Promise<FoodResult[]> {
-  const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${apiKey}`
+  const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(apiKey)}`
 
   const res = await fetchFn(url, {
     method: 'POST',
+    signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query,
@@ -115,7 +116,7 @@ export async function searchUsda(
   })
 
   if (!res.ok) {
-    throw new Error(`USDA search failed (${res.status})`)
+    throw new Error(`USDA search failed (HTTP ${res.status})`)
   }
 
   const data = await res.json() as unknown

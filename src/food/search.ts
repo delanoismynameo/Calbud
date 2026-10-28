@@ -8,9 +8,6 @@ export function usdaApiKey(): string {
   return raw
 }
 
-type SearchUsdaArgs = { apiKey: string; fetchFn?: typeof fetch }
-type SearchOffArgs = { fetchFn?: typeof fetch }
-
 function dedupKey(r: FoodResult): string {
   const name = (r.name ?? '').trim().toLowerCase()
   const brand = (r.brand ?? '').trim().toLowerCase()
@@ -33,8 +30,8 @@ export async function searchFoods(
   const key = apiKey ?? usdaApiKey()
 
   const [usdaResult, offResult] = await Promise.allSettled([
-    searchUsda(trimmed, { apiKey: key, fetchFn }),
-    searchOff(trimmed, { fetchFn }),
+    searchUsda(trimmed, { apiKey: key, fetchFn, signal }),
+    searchOff(trimmed, { fetchFn, signal }),
   ])
 
   const results: FoodResult[] = []
@@ -67,7 +64,8 @@ export async function searchFoods(
     errors.push(offResult.reason instanceof Error ? offResult.reason.message : 'Open Food Facts search failed')
   }
 
-  if (results.length === 0 && errors.length > 0) {
+  // Throw only when both sources failed; one source finding nothing is a normal empty result.
+  if (errors.length === 2) {
     throw new Error(errors.join('; '))
   }
 
