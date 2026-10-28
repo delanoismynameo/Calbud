@@ -6,12 +6,14 @@ import type { FoodResult } from '../food/types'
 import { useRecentFoods } from '../food/useRecentFoods'
 import { useFavoriteFoods } from '../food/useFavoriteFoods'
 import { withoutFavorites } from '../food/favorites'
+import CustomFoodForm from '../food/CustomFoodForm'
 
 export default function AddFood() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   // Keep the picked food itself, not its list position: the list can refresh underneath.
   const [selected, setSelected] = useState<FoodResult | null>(null)
+  const [creating, setCreating] = useState(false)
   const { results, errors, isSearching, settled, failed, tooShort, refetch } = useFoodSearch(query)
   const recents = useRecentFoods()
   const favorites = useFavoriteFoods()
@@ -37,12 +39,17 @@ export default function AddFood() {
 
       {selected ? (
         <ServingPicker food={selected} onLogged={() => navigate('/')} onCancel={() => setSelected(null)} />
+      ) : creating ? (
+        <CustomFoodForm onSaved={(food) => { setCreating(false); setSelected(food) }} onCancel={() => setCreating(false)} />
       ) : (
         <>
           <input type="search" autoFocus aria-label="Search foods"
             placeholder="Search foods (e.g. banana, oatmeal)"
             value={query} onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" />
+
+          <button type="button" onClick={() => setCreating(true)}
+            className="w-full py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">+ Create a food</button>
 
           {empty && (
             <div className="space-y-2">

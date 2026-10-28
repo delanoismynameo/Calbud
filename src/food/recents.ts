@@ -23,7 +23,7 @@ export type RecentLogRow = { food_id: string | null; foods: FoodRowFromDb | null
 
 export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
   return {
-    source: row.source as 'usda' | 'off',
+    source: row.source,
     sourceId: row.source_id ?? '',
     barcode: row.source === 'off' ? row.source_id : null,
     name: row.name,
@@ -46,7 +46,7 @@ export function recentFoods(rows: RecentLogRow[], limit = 10): FoodResult[] {
 
   for (const row of rows) {
     if (row.foods === null) continue
-    if (row.foods.source === 'custom') continue
+
     const key = row.foods.id
     if (seen.has(key)) continue
     seen.add(key)

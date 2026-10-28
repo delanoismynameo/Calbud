@@ -1,4 +1,4 @@
-export type FoodSource = 'usda' | 'off'
+export type FoodSource = 'usda' | 'off' | 'custom'
 
 export interface FoodResult {
   source: FoodSource

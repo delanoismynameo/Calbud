@@ -17,7 +17,6 @@ export function useFavoriteFoods() {
         .select('*')
         .eq('household_id', householdId!)
         .eq('is_favorite', true)
-        .neq('source', 'custom')
         .order('name')
 
       if (error) throw new Error(error.message)

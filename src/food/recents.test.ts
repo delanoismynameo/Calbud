@@ -98,7 +98,7 @@ describe('recentFoods', () => {
     expect(result).toHaveLength(2)
   })
 
-  it('custom foods are skipped', () => {
+  it('custom foods are kept', () => {
     const custom: FoodRowFromDb = { ...usdaRow, id: 'cust-1', source_id: '', source: 'custom' }
     const usda2: FoodRowFromDb = { ...usdaRow, id: 'u-1', source_id: 'u1', source: 'usda' }
     const rows: Row[] = [
@@ -106,7 +106,7 @@ describe('recentFoods', () => {
       { food_id: 'log-2', foods: usda2 },
     ]
     const result = recentFoods(rows)
-    expect(result).toHaveLength(1)
+    expect(result).toHaveLength(2)
   })
 
   it('limit is respected: 12 different foods with limit 10 gives 10', () => {
