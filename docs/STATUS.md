@@ -5,7 +5,7 @@
 ## Where things stand
 - **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
 - **Task 12 (the Today screen) is live** (pushed 2026-10-28).
-- **Task 13 (switching to a partner's household, SQL only) is in `main` but not applied:** `supabase/migrations/20261028000001_join_switch.sql` still has to be run in the Supabase SQL Editor. There's no UI for it yet (task 14).
+- **Tasks 13–14 (switching to a partner's household) are committed locally, not pushed:** task 13 is the SQL, task 14 the "Join your partner's household instead" form on the Us page. `supabase/migrations/20261028000001_join_switch.sql` still has to be run in the Supabase SQL Editor. **Run it before pushing**, or the new form only shows "already in a household".
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. Both migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
@@ -34,11 +34,11 @@ Before sending a task to the harness:
 | 09–11 | Food API clients, add-food flow, USDA branded search | [09](review/09-food-clients.md), [10](review/10-add-food.md), [11](review/11-usda-branded.md) |
 | 12 | Today screen: meals, totals against goals, edit and delete | [12](review/12-today-screen.md) |
 | 13 | `join_household` lets a solo member switch households (SQL + 12 DB tests) | [13](review/13-switch-household.md) |
+| 14 | "Join your partner's household instead" on the Us page | [14](review/14-switch-household-ui.md) |
 
 ## Next, in order
-1. **Apply the task 13 migration** in the SQL Editor (the user does this).
-2. **Task 14, "Join a different household" UI:** on the Us page, when you're alone in your household, offer "Join your partner's household" with a code field that calls `join_household`. See GAME_PLAN build step 4.
-3. **The rest of the build plan,** from step 7: recents, favorites and custom foods, then barcode scanning. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
+1. **Apply the task 13 migration** in the SQL Editor (the user does this), then push tasks 13–14.
+2. **The rest of the build plan,** from step 7: recents, favorites and custom foods, then barcode scanning. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

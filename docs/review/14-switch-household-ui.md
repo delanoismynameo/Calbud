@@ -49,3 +49,23 @@ Inside the existing `{!partner && ( … )}` block, after `<CopyCode … />`, add
 3. You have re-read this brief and checked each point under "Create this file" against your code.
 
 Reply with: the files created and changed, the pasted build lines, the last line `npm test` printed, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** **2 min 54 s**, 17 steps.
+- **Outcome:** finished. Its report was accurate this time. It pasted real build lines, though they came from the middle of the output rather than the last 5.
+
+## Result
+- **Builds:** yes. **Tests:** 63 passing.
+- **Click-through** at 375 px against the mock (`--in-household`; Alice and Bob each solo):
+  - an empty code shows "Enter the code your partner shared."
+  - Alice's own code, typed as `ZZZZ9999 `, shows "You are already in that household.", which shows the code is trimmed and lowercased
+  - Bob's code `abcd1234` switches her: the page shows Bob's household with both members, and the form disappears
+- **Not clicked:** Cancel and the wrong-code error. Both are trivial and match the brief in the code.
+
+## What I changed
+- Nothing in the app. Before the run I made `scripts/dev/mock-supabase.mjs` follow the task 13 switch rules, so the switch can be clicked through.
+- It calls `refresh()` after `invalidateQueries()`. That's redundant but harmless, so I left it.
+
+## Verdict
+Usable as delivered. Small, fully specified UI briefs that list the exact strings are a reliable fit for the 35B.
