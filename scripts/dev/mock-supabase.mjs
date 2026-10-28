@@ -47,8 +47,10 @@ if (process.argv.includes('--with-logs')) {
   const sun = new Date(d); sun.setDate(d.getDate() - d.getDay())
   const wd = (n) => { const x = new Date(sun); x.setDate(sun.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
   const prep = (created_by, scheduled_date, title, start_time, status, servings, ingredients) =>
-    mealPrep.push({ id: randomUUID(), household_id: profiles[ME].household_id, created_by, title, recipe_url: null, scheduled_date, start_time, duration_min: 90, status, servings, ingredients, notes: null, created_at: new Date().toISOString() })
+    mealPrep.push({ id: randomUUID(), household_id: profiles[ME].household_id, created_by, title, recipe_url: null, scheduled_date, start_time, duration_min: 90, status, servings, ingredients, notes: null, food_id: null, created_at: new Date().toISOString() })
   prep(ME, wd(0), 'Curry', '14:00:00', 'planned', 6, [{ name: 'chicken thighs', qty: 2, unit: 'lb' }, { name: 'curry roux', qty: null, unit: '' }, { name: 'rice', qty: 3, unit: 'cup' }])
+  // Curry's dish food: a custom food of 350 g per serving at 520 kcal (148.57 kcal / 100 g).
+  mealPrep[mealPrep.length - 1].food_id = food('custom', 'dish-curry', 'Curry', null, 350, '1 serving', 148.57, 8.57, 15.71, 5.71)
   prep(PARTNER, wd(0), 'Meatballs', null, 'done', 4, [])
   prep(ME, wd(3), 'Mabodofu, a long dish name to check wrapping on a phone screen', '18:30:00', 'planned', 3, [{ name: 'tofu', qty: 2, unit: '' }])
 }
@@ -146,12 +148,17 @@ http.createServer((req, res) => {
       if (req.method === 'POST') {
         const row = JSON.parse(body)
         if (!mine || row.household_id !== mine) return pgErr(res, 'new row violates row-level security policy for table "meal_prep"', 403)
-        const saved = { id: randomUUID(), recipe_url: null, start_time: null, duration_min: 60, status: 'planned', servings: 1, ingredients: [], notes: null, created_at: new Date().toISOString(), ...row }
+        const saved = { id: randomUUID(), recipe_url: null, start_time: null, duration_min: 60, status: 'planned', servings: 1, ingredients: [], notes: null, food_id: null, created_at: new Date().toISOString(), ...row }
         mealPrep.push(saved)
         return single ? send(res, 201, { id: saved.id }) : send(res, 201, [{ id: saved.id }])
       }
       const hit = mealPrep.filter((r) => mine && r.household_id === mine && match(r, fs))
-      if (req.method === 'GET') return send(res, 200, sortBy([...hit], url.searchParams.get('order') || ''))
+      if (req.method === 'GET') {
+        let rows = sortBy([...hit], url.searchParams.get('order') || '')
+        // Embedded foods(*): the dish's food, if this household can see it.
+        if ((url.searchParams.get('select') || '').includes('foods(')) rows = rows.map((r) => ({ ...r, foods: foods.find((f) => f.id === r.food_id && f.household_id === mine) ?? null }))
+        return send(res, 200, rows)
+      }
       if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
       if (req.method === 'DELETE') hit.forEach((r) => mealPrep.splice(mealPrep.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))

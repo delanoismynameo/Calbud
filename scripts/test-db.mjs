@@ -47,6 +47,7 @@ create publication supabase_realtime;
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261027000001_tables.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261027000002_security.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000001_join_switch.sql'), 'utf8'));
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000002_prep_food.sql'), 'utf8'));
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:
@@ -281,6 +282,21 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
   const mpHh = (await db.query('select household_id from meal_prep where id = $1', [mpId])).rows;
   ok('cannot move meal prep out', mpHh.length === 1 && mpHh[0].household_id === aliceHouseholdId,
      `error: ${mvMp.error ?? 'none'}; meal_prep household now ${mpHh[0]?.household_id}, want ${aliceHouseholdId}`);
+
+  // Migration 20261028000002: a prep session links to its dish's food; deleting the food clears the link.
+  const dish = await as(BOB,
+    `insert into foods (household_id, source, source_id, name, kcal_100g, protein_100g, carbs_100g, fat_100g) values ($1, 'custom', 'dish-1', 'Curry', 120, 8, 12, 4) returning id`,
+    [aliceHouseholdId]);
+  const dishId = dish.rows?.[0]?.id;
+  const link = await as(BOB, 'update meal_prep set food_id = $1 where id = $2', [dishId, mpId]);
+  const linked = (await db.query('select food_id from meal_prep where id = $1', [mpId])).rows[0]?.food_id;
+  const embed = await as(ALICE, 'select f.name from meal_prep m join foods f on f.id = m.food_id where m.id = $1', [mpId]);
+  const unlink = await as(ALICE, 'delete from foods where id = $1', [dishId]);
+  const after = (await db.query('select id, food_id from meal_prep where id = $1', [mpId])).rows;
+  ok('prep links to a household food; deleting the food keeps the prep and clears the link',
+     dish.error === undefined && link.error === undefined && linked === dishId && embed.rows?.[0]?.name === 'Curry'
+       && unlink.error === undefined && after.length === 1 && after[0].food_id === null,
+     `food: ${dish.error ?? dishId}; link: ${link.error ?? linked}; partner read: ${JSON.stringify(embed.rows)}; delete: ${unlink.error ?? 'ok'}; after: ${JSON.stringify(after)}`);
 
   const cFd = await as(CAROL, 'select id from foods');
   const cFdIns = await as(CAROL,
