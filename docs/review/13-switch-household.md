@@ -76,3 +76,18 @@ Each `ok` gets a `detail` string that shows the actual values, like the existing
 3. You have re-read this brief section by section, and re-read your SQL against the four numbered rules.
 
 Reply with: the files created and changed, and **paste the last line `npm run test:db` printed**, plus anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.8:27b (tuned server, 64k)` at **High**, Full access, web UI.
+- **Wall time:** **1 h 5 min**, 13 steps, about 7.5 tok/s. Its first step was 30 minutes of thinking.
+- **Outcome:** it got 42/42 on `test:db` on the first run. It then hit the output-token limit while re-reading its SQL, so there was no final report. The work itself was complete.
+- **Saved:** the harness output is committed unchanged.
+
+## Result and fixes
+- **The SQL was correct:** it covers all four rules, locks both household rows before counting members, and moves the user before deleting the old household.
+- **Mutation check:** I broke each rule in turn, and 7 of the 8 changes were caught. **Removing the own-household check wasn't caught.** Test 8 used Erin, who by then shared a household, so the partner check rejected her anyway. Without that check, a *solo* user who enters their own code deletes their own household. **Added test 12** (`solo member cannot rejoin own household`), which catches it. Now 43/43.
+- **`check-security.mjs`** passes 81/81 with the new function appended to the security migration.
+- **Left as is:** two solo users joining each other at the same instant lock the households in opposite order, so Postgres cancels one with a deadlock error. Nothing is corrupted.
+
+## Verdict
+Usable after one added test. Lesson: **for every "refuse X" rule, the brief should name a test case that only that rule can catch.**

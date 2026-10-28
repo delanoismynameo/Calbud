@@ -417,6 +417,15 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
   ok('bad code keeps the solo household',
      ginaBad.error !== undefined && ginaHhStill2 === ginaHh && ginaHhRows2.length === 1,
      `error: ${ginaBad.error ?? 'none'}; Gina household now ${ginaHhStill2}, want ${ginaHh}; household rows: ${ginaHhRows2.length} (want 1)`);
+
+  // A solo member entering their own code must not "move" into, and then delete, their own household.
+  const ginaOwnCode = (await db.query('select invite_code from households where id = $1', [ginaHh])).rows[0].invite_code;
+  const ginaOwn = await as(GINA, 'select join_household($1)', [ginaOwnCode]);
+  const ginaHhStill3 = (await db.query('select household_id from profiles where id = $1', [GINA])).rows[0].household_id;
+  const ginaHhRows3 = (await db.query('select id from households where id = $1', [ginaHh])).rows;
+  ok('solo member cannot rejoin own household',
+     /already in that household/.test(ginaOwn.error ?? '') && ginaHhStill3 === ginaHh && ginaHhRows3.length === 1,
+     `error: ${ginaOwn.error ?? 'none'}; Gina household now ${ginaHhStill3}, want ${ginaHh}; household rows: ${ginaHhRows3.length} (want 1)`);
 }
 
 // ---- summary ----------------------------------------------------------------
