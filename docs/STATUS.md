@@ -3,8 +3,8 @@
 *Last updated 2026-10-28. Update this file at the end of every task.*
 
 ## Where things stand
-- **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **It's live as of task 09:** sign-up, first-run setup, households and the Us page work.
-- **`main` is ahead of the live site** with tasks 10–11 (adding food, USDA branded search). These aren't pushed yet; the plan is to push once the Today screen exists, so logged food is visible.
+- **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
+- **Logged food can't be seen in the app yet.** It's saved to `meal_logs`, but the Today screen (task 12) doesn't list it yet.
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. Both migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
@@ -33,7 +33,7 @@ Before sending a task to the harness:
 | 09–11 | Food API clients, add-food flow, USDA branded search | [09](review/09-food-clients.md), [10](review/10-add-food.md), [11](review/11-usda-branded.md) |
 
 ## Next, in order
-1. **Task 12, Today screen:** today's meal logs grouped by meal, totals against goals (calories plus macro bars), and editing or deleting an entry. It reads `meal_logs` for the user's local date with the TanStack Query key `['meal-logs', …]`; the add-food flow already invalidates `['meal-logs']`. Afterwards: a click-through against the mock, then **push** (with the user's OK).
+1. **Task 12, Today screen:** today's meal logs grouped by meal, totals against goals (calories plus macro bars), and editing or deleting an entry. It reads `meal_logs` for the user's local date with the TanStack Query key `['meal-logs', …]`; the add-food flow already invalidates `['meal-logs']`. Afterwards: a click-through against the mock, then push (with the user's OK).
 2. **"Join a different household":** let someone who is alone in their household join their partner's from the Us page. It needs a migration changing `join_household`, plus updated DB tests and UI. See GAME_PLAN build step 4.
 3. **The rest of the build plan,** from step 7: recents, favorites and custom foods, then barcode scanning. See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
 
