@@ -95,3 +95,52 @@ Match the existing look: dark `bg-slate-900` page, `bg-slate-800` panels, white 
 3. You have re-read this brief section by section and confirmed every file and behaviour is there.
 
 Reply with: the files created and changed, the build result, and anything you were unsure about.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High** effort, chosen on purpose. Its "Default" in the web profile means Low. Run via the web UI with Full access (enabled by the user).
+- **Context:** the first 35B run after the compaction fix from 2026-10-28. It reached 30% of the listed 176K window, with no compactions.
+- **Wall time:** **8 min 58 s**, 66 steps, 2M tokens, ~72 tok/s.
+- **Outcome:** finished with a clear file table, ran `npm run build` and `npm run test:db` (both passing), and reported "None" under doubts.
+- **Saved:** harness output committed unchanged as `7d63d68`.
+
+## Result
+Every file in the brief was created or changed, nothing else was touched, and no keys or `.env` files were written. supabase-js was pinned at `2.118.0`. The build passes, and `npm run test:db` still prints 31/31.
+
+On reading the code, I found three problems the build couldn't catch:
+1. **Password reset could never reach the "Set new password" screen.** `AuthScreen` called `clearRecovery()` in an unmount cleanup, and again on every submit. A reset link fires `PASSWORD_RECOVERY` together with a new session, so the sign-in screen unmounts and immediately cancels recovery. The app would then go straight in without asking for a new password.
+2. **The URL was cleaned up too early.** The brief said to inspect the query string *after* the first `getSession()` resolves; the model did it synchronously in the effect. supabase-js reads `?code=` asynchronously during its own startup, so `history.replaceState` could strip the code first, and confirming by email would then fail to sign in. There were also two smaller issues:
+   - It showed "Your email is confirmed" whenever a code was present, even when the exchange succeeded.
+   - It ran `decodeURIComponent` on a value `URLSearchParams` had already decoded, which throws on a literal `%`.
+3. **No page background outside the main app.** Only the signed-in layout set `bg-slate-900`, so the sign-in, loading and setup screens rendered on a white page, and "Loading…" was white on white.
+
+Minor and left as is:
+- `isConfigured` is a function, not the boolean the brief named. It's harmless.
+- The `.env.example` comment says "anon/public key". That's fine, since both names are in use.
+
+## What I changed
+- `AuthProvider.tsx`: moved the URL check inside the `getSession().then(...)`. The confirmation notice now shows only when there is still no session, the double decode is gone, and the query string is cleared only after supabase-js has had its chance to read it.
+- `AuthScreen.tsx`: removed both `clearRecovery()` calls (and the unused import). Only `ResetPassword` ends recovery now, after `updateUser` succeeds.
+- `index.css`: the `body` gets the slate-900 background and white text, so every screen is dark.
+
+### Checked in the browser (local preview, service worker cleared)
+- **No keys:** the setup message shows on the dark page.
+- **Placeholder keys** (pointing at a dead local address, set only for the build command, never written to a file):
+  - The sign-in screen renders, and all three modes switch.
+  - A short password is rejected before any request is sent.
+  - A sign-in against the dead server shows `Failed to fetch` in red, and the button comes back.
+  - `?error_description=Email+link+is+invalid+or+has+expired#/` shows that text as the notice and cleans the URL to `/Calbud/#/`.
+  - `?code=not-a-real-code#/`: when the exchange fails, it shows "Your email is confirmed. Sign in to continue." and cleans the URL.
+- **Not testable yet:** real sign-up, email confirmation, sign-in, sign-out and the password-reset round trip all need a Supabase project. The reset bug above was found by reading the code. **Before relying on auth, run all four flows on the deployed Pages URL** (the game plan's build-order step 4).
+
+## How I would have done it
+The same file layout, plus:
+- **Derive recovery mode from the event stream, and never clear it from the sign-in screen.** In a real project I'd also store the `PASSWORD_RECOVERY` flag in `sessionStorage`, so a refresh on the reset screen doesn't drop the user into the app.
+- **One `useAuthForm` hook** for the loading, error and submit logic that `AuthScreen` and `ResetPassword` repeat, plus a shared `<Field>` component for the label, input and styling repeated five times.
+- **Put the page background on `body` from the start**, rather than on each layout.
+- **Write a brief line for the race explicitly:** "Do not touch `window.location` until `getSession()` has resolved". The model treated "after the first session check" as a comment, not a constraint.
+
+## Verdict
+**Usable after three small fixes. This is the fastest and cleanest 35B run so far on a multi-file task.** Lessons:
+1. **The compaction fix plus High effort made the difference.** It ran 9 minutes, never compacted, and gave an accurate report, compared with task 05 run 1 (Default/Low effort, compacting at 32K: 69 minutes and unusable).
+2. **A passing build is not a review.** Both real bugs are about the timing of React effects and auth events, which no type checker sees. Auth and event-ordering code always gets a careful read plus a browser check.
+3. **Ordering rules in briefs need to be written as rules** ("must not ... until ..."). Phrased as an aside, they get skipped.

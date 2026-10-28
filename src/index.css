@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/* Dark page behind every screen, including sign-in and loading. */
+body {
+  background-color: var(--color-slate-900);
+  color: var(--color-white);
+}

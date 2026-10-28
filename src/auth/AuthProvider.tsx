@@ -29,21 +29,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let unsubscribe: (() => void) | undefined
 
+    // getSession waits for supabase-js to finish exchanging any ?code= in the URL,
+    // so the query string is only inspected and cleared after that.
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
       setLoading(false)
-    })
 
-    // Check URL params after first session check
-    const params = new URLSearchParams(window.location.search)
-    const errorDesc = params.get('error_description')
-    if (errorDesc) {
-      setUrlNotice(decodeURIComponent(errorDesc))
-      history.replaceState(null, '', window.location.pathname + window.location.hash)
-    } else if (params.has('code')) {
-      setUrlNotice('Your email is confirmed. Sign in to continue.')
-      history.replaceState(null, '', window.location.pathname + window.location.hash)
-    }
+      const params = new URLSearchParams(window.location.search)
+      const errorDesc = params.get('error_description')
+      if (errorDesc) setUrlNotice(errorDesc)
+      else if (params.has('code') && !data.session) setUrlNotice('Your email is confirmed. Sign in to continue.')
+      if (errorDesc || params.has('code')) {
+        history.replaceState(null, '', window.location.pathname + window.location.hash)
+      }
+    })
 
     const sub = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, s: Session | null) => {
       if (_event === 'PASSWORD_RECOVERY') setRecovery(true)

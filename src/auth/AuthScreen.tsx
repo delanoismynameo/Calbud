@@ -6,8 +6,7 @@ import { authRedirectUrl } from '../lib/supabase'
 type Mode = 'signIn' | 'signUp' | 'forgotPassword'
 
 export default function AuthScreen() {
-  const { urlNotice, clearRecovery } = useAuth()
-  useEffect(() => () => clearRecovery(), [])
+  const { urlNotice } = useAuth()
   const [mode, setMode] = useState<Mode>('signIn')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,7 +21,6 @@ export default function AuthScreen() {
     e.preventDefault()
     setError(null)
     setSuccess(null)
-    clearRecovery()
     if (mode === 'signIn') {
       setLoading(true)
       const { error } = await supabase.auth.signInWithPassword({ email, password })
