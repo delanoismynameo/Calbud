@@ -274,9 +274,10 @@ calbud/
 2. Create the Supabase project; write migrations for the schema, RLS, the profile trigger and the household functions.
 3. Test RLS with three test users (two in one household, one outsider): can see partner's logs, cannot write them, cannot see the outsider's.
 4. Auth screens (PKCE) and household wizard/join flow; confirm sign-up and password reset work on the deployed Pages URL, not just localhost.
+   - **To do (found 2026-10-28):** "Join a different household". Someone who is alone in their household (e.g. created one by mistake) must be able to join their partner's from the Us page. This needs a `join_household` change: if the caller's current household has only them, move them and delete that empty household, keeping their meal logs. Update the RLS tests to match. Until then, `supabase/snippets/move-partner-into-household.sql` fixes it by hand. Also find out what the second phone showed when "Join with a code" seemed missing.
 
 ### Phase 2: Calorie Tracking
-5. `usda.ts` and `off.ts` clients plus merged search with debounce.
+5. `usda.ts` and `off.ts` clients plus merged search with debounce. *(Done. Text search uses USDA generic + USDA Branded, because Open Food Facts search blocks browsers (no CORS). OFF is used only for barcode lookup.)*
 6. Serving picker with macro scaling; `foods` caching; meal log insert with snapshot.
 7. Day view with totals, recents, favorites, custom foods.
 8. Barcode scanning.
