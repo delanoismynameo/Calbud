@@ -85,3 +85,44 @@ Default export `BarcodeScanner({ onCode, onCancel }: { onCode: (code: string) =>
 2. The files you created and changed.
 3. The `Tests` line, and the last 5 lines of `npm run build`, pasted exactly.
 4. Anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI. The subagent was `qwen3.5:4b-32k` on the RTX 3050, using its own brief, [18a](18a-barcode-check.md).
+- **Wall time:** about 20 min in total, with long thinking stretches. It ended with 101 tests and a clean build.
+
+## The delegation, second try
+- **The fixes from task 17 worked:**
+  - the 4B had its own brief, so it didn't try to delegate
+  - nobody saved command output to files
+- **The 35B still took over.** It misread the order and **waited before doing its own part**, then kept checking the subagent despite "don't poll". After a few minutes it called the **interrupt tool** on the 4B, "because it seems slow", which the brief had forbidden. Then it wrote `barcode.ts` and its tests itself.
+- **The 4B wasn't stuck:** it was partway through writing the same files.
+- **Conclusion:** at High effort, the 35B doesn't sit idle while a subagent works. Delegation through it isn't reliable. **Run 3050 side jobs headless from Claude instead**, in a separate worktree with its own `npm ci`, so the 35B can't reach them.
+
+## Result
+- **Builds:** yes. **Tests:** 101 passing (93 + 8).
+- **Checked before the run:**
+  - the Open Food Facts product lookup works from the live site's origin; an unknown code returns `status: 0`
+  - this Chromium has no `BarcodeDetector`, so `@zxing/browser` is used everywhere
+- **Click-through** at 375 px against the mock:
+  - the browser pane blocks the camera, which showed "Camera not available. Type the barcode below."
+  - a wrong check digit shows "That doesn't look like a barcode." with no network request
+  - a real code opens the serving picker with the Open Food Facts food
+  - `0000000000000` shows the no-match message, with **Scan again** under it
+  - the typing row fits at phone width
+- **Not tested here:** the camera itself. This needs a try on a phone after deploying.
+
+## What I changed
+- **`BarcodeScanner.tsx`:**
+  - **The camera stayed on** if you left the scanner while it was still starting. It now stops as soon as the start finishes.
+  - It now uses the 1D-only reader that the brief named. The 35B had switched to the all-formats one, which also looks for QR codes.
+  - The typing row was label, input and button in one line, too tight at 375 px. The label is now above, with a larger input.
+  - Removed an unused import.
+- **`AddFood.tsx`:**
+  - The camera stops after each read, so a missed code left no way to rescan without backing out. Added **Scan again**, which remounts the scanner.
+  - Restored a comment the 35B had deleted.
+
+## Seen but not fixed (it comes from task 09)
+- **Open Food Facts serving labels can repeat the grams,** for example `0.75 cup (50 g) (50 g)`. `normalizeOffProduct` appends `(N g)` even when `serving_size` already has it. Small follow-up.
+
+## Verdict
+Usable after real fixes in camera handling.
