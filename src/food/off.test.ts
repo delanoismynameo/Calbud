@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeOffProduct, lookupBarcode } from './off'
+import { normalizeOffProduct, lookupBarcode, offServingLabel } from './off'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -90,5 +90,57 @@ describe('normalizeOffProduct', () => {
     await expect(lookupBarcode('1234567890123', { fetchFn: mockFetch as unknown as typeof fetch })).rejects.toThrow(
       'Open Food Facts lookup failed (HTTP 500)',
     )
+  })
+})
+
+describe('offServingLabel', () => {
+  it('trims text that already contains g and returns it unchanged ("0.75 cup (50 g)")', () => {
+    expect(offServingLabel('0.75 cup (50 g)', 50)).toBe('0.75 cup (50 g)')
+  })
+
+  it('gr without space returns trimmed text unchanged ("30g")', () => {
+    expect(offServingLabel('30g', 30)).toBe('30g')
+  })
+
+  it('uppercase G in parentheses returns trimmed text unchanged ("1 bar (40 G)")', () => {
+    expect(offServingLabel('1 bar (40 G)', 40)).toBe('1 bar (40 G)')
+  })
+
+  it('2 cookies does not match grams and appends ("2 cookies")', () => {
+    expect(offServingLabel('2 cookies', 28)).toBe('2 cookies (28 g)')
+  })
+
+  it('mg is not grams so appends ("1 tablet (250 mg)")', () => {
+    expect(offServingLabel('1 tablet (250 mg)', 0.3)).toBe('1 tablet (250 mg) (0.3 g)')
+  })
+
+  it('empty string returns default label', () => {
+    expect(offServingLabel('', 15)).toBe('1 serving (15 g)')
+  })
+
+  it('whitespace-only string returns default label', () => {
+    expect(offServingLabel('   ', 15)).toBe('1 serving (15 g)')
+  })
+
+  it('trims and appends when no grams present ("  1 cup  ")', () => {
+    expect(offServingLabel('  1 cup  ', 240)).toBe('1 cup (240 g)')
+  })
+
+  it('normalizeOffProduct uses offServingLabel correctly on a product with "0.75 cup (50 g)" serving_size', () => {
+    const input = {
+      product_name: 'Test cereal',
+      serving_size: '0.75 cup (50 g)',
+      serving_quantity: 50,
+      nutriments: {
+        'energy-kcal_100g': 380,
+        proteins_100g: 8,
+        carbohydrates_100g: 80,
+        fat_100g: 3,
+      },
+    }
+    const result = normalizeOffProduct({ code: '123', ...input })
+    expect(result).not.toBeNull()
+    expect(result!.servingLabel).toBe('0.75 cup (50 g)')
+    expect(result!.servingG).toBe(50)
   })
 })

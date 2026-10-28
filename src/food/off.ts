@@ -1,5 +1,14 @@
 import type { FoodResult } from './types'
 
+const gramRegex = /\d\s*(g|gr|grams?)\b/i
+
+export function offServingLabel(sizeText: string, servingG: number): string {
+  const trimmed = sizeText.trim()
+  if (trimmed === '') return `1 serving (${servingG} g)`
+  if (gramRegex.test(trimmed)) return trimmed
+  return `${trimmed} (${servingG} g)`
+}
+
 type OffSearchResponse = Record<string, unknown>
 type OffProductResponse = Record<string, unknown>
 
@@ -73,7 +82,7 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
   if (servingQtyRaw !== undefined && isFinite(servingQtyRaw) && servingQtyRaw > 0) {
     servingG = Math.round(servingQtyRaw * 10) / 10
     const sizeText = String((product as Record<string, unknown>).serving_size ?? '')
-    servingLabel = sizeText !== '' ? `${sizeText} (${servingG} g)` : `1 serving (${servingG} g)`
+    servingLabel = offServingLabel(sizeText, servingG)
   }
 
   const brandsRaw = (product as Record<string, unknown>).brands as unknown
