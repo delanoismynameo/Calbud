@@ -124,3 +124,68 @@ Never rewrite the whole file with `write` after step 1. Don't create helper file
 3. You have re-read the test list above and confirmed each one is present.
 
 Reply with: the summary line, the list of any failing tests with the reason, and anything in this brief you were unsure about.
+
+## Run
+Two runs. The brief changed between them: after the first run, I added the "How to write the file" section, the "use the Step 1 SQL exactly" rule, and "a crash must exit 1".
+
+| | Run 1: Qwen 3.6 35B | Run 2: Qwen 3.8 27B (tuned server, 64k) |
+|---|---|---|
+| Thinking level | **Default.** My mistake: it should have been High or above for a long multi-step task (the user caught this). | No setting exists for the tuned server |
+| Permission | Full access (enabled by the user) | Full access (enabled by the user) |
+| Wall time | 1 h 9 min 24 s | 1 h 14 min 27 s |
+| Steps / tokens / speed | 158 steps, 4.4M tokens, ~70 tok/s | 25 steps, 1.2M tokens, 8.2 tok/s |
+| My intervention | One answer mid-run. After its context was compacted, it asked where the brief was; I gave the path and told it to keep its placeholder approach. | None |
+| Ending | Stopped with to-dos open | Hit the output-token limit before its closing reply (the file was finished) |
+| Saved as | branch `task05-35b`, `639e930` | branch `task05-27b`, `3767b85` (main fast-forwarded to it) |
+
+## Result
+**Run 1 (35B) was unusable:**
+- **It fails and crashes.** 9 tests failed, and it crashed at test 25 on an unquoted uuid. It still exited 0.
+- **It ignored the given setup SQL.** It wrote its own `auth.uid()` from a made-up setting and left out the default privileges. With no table access at all, "blocked" tests passed for the wrong reason, and "can insert" tests failed.
+- **It checked errors, not data.** Its "cannot" tests looked only for an error, despite the brief's explicit warning.
+- **About a third of the tests were missing**, and the names didn't match the brief.
+- **It left 5 stray files**: base64 chunks, a text remainder and two Python "fix" scripts.
+
+The cause: it tried to write the 300-line file in one go, rewrote it 7 times, then improvised with base64 and Python. Its context filled up, and it lost the brief.
+
+**Run 2 (27B) was good:**
+- **31/31 pass.** `npm run test:db` exits 0 on success and 1 on failure. A crash also exits 1, since a top-level `await` that throws ends Node with code 1.
+- **It followed the brief to the letter.** It used the setup SQL exactly as given, and the `as()` helper matches the spec.
+- **Clean code.** It used parameterised SQL throughout, and its error details are useful, e.g. `Carol saw 1 rows (want 0)`.
+- **Every "cannot" test checks the data as the superuser afterwards.**
+- **It followed the skeleton-and-marker steps** and left no stray files.
+
+**Does it catch broken rules?** I broke the security migration on purpose, one way at a time, and reran the tests:
+
+| Break | Caught by |
+|---|---|
+| profiles readable by everyone | partner can read partner profile, outsider sees only self |
+| full table update on profiles again | cannot change created_at |
+| no 2-member limit in `join_household` | household is full at 2 |
+| invite code not rotated | invite code changes after a join |
+| meal_logs update fully open | partner cannot change or delete |
+| meal_logs delete open | partner cannot change or delete |
+| activities readable by everyone | outsider cannot read activity |
+
+Three other breaks I tried left the database still secure, so passing was correct:
+- **meal_logs update with only `using` opened:** the `with check` still pins `user_id`.
+- **meal_prep update with no `with check`:** Postgres reuses `using` in its place.
+- **meal_prep `with check (true)`:** an update with a `where` clause also checks the new row against the table's select rule, which pins the household.
+
+## What I changed
+- **Renamed the five activities tests.** They reused the meal-log names ("can log own meal" for an activity), because my brief said to "write 16–20 again" without saying how to name them. They are now `can add own activity`, `cannot add activity as partner`, `partner can read activity`, `outsider cannot read activity` and `partner cannot change or delete activity`.
+- Nothing else. 31/31 still pass.
+
+## How I would have done it
+Close to this file. Differences:
+- **One shared helper for the per-user tables.** The meal_logs and activities groups are the same apart from the table and columns, so I'd write a helper that takes those and runs all five tests.
+- **Tests for the household functions' error messages.** Right now any error counts. If `join_household` failed for the wrong reason (say, a typo making it always raise), the "cannot" tests would still pass. The happy-path setup catches the worst case, since Bob must be able to join.
+- **Breaking the rules on purpose as a repeatable check.** The checks above were run by hand. A small `--mutate` mode that applies each break and expects a failure would keep the tests honest as the security file changes.
+- **Running it in CI.** It needs no network or database server, so a step in the deploy workflow would block a leaky change. This is worth a small later task.
+
+## Verdict
+**Run 2 is usable after a trivial rename. Run 1 failed.** Lessons:
+1. **Long files need explicit writing steps.** "Write in pieces of about 100 lines" isn't enough. With the skeleton, `// ADD TESTS HERE`, one-edit-per-group steps, the 27B wrote 313 lines in 25 steps with no rewrites. Every future brief for a file over ~150 lines gets this section.
+2. **Set the 35B's thinking level per task.** Run 1 used Default.
+3. **The 27B is the right model when correctness matters more than speed.** Both runs took about the same time, but the 27B used a quarter of the tokens and needed no help.
+4. **Briefs must name repeated test groups explicitly.**

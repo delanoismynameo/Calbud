@@ -230,28 +230,28 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
     `insert into activities (user_id, title, scheduled_date) values ($1, 'Morning Run', '2026-10-28')`,
     [ALICE]);
   const actId = (await db.query(`select id from activities where user_id = $1 and title = 'Morning Run'`, [ALICE])).rows[0]?.id;
-  ok('can log own meal', ins.error === undefined && ins.affected === 1 && actId !== undefined,
+  ok('can add own activity', ins.error === undefined && ins.affected === 1 && actId !== undefined,
      ins.error ? `error: ${ins.error}` : `affected ${ins.affected}; activity id ${actId}`);
 
   const asPartner = await as(ALICE,
     `insert into activities (user_id, title, scheduled_date) values ($1, 'Partner Run', '2026-10-28')`,
     [BOB]);
   const partnerRows = (await db.query(`select id from activities where user_id = $1 and title = 'Partner Run'`, [BOB])).rows;
-  ok('cannot log as partner', asPartner.error !== undefined && partnerRows.length === 0,
+  ok('cannot add activity as partner', asPartner.error !== undefined && partnerRows.length === 0,
      `error: ${asPartner.error ?? 'none'}; rows for Bob: ${partnerRows.length}`);
 
   const bobReads = await as(BOB, 'select id from activities where id = $1', [actId]);
-  ok('partner can read', bobReads.error === undefined && bobReads.rows.length === 1,
+  ok('partner can read activity', bobReads.error === undefined && bobReads.rows.length === 1,
      bobReads.error ? `error: ${bobReads.error}` : `Bob saw ${bobReads.rows.length} rows (want 1)`);
 
   const carolReads = await as(CAROL, 'select id from activities where id = $1', [actId]);
-  ok('outsider cannot read', carolReads.error === undefined && carolReads.rows.length === 0,
+  ok('outsider cannot read activity', carolReads.error === undefined && carolReads.rows.length === 0,
      carolReads.error ? `error: ${carolReads.error}` : `Carol saw ${carolReads.rows.length} rows (want 0)`);
 
   const upd = await as(BOB, 'update activities set title = $1 where id = $2', ['Hacked Run', actId]);
   const del = await as(BOB, 'delete from activities where id = $1', [actId]);
   const still = (await db.query('select id, title from activities where id = $1', [actId])).rows;
-  ok('partner cannot change or delete', still.length === 1 && still[0].title === 'Morning Run',
+  ok('partner cannot change or delete activity', still.length === 1 && still[0].title === 'Morning Run',
      `update: ${upd.error ?? `affected ${upd.affected}`}; delete: ${del.error ?? `affected ${del.affected}`}; now ${JSON.stringify(still)}`);
 }
 
