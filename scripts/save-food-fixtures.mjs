@@ -31,6 +31,18 @@ if (which === 'off') {
   }))
 }
 
+if (which === 'usda-branded') {
+  const envFile = path.join(repo, '.env.local')
+  const key = (existsSync(envFile) ? readFileSync(envFile, 'utf8').match(/^VITE_USDA_API_KEY=(.+)$/m)?.[1]?.trim() : undefined) || 'DEMO_KEY'
+  for (const q of ['oatmeal', 'greek yogurt']) {
+    const body = { query: q, dataType: ['Branded'], pageSize: 5 }
+    const data = await get(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${key}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    })
+    save(`usda-branded-${q.replace(/\s+/g, '-')}.json`, { ...data, foods: data.foods.slice(0, 5), aggregations: undefined })
+  }
+}
+
 if (which === 'usda') {
   const envFile = path.join(repo, '.env.local')
   const fromEnv = existsSync(envFile) ? readFileSync(envFile, 'utf8').match(/^VITE_USDA_API_KEY=(.+)$/m)?.[1]?.trim() : undefined
