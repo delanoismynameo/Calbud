@@ -38,6 +38,10 @@ if (process.argv.includes('--with-logs')) {
   const [oat, yog, pasta, burger] = [food('usda', '173904', 'Oatmeal, cooked', null, 240, '1 cup', 71, 2.5, 12, 1.5), food('off', '0123456789012', 'Greek yogurt, plain, nonfat', 'Fage', 150, '1 cup', 59, 10.2, 3.6, 0.4), food('usda', '168927', 'Pasta, cooked', null, null, null, 157, 5.8, 30.6, 0.9), food('usda', '999', 'Bob burger', null, null, null, 300, 17, 20, 17)]
   mealLogs[0].food_id = oat; mealLogs[1].food_id = yog; mealLogs[2].food_id = burger; mealLogs[3].food_id = pasta
   log(ME, day(1), 'breakfast', 'Oatmeal, cooked', 240, 170, 6, 28.8, 3.6, '2026-10-27T12:00:00Z'); mealLogs[4].food_id = oat
+  // Favorites: yogurt (also recent) and a never-logged banana.
+  foods.find((f) => f.id === yog).is_favorite = true
+  const banana = food('usda', '173944', 'Banana, raw', null, 118, '1 medium', 89, 1.1, 22.8, 0.3)
+  foods.find((f) => f.id === banana).is_favorite = true
 }
 const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone']
 const code8 = () => Math.random().toString(16).slice(2, 10)
@@ -73,6 +77,12 @@ http.createServer((req, res) => {
         return send(res, 204)
       }
       if (single) return rows.length === 1 ? send(res, 200, rows[0]) : send(res, 406, { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned', details: `The result contains ${rows.length} rows`, hint: null })
+      return send(res, 200, rows)
+    }
+    // foods read: your household's only, with eq/neq filters and order=name.
+    if (url.pathname === '/rest/v1/foods' && req.method === 'GET') {
+      const rows = foods.filter((f) => f.household_id === profiles[ME].household_id && match(f, filters(url)))
+      if ((url.searchParams.get('order') || '').startsWith('name')) rows.sort((a, b) => a.name.localeCompare(b.name))
       return send(res, 200, rows)
     }
     // foods upsert and meal_logs insert, recorded for review.
