@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
+import { useState, useRef, useEffect } from 'react'
+import { BrowserMultiFormatOneDReader, type IScannerControls } from '@zxing/browser'
 
 interface BarcodeScannerProps {
   onCode: (code: string) => void
@@ -20,7 +20,8 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
     let controls: IScannerControls | undefined
 
     const startCamera = async () => {
-      const reader = new BrowserMultiFormatReader()
+      // 1D barcodes only (EAN, UPC): faster than also looking for QR codes.
+      const reader = new BrowserMultiFormatOneDReader()
       try {
         controls = await reader.decodeFromConstraints(
           { video: { facingMode: 'environment' } },
@@ -32,6 +33,8 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
             }
           },
         )
+        // Left before the camera started: turn it off now.
+        if (cancelled) controls.stop()
       } catch {
         if (!cancelled) setCameraError('Camera not available. Type the barcode below.')
       }
@@ -69,18 +72,20 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
         </>
       )}
 
-      <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-        <label htmlFor="barcode-input" className="text-gray-400 text-sm whitespace-nowrap shrink-0">Or type the barcode</label>
-        <input
-          id="barcode-input"
-          name="barcode"
-          type="text"
-          inputMode="numeric"
-          autoComplete="off"
-          defaultValue=""
-          className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
-        />
-        <button type="submit" className="py-2 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm font-semibold">Look up</button>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="barcode-input" className="block text-gray-400 text-sm mb-1">Or type the barcode</label>
+        <div className="flex gap-2">
+          <input
+            id="barcode-input"
+            name="barcode"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            defaultValue=""
+            className="min-w-0 flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500"
+          />
+          <button type="submit" className="py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold">Look up</button>
+        </div>
       </form>
 
       <button

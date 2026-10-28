@@ -14,11 +14,14 @@ import { lookupBarcode } from '../food/off'
 export default function AddFood() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  // Keep the picked food itself, not its list position: the list can refresh underneath.
   const [selected, setSelected] = useState<FoodResult | null>(null)
   const [creating, setCreating] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [lookingUp, setLookingUp] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
+  // The camera stops after each read; a new key restarts it.
+  const [scanKey, setScanKey] = useState(0)
   const { results, errors, isSearching, settled, failed, tooShort, refetch } = useFoodSearch(query)
   const recents = useRecentFoods()
   const favorites = useFavoriteFoods()
@@ -70,9 +73,15 @@ export default function AddFood() {
         <CustomFoodForm onSaved={(food) => { setCreating(false); setSelected(food) }} onCancel={() => setCreating(false)} />
       ) : scanning ? (
         <div className="space-y-3">
-          <BarcodeScanner onCode={onCode} onCancel={onScannerCancel} />
+          <BarcodeScanner key={scanKey} onCode={onCode} onCancel={onScannerCancel} />
           {lookingUp && <p className="text-blue-400 text-sm text-center">Looking up…</p>}
-          {scanError && <p className="text-red-400 text-sm">{scanError}</p>}
+          {scanError && (
+            <div className="space-y-2">
+              <p className="text-red-400 text-sm">{scanError}</p>
+              <button type="button" onClick={() => { setScanError(null); setScanKey((k) => k + 1) }}
+                className="w-full py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">Scan again</button>
+            </div>
+          )}
         </div>
       ) : (
         <>
