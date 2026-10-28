@@ -70,7 +70,7 @@ export interface FoodResult {
   - **Return `null`** if energy, protein, carbs or fat is missing, or if there is no name.
   - **Default serving:**
     - If `servingSize` is set and `servingSizeUnit` is `g` or `GRM` (any case), use it, with a label like `1 serving (40 g)`.
-    - Otherwise use the first `foodMeasures` entry with `gramWeight > 0`, labelled with its `disseminationText`.
+    - Otherwise use the `foodMeasures` entry with the **lowest `rank`** among those with `gramWeight > 0`, labelled with its `disseminationText`. The list isn't sorted: for "Banana, raw" in the fixture, this gives `1 banana` (126 g), not `1 cup, mashed`. Add a test for exactly that.
     - Otherwise both are `null`.
   - Use `description` as the name and `brandOwner` (or `null`) as the brand.
 - **`searchUsda(query, { apiKey, fetchFn = fetch, signal })`** returns `Promise<FoodResult[]>`.
