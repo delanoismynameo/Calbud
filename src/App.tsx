@@ -1,12 +1,15 @@
+import { useState, useEffect } from 'react'
 import { Routes, Route, NavLink } from 'react-router'
 import Today from './pages/Today'
 import Prep from './pages/Prep'
 import Plan from './pages/Plan'
 import Us from './pages/Us'
+import ResetPassword from './auth/ResetPassword'
 import { isConfigured } from './lib/env'
 import { useAuth } from './auth/AuthProvider'
 import AuthScreen from './auth/AuthScreen'
-import ResetPassword from './auth/ResetPassword'
+import { ProfileProvider, useProfile } from './household/ProfileProvider'
+import Setup from './household/Setup'
 
 const tabs = [
   { to: '/', label: 'Today' },
@@ -40,6 +43,48 @@ export default function App() {
 
   if (!session) {
     return <AuthScreen />
+  }
+
+  return (
+    <ProfileProvider>
+      <SignedInApp />
+    </ProfileProvider>
+  )
+}
+
+function SignedInApp() {
+  const { profile, household, loading, error, refresh } = useProfile()
+  const [everLoaded, setEverLoaded] = useState(false)
+
+  useEffect(() => { setEverLoaded(true) }, [])
+
+  if (!everLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <p className="text-white">Loading…</p>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <p className="text-white">Loading…</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <p className="text-red-400 mb-3">{error}</p>
+        <button onClick={refresh} className="py-2 bg-slate-700 hover:bg-slate-600 rounded text-white px-4 font-semibold">Retry</button>
+      </div>
+    )
+  }
+
+  if (!profile?.household_id) {
+    return <Setup />
   }
 
   return (
