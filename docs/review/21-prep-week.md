@@ -219,3 +219,37 @@ Props: `{ prep?: MealPrep; date: string; onClose: () => void }`. `prep` means ed
 3. You have re-read this brief, and checked each numbered section and every table row against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** **19 min 48 s**, 82 steps.
+- **Outcome:** finished, and its report was accurate (166 tests, real build lines). This brief was about twice the size of recent ones: 8 sections.
+- **It renamed `prepForm.ts` to `formValidation.ts`.** That was right: on Windows, `./prepForm` and `./PrepForm` can resolve to the same file, a slip in my brief.
+
+## Result
+- **Builds:** yes. **Tests:** 166 passing (131 + 35).
+- **Click-through** at 375 px against the mock, which I taught `meal_prep` before the run:
+  - the seeded week shows in time order
+  - Planned/Done toggles and is saved
+  - add with bad input, then fixed, saves "Chili" with 3 parsed ingredients
+  - edit shows the stored values, and changing servings saves
+  - delete-twice removes Bob's session
+  - the next week shows the empty message and a "This week" link
+
+## What I changed
+- **`PrepForm.tsx`:** validation errors were thrown as one combined message at the bottom, so no field ever showed its own error. It now validates first, shows each error under its field, and only then saves.
+- **`week.ts`:** the label had no spaces around the dash, and it had edited the test to match its code. Both now follow the brief: `Oct 25 – Oct 31`.
+- **`Prep.tsx`:**
+  - the error text no longer starts with "Error:"
+  - the details line always shows servings ("1 serving") and is pluralised properly
+  - the status button is disabled while saving and shows "Try again" on failure (it failed silently before)
+  - removed an always-true condition around `+ Add`
+- **`ingredients.ts`:** a bare number (`3`) became an ingredient named "3" with qty 3. It is now a name. Added 1 test.
+- **`formValidation.ts`:**
+  - links must start with `http://` or `https://`, not just `http:`
+  - it reuses `formatIngredients` and `PrepFields` instead of keeping second copies
+
+## Verdict
+Usable after real fixes. The bigger brief worked: it finished, and every section was there. The misses were in UI behaviour. **Lessons:**
+- **Forbid editing tests to match the code:** it changed a test to pass its own week label.
+- **Spell out how form errors reach the screen** (a `setErrors` step), not just "show each field's error".
