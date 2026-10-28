@@ -79,3 +79,45 @@ Only the small source tag on each result changes. It should read `Packaged` when
 5. You have re-read this brief section by section.
 
 Reply with: the files changed, the test count, the build result, any fixture disagreement, and anything you were unsure about. **Report only what you actually did and saw.**
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access (enabled by the user), web UI.
+- **Wall time:** **8 min 35 s**, 39 steps, 3M tokens, reaching 55% of context.
+- **Outcome:** reported 53 tests passing, a clean build, 31/31 on the database tests, `searchOff` gone, and no fixture disagreements. I confirmed all of it.
+- **Saved:** harness output committed unchanged as `666b1e4`.
+
+## Result
+**The cleanest run so far: no code changes needed.**
+- **`searchUsda`:** gains `kind`. `branded` sends `dataType: ["Branded"]`, and the generic behaviour is unchanged.
+- **`normalizeUsdaFood`:**
+  - The brand is `brandName`, falling back to `brandOwner`, with empty strings treated as missing.
+  - The barcode comes from `gtinUpc`.
+  - Serving text that only repeats the grams (`45 GRM`) is replaced by `1 serving (45 g)`.
+  - All-caps names and brands are title-cased without capitalising after an apostrophe (`Trader Joe's`).
+- **`searchFoods`:** two USDA searches, generic results first, errors prefixed `Basic foods:` / `Packaged foods:`, and a cap of 30. Open Food Facts is no longer called.
+- **`searchOff` and its tests are deleted.** `lookupBarcode` is kept.
+
+### Mutation check
+| Break | Caught |
+|---|---|
+| capitalising after an apostrophe | yes |
+| ignoring `brandName` | yes |
+| keeping gram-only serving text | yes |
+| branded search sending the wrong `dataType` | yes |
+| dropping generic results | yes |
+
+### Checked in the browser
+I used the real USDA API with the user's key, and the mock Supabase for the signed-in session. Searching **greek yogurt** gave 30 results: generic first (e.g. "Yogurt, Greek, plain, nonfat", tagged **Basic**), then branded "Greek Yogurt" items tagged **Packaged**, with brands **Ocean Spray**, **Chobani**, **Trader Joe's** and **Olympiana**. There were no error lines.
+
+## What I changed
+Nothing in the code.
+
+## How I would have done it
+The same. Two small things I might add later:
+- **A smarter cap**, so a long generic list can't crowd out all the branded results (e.g. at most 20 generic).
+- **Using the `score` USDA returns to rank results** within each group.
+
+## Verdict
+**Usable as delivered.** Lessons:
+1. **When the brief supplies real fixtures, names exact items and expected outputs, and says "report only what you did", the 35B delivers exactly that.** This is the first run that needed no fixes.
+2. **Downloading the fixtures first changed the brief:** empty `brandName`, `IU` serving units and all-caps names came from the real data, not from guesses.
