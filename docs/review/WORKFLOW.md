@@ -1,6 +1,6 @@
 # Calbud Build Workflow: Local Harness Builds, Claude Reviews
 
-The DeepSeek Harness (`dsh`) with local models does the implementation. Claude writes each task brief, waits until the harness has finished, then reviews and corrects the output. Every task gets a review note in this folder that records what Claude would have done differently.
+The DeepSeek Harness (`dsh`) with local models does the implementation. Claude writes each task brief, waits until the harness has finished, then reviews and corrects the output. Every task gets a short review note in this folder: what went wrong, what was fixed, and the lesson.
 
 ---
 
@@ -75,12 +75,11 @@ One file per task: `docs/review/NN-short-name.md`.
 ## What I changed
 - <file>: <change> — <why>
 
-## How I would have done it
-<Claude's approach: structure, key decisions, and where it differs from the harness output>
-
 ## Verdict
 Usable as-is / usable after small fixes / rewritten. One-line lesson for future briefs.
 ```
+
+Keep notes short (since task 13): no long code overviews and no "how I would have done it" section.
 
 ---
 
