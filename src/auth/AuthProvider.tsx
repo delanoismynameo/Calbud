@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import type { Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { queryClient } from '../lib/queryClient'
 
 interface AuthContextValue {
   session: Session | null
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const sub = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, s: Session | null) => {
       if (_event === 'PASSWORD_RECOVERY') setRecovery(true)
+      if (_event === 'SIGNED_OUT') queryClient.clear()
       setSession(s)
     })
 

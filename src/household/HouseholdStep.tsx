@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useProfile } from './ProfileProvider'
+import { useProfile } from './useProfile'
 import { supabase } from '../lib/supabase'
 import { friendlyError } from '../lib/errors'
 import CopyCode from './CopyCode'

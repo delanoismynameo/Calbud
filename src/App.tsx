@@ -7,7 +7,7 @@ import ResetPassword from './auth/ResetPassword'
 import { isConfigured } from './lib/env'
 import { useAuth } from './auth/AuthProvider'
 import AuthScreen from './auth/AuthScreen'
-import { ProfileProvider, useProfile } from './household/ProfileProvider'
+import { useProfile } from './household/useProfile'
 import Setup from './household/Setup'
 
 const tabs = [
@@ -45,9 +45,7 @@ export default function App() {
   }
 
   return (
-    <ProfileProvider>
-      <SignedInApp />
-    </ProfileProvider>
+    <SignedInApp />
   )
 }
 

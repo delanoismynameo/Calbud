@@ -1,5 +1,5 @@
 import { useAuth } from '../auth/AuthProvider'
-import { useProfile } from '../household/ProfileProvider'
+import { useProfile } from '../household/useProfile'
 import { supabase } from '../lib/supabase'
 import CopyCode from '../household/CopyCode'
 
