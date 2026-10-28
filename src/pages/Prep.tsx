@@ -7,12 +7,18 @@ import type { MealPrep } from '../prep/types'
 import { updatePrep } from '../prep/prepApi'
 import { usePrepWeek } from '../prep/usePrepWeek'
 import PrepForm from '../prep/PrepForm'
+import { useProfile } from '../household/useProfile'
+import { usePrepRealtime } from '../prep/usePrepRealtime'
+import GroceryList from '../prep/GroceryList'
 
 export default function Prep() {
   const today = useLocalDate()
   const [start, setStart] = useState(() => weekStart(today))
   const [editing, setEditing] = useState<{ date: string; prep?: MealPrep } | null>(null)
   const { data, isLoading, error, refetch } = usePrepWeek(start)
+  const profile = useProfile()
+  usePrepRealtime(profile.profile?.household_id)
+  const [view, setView] = useState<'plan' | 'grocery'>('plan')
 
   if (editing) {
     return <PrepForm date={editing.date} prep={editing.prep} onClose={() => setEditing(null)} />
@@ -45,6 +51,18 @@ export default function Prep() {
         )}
       </div>
 
+      {/* Plan / Grocery list switch */}
+      <div className="flex mx-3 my-2 rounded overflow-hidden">
+        <button onClick={() => setView('plan')} aria-pressed={view === 'plan'}
+          className={`flex-1 py-2 text-sm font-medium ${view === 'plan' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+          Plan
+        </button>
+        <button onClick={() => setView('grocery')} aria-pressed={view === 'grocery'}
+          className={`flex-1 py-2 text-sm font-medium ${view === 'grocery' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+          Grocery list
+        </button>
+      </div>
+
       {/* Loading / Error */}
       {isLoading && <p className="px-3 py-8 text-center text-gray-500">Loading…</p>}
       {error && !isLoading && (
@@ -55,7 +73,9 @@ export default function Prep() {
       )}
 
       {/* Week data */}
-      {!isLoading && !error && data && (
+      {data && !isLoading && !error && (view === 'grocery' ? (
+        <GroceryList sessions={data} weekStart={start} />
+      ) : (
         <>
           {data.length === 0 && (
             <p className="px-3 py-6 text-center text-gray-500">Nothing planned this week. Tap + Add on a day.</p>
@@ -96,7 +116,7 @@ export default function Prep() {
             )
           })}
         </>
-      )}
+      ))}
     </div>
   )
 }
