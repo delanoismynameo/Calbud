@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeOffProduct, searchOff, lookupBarcode } from './off'
+import { normalizeOffProduct, lookupBarcode } from './off'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -58,26 +58,6 @@ describe('normalizeOffProduct', () => {
     expect(result).not.toBeNull()
     // 1837.1 / 4.184 ≈ 439.08 -> round to whole kcal -> 439
     expect(Math.round(result!.kcal100g as number)).toBe(439)
-  })
-
-  it('searchOff on the oatmeal fixture returns hits with energy and macros, dropping cookies without energy', async () => {
-    const oatmealData = loadFixture('off-search-oatmeal.json') as Record<string, unknown>
-    let capturedUrl: string | null = null
-    const mockFetch: typeof fetch = (input, _init) => {
-      capturedUrl = String(input)
-      expect(capturedUrl).toContain(encodeURIComponent('oatmeal'))
-      return Promise.resolve(new Response(JSON.stringify(oatmealData), { status: 200 }))
-    }
-    const results = await searchOff('oatmeal', { fetchFn: mockFetch as unknown as typeof fetch })
-
-    // First hit is "cookies" with no energy -> dropped. So we get 4 back.
-    expect(results.length).toBe(4)
-
-    // The plain "cookies" hit (index 0 of fixture) should NOT be in results
-    const cookiesFirstHit = loadFixture('off-search-oatmeal.json') as Record<string, unknown>
-    const hits = Array.isArray(cookiesFirstHit.hits) ? (cookiesFirstHit.hits as unknown[]) : []
-    const firstCookiesName = (hits[0] as Record<string, unknown>).product_name as string
-    expect(results.find(r => r.name.toLowerCase() === firstCookiesName.toLowerCase())).toBeUndefined()
   })
 
   it('lookupBarcode on the Nutella fixture returns a result with barcode 3017620422003', async () => {

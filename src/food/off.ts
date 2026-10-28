@@ -99,21 +99,6 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
 
 type RequestOpts = { fetchFn?: typeof fetch; signal?: AbortSignal }
 
-export async function searchOff(query: string, { fetchFn = fetch, signal }: RequestOpts = {}): Promise<FoodResult[]> {
-  const url = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(
-    query,
-  )}&page_size=20&fields=code,product_name,brands,serving_size,serving_quantity,nutriments`
-
-  const res = await fetchFn(url, { signal })
-  if (!res.ok) {
-    throw new Error(`Open Food Facts search failed (HTTP ${res.status})`)
-  }
-
-  const data = await res.json() as OffSearchResponse
-  const hits = Array.isArray(data.hits) ? data.hits : []
-  return hits.map(normalizeOffProduct).filter((r): r is FoodResult => r !== null)
-}
-
 export async function lookupBarcode(
   code: string,
   { fetchFn = fetch, signal }: RequestOpts = {},

@@ -23,6 +23,27 @@ interface UsdaFoodItem {
 
 type UsdaSearchResponse = { foods: readonly unknown[] }
 
+/** Title-case a string that has no lowercase letters. Does not capitalise after apostrophe. */
+export function titleCase(s: string): string {
+  const lower = s.toLowerCase()
+  let result = ''
+  for (let i = 0; i < lower.length; i++) {
+    if (i === 0 || /\s|-|\/|\(|&/.test(lower[i - 1])) {
+      result += lower[i].toUpperCase()
+    } else {
+      result += lower[i]
+    }
+  }
+  return result
+}
+
+function toTitle(name: string | null): string | null {
+  if (name === null) return null
+  // Only apply when the original has no lowercase letters
+  if ([...name].some(c => c >= 'a' && c <= 'z')) return name
+  return titleCase(name)
+}
+
 function isUsdaFoodItem(raw: unknown): raw is UsdaFoodItem {
   return typeof raw === 'object' && raw !== null && 'fdcId' in raw
 }
@@ -58,6 +79,28 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
 
   if (energy === undefined || protein === undefined || carbs === undefined || fat === undefined) return null
 
+  // Brand: brandName first, then brandOwner, using titleCase only when no lowercase present
+  const rec = raw as unknown as Record<string, unknown>
+  const rawBrandName = typeof rec.brandName === 'string' ? rec.brandName : ''
+  const rawBrandOwner = typeof raw.brandOwner === 'string' ? raw.brandOwner : ''
+  let brand: string | null = null
+  const trimmedBrandName = rawBrandName.trim()
+  if (trimmedBrandName !== '') {
+    brand = toTitle(trimmedBrandName)
+  } else {
+    const trimmedBrandOwner = rawBrandOwner.trim()
+    if (trimmedBrandOwner !== '') {
+      brand = toTitle(trimmedBrandOwner)
+    }
+  }
+
+  // Barcode from gtinUpc for branded foods
+  let barcode: string | null = null
+  const rawGtin = typeof rec.gtinUpc === 'string' ? rec.gtinUpc : ''
+  if (rawGtin.trim() !== '') {
+    barcode = rawGtin.trim()
+  }
+
   // Serving
   let servingG: number | null = null
   let servingLabel: string | null = null
@@ -66,7 +109,14 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
     const unitUpper = raw.servingSizeUnit.toUpperCase()
     if (unitUpper === 'G' || unitUpper === 'GRM') {
       servingG = raw.servingSize
-      servingLabel = `1 serving (${raw.servingSize} g)`
+      // Check if householdServingFullText is just a gram amount like "45 GRM" or "74 g"
+      const rawHsf = typeof rec.householdServingFullText === 'string' ? rec.householdServingFullText : ''
+      const hsf = rawHsf.trim()
+      if (hsf && !/^\d+(\.\d+)?\s*(g|grm)$/i.test(hsf)) {
+        servingLabel = `${hsf} (${raw.servingSize} g)`
+      } else {
+        servingLabel = `1 serving (${raw.servingSize} g)`
+      }
     }
   }
 
@@ -83,8 +133,8 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
   return {
     source: 'usda',
     sourceId: String(raw.fdcId),
-    name: raw.description,
-    brand: typeof raw.brandOwner === 'string' && raw.brandOwner !== '' ? raw.brandOwner : null,
+    name: toTitle(raw.description) ?? raw.description,
+    brand,
     servingG,
     servingLabel,
     kcal100g: energy,
@@ -94,15 +144,17 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
     fiber100g: nutrients.has(1079) ? (nutrients.get(1079) as number) : null,
     sugar100g: nutrients.has(2000) ? (nutrients.get(2000) as number) : null,
     sodiumMg100g: nutrients.has(1093) ? (nutrients.get(1093) as number) : null,
-    barcode: null,
+    barcode,
   }
 }
 
 export async function searchUsda(
   query: string,
-  { apiKey, fetchFn = fetch, signal }: { apiKey: string; fetchFn?: typeof fetch; signal?: AbortSignal },
+  { apiKey, fetchFn = fetch, signal, kind }: { apiKey: string; fetchFn?: typeof fetch; signal?: AbortSignal; kind?: 'generic' | 'branded' },
 ): Promise<FoodResult[]> {
   const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(apiKey)}`
+
+  const dataType: string[] = kind === 'branded' ? ['Branded'] : ['Foundation', 'SR Legacy', 'Survey (FNDDS)']
 
   const res = await fetchFn(url, {
     method: 'POST',
@@ -110,7 +162,7 @@ export async function searchUsda(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query,
-      dataType: ['Foundation', 'SR Legacy', 'Survey (FNDDS)'],
+      dataType,
       pageSize: 25,
     }),
   })

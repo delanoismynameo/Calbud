@@ -44,7 +44,7 @@ export default function AddFood() {
                   className="w-full bg-slate-800 rounded-lg p-3 text-left hover:bg-slate-700 active:bg-slate-600">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold">{food.name}</span>
-                    <span className="text-xs px-2 py-1 bg-slate-900 rounded text-gray-400 shrink-0">{food.source === 'usda' ? 'USDA' : 'OFF'}</span>
+                    <span className="text-xs px-2 py-1 bg-slate-900 rounded text-gray-400 shrink-0">{food.barcode ? 'Packaged' : 'Basic'}</span>
                   </div>
                   {food.brand && <p className="text-gray-400 text-sm">{food.brand}</p>}
                   <p className="text-gray-400 text-xs mt-1">{Math.round(food.kcal100g)} kcal / 100 g</p>

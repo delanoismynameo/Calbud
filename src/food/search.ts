@@ -1,5 +1,4 @@
 import { searchUsda } from './usda'
-import { searchOff } from './off'
 import type { FoodResult } from './types'
 
 export function usdaApiKey(): string {
@@ -29,18 +28,18 @@ export async function searchFoods(
 
   const key = apiKey ?? usdaApiKey()
 
-  const [usdaResult, offResult] = await Promise.allSettled([
-    searchUsda(trimmed, { apiKey: key, fetchFn, signal }),
-    searchOff(trimmed, { fetchFn, signal }),
+  const [genericResult, brandedResult] = await Promise.allSettled([
+    searchUsda(trimmed, { apiKey: key, fetchFn, signal, kind: 'generic' }),
+    searchUsda(trimmed, { apiKey: key, fetchFn, signal, kind: 'branded' }),
   ])
 
   const results: FoodResult[] = []
   const errors: string[] = []
   const seen = new Set<string>()
 
-  if (usdaResult.status === 'fulfilled') {
-    for (const r of usdaResult.value) {
-      if (results.length >= 25) break
+  if (genericResult.status === 'fulfilled') {
+    for (const r of genericResult.value) {
+      if (results.length >= 30) break
       const dk = dedupKey(r)
       if (!seen.has(dk)) {
         seen.add(dk)
@@ -48,12 +47,12 @@ export async function searchFoods(
       }
     }
   } else {
-    errors.push(usdaResult.reason instanceof Error ? usdaResult.reason.message : 'USDA search failed')
+    errors.push(`Basic foods: ${genericResult.reason instanceof Error ? genericResult.reason.message : 'USDA search failed'}`)
   }
 
-  if (offResult.status === 'fulfilled') {
-    for (const r of offResult.value) {
-      if (results.length >= 25) break
+  if (brandedResult.status === 'fulfilled') {
+    for (const r of brandedResult.value) {
+      if (results.length >= 30) break
       const dk = dedupKey(r)
       if (!seen.has(dk)) {
         seen.add(dk)
@@ -61,7 +60,7 @@ export async function searchFoods(
       }
     }
   } else {
-    errors.push(offResult.reason instanceof Error ? offResult.reason.message : 'Open Food Facts search failed')
+    errors.push(`Packaged foods: ${brandedResult.reason instanceof Error ? brandedResult.reason.message : 'USDA search failed'}`)
   }
 
   // Throw only when both sources failed; one source finding nothing is a normal empty result.
@@ -69,5 +68,5 @@ export async function searchFoods(
     throw new Error(errors.join('; '))
   }
 
-  return { results: results.slice(0, 25), errors }
+  return { results: results.slice(0, 30), errors }
 }
