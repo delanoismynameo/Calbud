@@ -30,6 +30,14 @@ if (process.argv.includes('--with-logs')) {
   log(ME, day(0), 'lunch', 'Greek yogurt, plain, nonfat, a very long product name that must be truncated on a phone', 150, 89, 15.3, 5.4, 0.6, '2026-10-28T16:00:00Z')
   log(PARTNER, day(0), 'lunch', 'Bob burger', 300, 900, 50, 60, 50, '2026-10-28T16:30:00Z')
   log(ME, day(1), 'dinner', 'Yesterday pasta', 300, 470, 17, 90, 4, '2026-10-27T23:00:00Z')
+  // Foods behind Alice's logs, for recents: oatmeal twice (yesterday too), yogurt, pasta; Bob's burger isn't hers.
+  const food = (source, source_id, name, brand, serving_g, serving_label, kcal, p, c, f) => {
+    const row = { id: randomUUID(), household_id: profiles[ME].household_id, source, source_id, name, brand, serving_g, serving_label, kcal_100g: kcal, protein_100g: p, carbs_100g: c, fat_100g: f, fiber_100g: null, sugar_100g: null, sodium_mg_100g: null, is_favorite: false }
+    foods.push(row); return row.id
+  }
+  const [oat, yog, pasta, burger] = [food('usda', '173904', 'Oatmeal, cooked', null, 240, '1 cup', 71, 2.5, 12, 1.5), food('off', '0123456789012', 'Greek yogurt, plain, nonfat', 'Fage', 150, '1 cup', 59, 10.2, 3.6, 0.4), food('usda', '168927', 'Pasta, cooked', null, null, null, 157, 5.8, 30.6, 0.9), food('usda', '999', 'Bob burger', null, null, null, 300, 17, 20, 17)]
+  mealLogs[0].food_id = oat; mealLogs[1].food_id = yog; mealLogs[2].food_id = burger; mealLogs[3].food_id = pasta
+  log(ME, day(1), 'breakfast', 'Oatmeal, cooked', 240, 170, 6, 28.8, 3.6, '2026-10-27T12:00:00Z'); mealLogs[4].food_id = oat
 }
 const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone']
 const code8 = () => Math.random().toString(16).slice(2, 10)
@@ -39,8 +47,8 @@ const send = (res, status, body) => { res.writeHead(status, { ...cors, 'Content-
 const pgErr = (res, message, status = 400) => send(res, status, { code: 'P0001', message, details: null, hint: null })
 
 // Parses PostgREST filters like id=eq.X and id=neq.X.
-const filters = (url) => [...url.searchParams].filter(([k]) => k !== 'select').map(([k, v]) => { const [op, ...rest] = v.split('.'); return { k, op, v: rest.join('.') } })
-const match = (row, fs) => fs.every(({ k, op, v }) => op === 'eq' ? String(row[k]) === v : op === 'neq' ? String(row[k]) !== v : true)
+const filters = (url) => [...url.searchParams].filter(([k]) => !['select', 'order', 'limit'].includes(k)).map(([k, v]) => { const [op, ...rest] = v.split('.'); return { k, op, v: rest.join('.') } })
+const match = (row, fs) => fs.every(({ k, op, v }) => op === 'eq' ? String(row[k]) === v : op === 'neq' ? String(row[k]) !== v : op === 'not' && v === 'is.null' ? row[k] != null : true)
 
 http.createServer((req, res) => {
   let body = ''
@@ -88,8 +96,12 @@ http.createServer((req, res) => {
       const visible = mealLogs.filter((r) => r.user_id === ME || (mine && profiles[r.user_id]?.household_id === mine))
       const fs = filters(url).filter((f) => f.k !== 'order')
       if (req.method === 'GET') {
-        const rows = visible.filter((r) => match(r, fs))
-        if ((url.searchParams.get('order') || '').startsWith('created_at')) rows.sort((a, b) => a.created_at.localeCompare(b.created_at))
+        let rows = visible.filter((r) => match(r, fs))
+        const order = url.searchParams.get('order') || ''
+        if (order.startsWith('created_at')) rows.sort((a, b) => a.created_at.localeCompare(b.created_at) * (order.endsWith('.desc') ? -1 : 1))
+        if (url.searchParams.get('limit')) rows = rows.slice(0, Number(url.searchParams.get('limit')))
+        // Embedded foods(*): the food behind each log, if this household can see it.
+        if ((url.searchParams.get('select') || '').includes('foods(')) rows = rows.map((r) => ({ ...r, foods: foods.find((f) => f.id === r.food_id && f.household_id === mine) ?? null }))
         return send(res, 200, rows)
       }
       const hit = mealLogs.filter((r) => r.user_id === ME && match(r, fs))
