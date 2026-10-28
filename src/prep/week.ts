@@ -37,7 +37,7 @@ export function weekLabel(start: string): string {
   const eDate = new Date(sy, sm - 1, sd + 6)
   const startMonth = MONTHS[sm - 1]
   const endMonth = MONTHS[eDate.getMonth()]
-  return `${startMonth} ${sd}\u2013${endMonth} ${eDate.getDate()}`
+  return `${startMonth} ${sd} \u2013 ${endMonth} ${eDate.getDate()}`
 }
 
 export function dayLabel(date: string): string {

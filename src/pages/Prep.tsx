@@ -49,7 +49,7 @@ export default function Prep() {
       {isLoading && <p className="px-3 py-8 text-center text-gray-500">Loading…</p>}
       {error && !isLoading && (
         <div className="px-3 py-6 text-center space-y-2">
-          <p className="text-red-400">{typeof error === 'string' ? error : String(error)}</p>
+          <p className="text-red-400">{error.message}</p>
           <button onClick={() => refetch()} className="text-sm text-blue-400 underline">Try again</button>
         </div>
       )}
@@ -71,10 +71,8 @@ export default function Prep() {
                     {dayLabel(day)}
                     {day === today && <span className="text-xs text-blue-400 ml-1">· Today</span>}
                   </h2>
-                  {(data.length > 0 || daySessions.length === 0) && (
-                    <button onClick={() => setEditing({ date: day })} aria-label={`Add prep on ${dayLabel(day)}`}
-                      className="text-xs text-blue-400 font-semibold hover:text-blue-300">+ Add</button>
-                  )}
+                  <button onClick={() => setEditing({ date: day })} aria-label={`Add prep on ${dayLabel(day)}`}
+                    className="text-xs text-blue-400 font-semibold hover:text-blue-300">+ Add</button>
                 </div>
 
                 {/* Sessions */}
@@ -87,12 +85,7 @@ export default function Prep() {
                     <button onClick={() => setEditing({ prep: session, date: session.scheduled_date })}
                       className={`flex-1 text-left p-2 rounded ${session.status === 'done' ? 'line-through opacity-60' : ''}`}>
                       <p className="font-medium">{session.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {session.start_time
-                          ? session.start_time.slice(0, 5) + ' · '
-                          : ''}{`${session.duration_min} min${session.servings !== 1 ? ` · ${session.servings} servings` : ''}${
-                          session.ingredients.length > 0 ? ` · ${session.ingredients.length} ingredient(s)` : ''}`}
-                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">{sessionDetails(session)}</p>
                     </button>
 
                     {/* Status toggle */}
@@ -108,6 +101,16 @@ export default function Prep() {
   )
 }
 
+function sessionDetails(s: MealPrep): string {
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+  return [
+    s.start_time ? s.start_time.slice(0, 5) : null,
+    `${s.duration_min} min`,
+    plural(s.servings, 'serving'),
+    s.ingredients.length > 0 ? plural(s.ingredients.length, 'ingredient') : null,
+  ].filter(Boolean).join(' · ')
+}
+
 function ToggleStatus({ id, current }: { id: string; current: 'planned' | 'done' }) {
   const other = current === 'planned' ? ('done' as const) : ('planned' as const)
   const mutation = useMutation({
@@ -117,11 +120,12 @@ function ToggleStatus({ id, current }: { id: string; current: 'planned' | 'done'
 
   const isDone = current === 'done'
   return (
-    <button onClick={() => mutation.mutate()} aria-pressed={isDone}
-      className={`px-2 py-1 text-xs font-semibold rounded ${
-        isDone ? 'bg-green-600 text-white' : 'bg-slate-600 text-gray-300 hover:bg-slate-500'
+    <button onClick={() => mutation.mutate()} aria-pressed={isDone} disabled={mutation.isPending}
+      className={`px-2 py-1 text-xs font-semibold rounded disabled:opacity-50 ${
+        mutation.isError ? 'bg-red-700 text-white'
+          : isDone ? 'bg-green-600 text-white' : 'bg-slate-600 text-gray-300 hover:bg-slate-500'
       }`}>
-      {isDone ? 'Done' : 'Planned'}
+      {mutation.isError ? 'Try again' : isDone ? 'Done' : 'Planned'}
     </button>
   )
 }

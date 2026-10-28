@@ -42,12 +42,12 @@ describe('weekDays', () => {
 describe('weekLabel', () => {
   it('Oct 25 – Oct 31', () => {
     const result = weekLabel('2026-10-25')
-    expect(result).toBe('Oct 25' + String.fromCharCode(8211) + 'Oct 31')
+    expect(result).toBe('Oct 25 – Oct 31')
   })
 
   it('Dec 27 – Jan 2 (cross-month)', () => {
     const result = weekLabel('2026-12-27')
-    expect(result).toBe('Dec 27' + String.fromCharCode(8211) + 'Jan 2')
+    expect(result).toBe('Dec 27 – Jan 2')
   })
 })
 

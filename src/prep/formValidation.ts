@@ -1,6 +1,5 @@
-import type { MealPrep } from './types'
-import { parseIngredients } from './ingredients'
-import type { Ingredient } from './types'
+import type { MealPrep, PrepFields } from './types'
+import { parseIngredients, formatIngredients } from './ingredients'
 
 export interface PrepFormInput {
   title: string
@@ -13,10 +12,7 @@ export interface PrepFormInput {
   notes: string
 }
 
-export type PrepFields = Pick<
-  MealPrep,
-  'title' | 'scheduled_date' | 'start_time' | 'duration_min' | 'servings' | 'recipe_url' | 'ingredients' | 'notes'
->
+export type { PrepFields }
 
 function isInt(s: string): boolean {
   return /^\d+$/.test(s)
@@ -90,7 +86,7 @@ export function parsePrepForm(input: PrepFormInput):
   let recipe_url: string | null = null
   if (recipeUrlTrimmed === '') {
     recipe_url = null
-  } else if (/^https?:/.test(recipeUrlTrimmed)) {
+  } else if (/^https?:\/\//.test(recipeUrlTrimmed)) {
     recipe_url = recipeUrlTrimmed
   } else {
     errors.recipeUrl = 'Links must start with http:// or https://.'
@@ -98,7 +94,7 @@ export function parsePrepForm(input: PrepFormInput):
 
   // ingredients – never errors
   const ingredientsTrimmed = input.ingredients.trim()
-  const ingredients = ingredientsTrimmed === '' ? [] : (parseIngredients(ingredientsTrimmed) as Array<{ name: string; qty: number | null; unit: string }>)
+  const ingredients = [...parseIngredients(ingredientsTrimmed)]
 
   // notes
   const notesTrimmed = input.notes.trim()
@@ -134,17 +130,4 @@ export function prepFormFrom(prep: MealPrep): PrepFormInput {
     ingredients: formatIngredients(prep.ingredients),
     notes: prep.notes ?? '',
   }
-}
-
-function formatIngredients(list: ReadonlyArray<{ name: string; qty: number | null; unit: string }>): string {
-  return list
-    .map((i) => [
-      i.qty != null ? String(i.qty) : '',
-      i.unit,
-      i.name,
-    ]
-      .filter(Boolean)
-      .join(' ')
-    )
-    .join('\n')
 }

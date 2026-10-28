@@ -45,7 +45,8 @@ export function parseIngredients(text: string): ReadonlyArray<{ name: string; qt
     } else if (hasQty) {
       // valid qty but no recognized unit for second word
       const remaining = parts.slice(1).join(' ')
-      result.push({ name: remaining || trimmed, qty: qtyRaw, unit: '' })
+      // A bare number ("3") has no name, so the whole line is the name.
+      result.push(remaining ? { name: remaining, qty: qtyRaw, unit: '' } : { name: trimmed, qty: null, unit: '' })
     } else {
       // no valid number at start → entire line is name
       result.push({ name: trimmed, qty: null, unit: '' })

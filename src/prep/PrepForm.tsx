@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { queryClient } from '../lib/queryClient'
-import type { MealPrep } from './types'
+import type { MealPrep, PrepFields } from './types'
 import type { PrepFormInput } from './formValidation'
 import { parsePrepForm, prepFormFrom } from './formValidation'
 import { insertPrep, updatePrep, deletePrep } from './prepApi'
@@ -31,12 +31,10 @@ export default function PrepForm({
   const textareaClass = 'w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500'
 
   const saveMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: (fields: PrepFields) => {
+      if (prep) return updatePrep(prep.id, fields)
       if (!profile?.household_id) throw new Error('Join or create a household first.')
-      const parsed = parsePrepForm(input)
-      if (!parsed.ok) throw new Error(Object.values(parsed.errors).join('\n'))
-      if (prep) return updatePrep(prep.id, parsed.fields)
-      return insertPrep(profile.household_id, profile.id, parsed.fields)
+      return insertPrep(profile.household_id, profile.id, fields)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['meal-prep'] })
@@ -51,6 +49,13 @@ export default function PrepForm({
       onClose()
     },
   })
+
+  // Validate first so each error shows under its own field.
+  const save = () => {
+    const parsed = parsePrepForm(input)
+    if (!parsed.ok) { setErrors(parsed.errors); return }
+    saveMutation.mutate(parsed.fields)
+  }
 
   const anyPending = saveMutation.isPending || deleteMutation.isPending
   const isSaveLoading = saveMutation.isPending
@@ -125,14 +130,11 @@ export default function PrepForm({
         <textarea id="prep-notes" rows={3} value={input.notes ?? ''} onChange={changeField('notes')} placeholder="Optional notes" className={textareaClass} />
       </div>
 
-      {saveMutation.isError && (
-        <p className="text-red-400 text-sm px-1">
-          {saveMutation.error instanceof Error ? saveMutation.error.message : 'Something went wrong'}
-        </p>
-      )}
+      {saveMutation.isError && <p className="text-red-400 text-sm px-1">{saveMutation.error.message}</p>}
+      {deleteMutation.isError && <p className="text-red-400 text-sm px-1">{deleteMutation.error.message}</p>}
 
       <div className="flex gap-2 pt-1">
-        <button type="button" onClick={() => saveMutation.mutate()} disabled={anyPending}
+        <button type="button" onClick={save} disabled={anyPending}
           className="py-3 rounded font-semibold text-white flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-center">
           {isSaveLoading ? 'Saving…' : 'Save'}
         </button>

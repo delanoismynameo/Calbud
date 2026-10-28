@@ -21,6 +21,10 @@ describe('parseIngredients', () => {
     })
   }
 
+  it('a bare number is a name, not a quantity', () => {
+    expect(parseIngredients('3')).toEqual([{ name: '3', qty: null, unit: '' }])
+  })
+
   it('skips blank lines and surrounding spaces', () => {
     const result = parseIngredients('  \n\n2 cup rice\n\n3 eggs\n\n')
     expect(result).toHaveLength(2)
