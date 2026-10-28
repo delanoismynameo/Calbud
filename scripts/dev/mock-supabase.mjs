@@ -14,6 +14,7 @@ const households = {
 profiles[PARTNER] = { ...profiles[ME], id: PARTNER, display_name: 'Bob', color: '#10b981', household_id: 'h-partner' }
 const foods = []
 const mealLogs = []
+const mealPrep = []
 // Start with Alice already in her own household, so the add-food flow is reachable.
 if (process.argv.includes('--in-household')) {
   households['h-alice'] = { id: 'h-alice', name: "Alice's household", invite_code: 'zzzz9999', created_at: '2026-10-27T00:00:00Z' }
@@ -42,6 +43,14 @@ if (process.argv.includes('--with-logs')) {
   foods.find((f) => f.id === yog).is_favorite = true
   const banana = food('usda', '173944', 'Banana, raw', null, 118, '1 medium', 89, 1.1, 22.8, 0.3)
   foods.find((f) => f.id === banana).is_favorite = true
+  // Meal prep this week (Sunday start): curry by Alice with ingredients, meatballs done by Bob, an untimed one.
+  const sun = new Date(d); sun.setDate(d.getDate() - d.getDay())
+  const wd = (n) => { const x = new Date(sun); x.setDate(sun.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
+  const prep = (created_by, scheduled_date, title, start_time, status, servings, ingredients) =>
+    mealPrep.push({ id: randomUUID(), household_id: profiles[ME].household_id, created_by, title, recipe_url: null, scheduled_date, start_time, duration_min: 90, status, servings, ingredients, notes: null, created_at: new Date().toISOString() })
+  prep(ME, wd(0), 'Curry', '14:00:00', 'planned', 6, [{ name: 'chicken thighs', qty: 2, unit: 'lb' }, { name: 'curry roux', qty: null, unit: '' }, { name: 'rice', qty: 3, unit: 'cup' }])
+  prep(PARTNER, wd(0), 'Meatballs', null, 'done', 4, [])
+  prep(ME, wd(3), 'Mabodofu, a long dish name to check wrapping on a phone screen', '18:30:00', 'planned', 3, [{ name: 'tofu', qty: 2, unit: '' }])
 }
 const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone']
 const code8 = () => Math.random().toString(16).slice(2, 10)
@@ -52,7 +61,18 @@ const pgErr = (res, message, status = 400) => send(res, status, { code: 'P0001',
 
 // Parses PostgREST filters like id=eq.X and id=neq.X.
 const filters = (url) => [...url.searchParams].filter(([k]) => !['select', 'order', 'limit'].includes(k)).map(([k, v]) => { const [op, ...rest] = v.split('.'); return { k, op, v: rest.join('.') } })
-const match = (row, fs) => fs.every(({ k, op, v }) => op === 'eq' ? String(row[k]) === v : op === 'neq' ? String(row[k]) !== v : op === 'not' && v === 'is.null' ? row[k] != null : true)
+const match = (row, fs) => fs.every(({ k, op, v }) => op === 'eq' ? String(row[k]) === v : op === 'neq' ? String(row[k]) !== v : op === 'gte' ? String(row[k]) >= v : op === 'lte' ? String(row[k]) <= v : op === 'not' && v === 'is.null' ? row[k] != null : true)
+// Sorts by a PostgREST order param like "scheduled_date.asc,start_time.asc.nullsfirst".
+const sortBy = (rows, order) => rows.sort((a, b) => {
+  for (const part of order.split(',').filter(Boolean)) {
+    const [k, dir = 'asc', nulls] = part.split('.')
+    const [x, y] = [a[k], b[k]]
+    if (x == null || y == null) { if (x == null && y == null) continue; return (x == null) === (nulls === 'nullsfirst') ? -1 : 1 }
+    const c = String(x).localeCompare(String(y)) * (dir === 'desc' ? -1 : 1)
+    if (c) return c
+  }
+  return 0
+})
 
 http.createServer((req, res) => {
   let body = ''
@@ -119,7 +139,24 @@ http.createServer((req, res) => {
       if (req.method === 'DELETE') hit.forEach((r) => mealLogs.splice(mealLogs.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
-    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs })
+    // meal_prep: either household member reads and changes any of the household's rows.
+    if (url.pathname === '/rest/v1/meal_prep') {
+      const mine = profiles[ME].household_id
+      const fs = filters(url)
+      if (req.method === 'POST') {
+        const row = JSON.parse(body)
+        if (!mine || row.household_id !== mine) return pgErr(res, 'new row violates row-level security policy for table "meal_prep"', 403)
+        const saved = { id: randomUUID(), recipe_url: null, start_time: null, duration_min: 60, status: 'planned', servings: 1, ingredients: [], notes: null, created_at: new Date().toISOString(), ...row }
+        mealPrep.push(saved)
+        return single ? send(res, 201, { id: saved.id }) : send(res, 201, [{ id: saved.id }])
+      }
+      const hit = mealPrep.filter((r) => mine && r.household_id === mine && match(r, fs))
+      if (req.method === 'GET') return send(res, 200, sortBy([...hit], url.searchParams.get('order') || ''))
+      if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
+      if (req.method === 'DELETE') hit.forEach((r) => mealPrep.splice(mealPrep.indexOf(r), 1))
+      return send(res, 200, hit.map((r) => ({ id: r.id })))
+    }
+    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep })
     if (url.pathname === '/rest/v1/rpc/create_household') {
       if (profiles[ME].household_id) return pgErr(res, 'create_household: you are already in a household')
       const id = randomUUID()

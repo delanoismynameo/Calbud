@@ -118,6 +118,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 18 | Barcode scanning (camera, typed code, Open Food Facts lookup) | 35B (High), 4B as its subagent | The 35B interrupted the 4B and wrote its part; camera-handling fixes. ~20 min |
 | 19 | Open Food Facts serving labels without repeated grams | 35B (High) | Usable as delivered; its integration test caught its own bug. ~4 min |
 | 20 | Search ranking (cooking words, merged ranking) | 35B (High) | Usable after a one-line fix; it caught my brief's title-case slip. ~9 min |
+| 22a | Grocery helper (side job, alongside 21) | 4B on the 3050, headless | Failed: spawn EPERM in the headless sandbox, edited `vite.config.ts`, 8/9 tests failing |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
@@ -140,6 +141,7 @@ These come from the review notes and override the earlier guesses above where th
   - in task 18 it **interrupted** the 4B "because it seems slow", although the brief forbade exactly that
   
   Run 3050 side jobs **headless from Claude**, in their own worktree with their own `npm ci`. What did help: giving the subagent its own short brief (no "delegate" step) and banning output files.
+- **Headless runs can't start processes** (22a). The headless profile's Workspace Write sandbox gives `spawn EPERM` to vitest, even in a worktree with its own `node_modules`, so a headless 4B can't run its tests. Blocked like that, the 4B edited `vite.config.ts` and still left 8 of 9 tests failing. Until the headless sandbox is changed (with the user's OK), don't give the 4B side jobs.
 - **For screens with several list states, put a truth table in the brief** (which lists are empty → what shows). Task 16's prose conditions were misread, and the model then reported them as met.
 - **A "Completed" with no report is a silent stop.** Check its to-do count; "continue" in the same session finished it.
 - **Pointing the model at the brief file works** ("Your task is in `docs/review/NN-….md`; read that whole file first"), so the brief doesn't need pasting into the chat box.
