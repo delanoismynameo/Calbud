@@ -123,3 +123,78 @@ Match `AuthScreen.tsx`: `bg-slate-800` cards, labels in `text-gray-400`, inputs 
 4. You have re-read this brief section by section.
 
 Reply with: the files created and changed, the test count, the build result, and anything you were unsure about. **Report only what you actually did and saw.** Don't describe the brief from memory.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access (enabled by the user), web UI.
+- **Wall time:** **6 min 26 s**, 37 steps, 1.2M tokens. It reached 29% of its context, with no compactions.
+- **Outcome:** reported 43 tests passing, a clean build and 31/31 on the database tests, all of which I confirmed.
+- **Saved:** harness output committed unchanged as `a5110ce`.
+
+## Result
+**The data layer was right:**
+- `dates.ts` uses local getters, and its boundary tests pass.
+- `rows.ts` uses exactly the 14 `foods` columns, and 150 g gives 215 kcal.
+- `logFood` upserts on `household_id,source,source_id`, then inserts the meal log.
+- `useFoodSearch` has a 400 ms debounce, passes `signal` from TanStack Query, and uses `retry: false` and `keepPreviousData`.
+- `useDebouncedValue` clears its timer on every change.
+
+**The screens had real bugs:**
+1. **The Log button had no `onClick`.** `handleLog` was written but never attached, so **nothing could ever be logged**. The build and tests can't see this.
+2. **Today's "Add food" was a plain `<a href="/add">`.** With HashRouter, that goes to `github.io/add`, a 404, instead of `#/add`.
+3. **One `onDone` was used for both finishing and cancelling,** so after logging the user went back to the search list instead of Today. **This was partly my brief's fault:** it described two outcomes for one callback.
+4. **The picked food was stored as an index into `results`.** A background refetch (for example on window focus) could swap it for a different food before logging.
+5. **"No foods found." showed at the wrong times:** together with "Type at least 2 letters." and while a search was still loading.
+6. **Smaller issues:**
+   - The serving text doubled up ("1 1 banana (126 g) (126 g)").
+   - The nutrition labels showed code names (`protein_g`).
+   - Switching to grams kept "1", meaning 1 g.
+   - The amount input had no label, and the unit buttons had no `aria-pressed`.
+   - A 0 kcal food hid its numbers.
+   - A `useCallback` had wrong dependencies.
+
+## What I changed
+- **`ServingPicker.tsx`, rewritten:**
+  - Separate `onLogged` and `onCancel` props.
+  - Log calls the mutation, and invalidation is awaited before leaving.
+  - The unit switch keeps the same amount of food, converting servings and grams.
+  - Labelled amount input, readable nutrition labels, and the serving line reads `1 × 1 banana split (490 g) = 490 g`.
+  - `aria-pressed` on the toggles, and `type="button"` everywhere.
+- **`AddFood.tsx`, rewritten:**
+  - Stores the picked `FoodResult` itself.
+  - Navigates to `/` after logging; Cancel keeps the query and the results.
+  - Keys use `source:sourceId`, so a USDA and an OFF id can't collide.
+  - Uses the app's normal layout instead of a second full-screen header.
+- **`useFoodSearch.ts`:** added `settled` (the current query has finished loading), used for "No foods found.".
+- **`Today.tsx`:** `<Link to="/add">`.
+
+### Checked in the browser
+Searches went to the **real** food APIs, using the user's USDA key. Saves went to the mock Supabase from task 07, extended to record `foods` upserts and `meal_logs` inserts:
+- **Today → Add food** goes to `#/add`.
+- **Typing "b"** shows "Type at least 2 letters."
+- **Finishing "banana"** gives a list of real USDA foods.
+- **Picking "Banana split"** defaults to 1 serving (490 g).
+- **Switching to Grams** gives **490**. Setting 150 g shows **299 kcal**, 3.6 g protein, 48.9 g carbs and 10.3 g fat.
+- **Choosing Breakfast and pressing Log** returns to Today. The mock then holds:
+  - **one `foods` row**, with the right 14 columns and household `h-alice`
+  - **one `meal_logs` row:** 150 g at breakfast for Alice, linked to that food, with the nutrition copied in and `logged_on: 2026-10-27`
+
+  The local date was the 27th while UTC was already the 28th, so this confirms late-night logging lands on the right day.
+
+### Found while testing: Open Food Facts text search is blocked in browsers
+Every search showed a grey `Failed to fetch` line. The console showed **CORS**:
+- **`search.openfoodfacts.org` sends no `Access-Control-Allow-Origin` header,** for GET or POST, from either `localhost` or `delanoismynameo.github.io`.
+- **The old `cgi/search.pl` and `/api/v2/search` endpoints return 503.**
+- **The barcode lookup (`/api/v2/product/…`) does send `Access-Control-Allow-Origin: *`,** so barcode scanning will still work.
+
+Task 09's tests couldn't catch this, because CORS only exists in browsers, and nor could my checks with scripts. **The app's search needs a decision** (see the verdict below).
+
+## How I would have done it
+- **Two callbacks from the start** (`onLogged`, `onCancel`), and store the picked object rather than its position. I should have written both into the brief.
+- **A one-line "click it" check** in the brief: "after building, confirm by reading the JSX that every button has an `onClick` or is a `type="submit"` in a form". UI bugs like a disconnected button are exactly what the 35B leaves behind.
+- **Before adopting any third-party API for a browser app, test it from a browser origin, not from a script.**
+
+## Verdict
+**Usable after real fixes. The data code was right; the screens weren't wired up.** Lessons:
+1. **The 35B's pattern holds across tasks 06, 07 and 10:** solid pure functions and data code, but the React wiring is wrong in ways the build can't catch. Every UI task needs a click-through.
+2. **APIs need checking from where they'll actually be called.** Open Food Facts search works from scripts and is blocked from browsers.
+3. **Decision needed:** either drop Open Food Facts from text search and use USDA's Branded foods for packaged items, keeping Open Food Facts for barcodes; or put a small proxy in front of it (a Supabase Edge Function).
