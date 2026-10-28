@@ -19,10 +19,22 @@ if (process.argv.includes('--in-household')) {
   households['h-alice'] = { id: 'h-alice', name: "Alice's household", invite_code: 'zzzz9999', created_at: '2026-10-27T00:00:00Z' }
   profiles[ME].household_id = 'h-alice'
 }
+// --with-logs: Bob joins Alice's household, and both have food logged today (local date), plus one
+// of Alice's from yesterday. The Today screen must show only Alice's two entries for today.
+if (process.argv.includes('--with-logs')) {
+  profiles[PARTNER].household_id = profiles[ME].household_id
+  const d = new Date(); const day = (n) => { const x = new Date(d); x.setDate(x.getDate() - n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
+  const log = (user_id, logged_on, meal_type, name, quantity_g, kcal, protein_g, carbs_g, fat_g, at) =>
+    mealLogs.push({ id: randomUUID(), user_id, logged_on, meal_type, food_id: null, name, quantity_g, kcal, protein_g, carbs_g, fat_g, created_at: at })
+  log(ME, day(0), 'breakfast', 'Oatmeal, cooked', 240, 170, 6, 28.8, 3.6, '2026-10-28T12:00:00Z')
+  log(ME, day(0), 'lunch', 'Greek yogurt, plain, nonfat, a very long product name that must be truncated on a phone', 150, 89, 15.3, 5.4, 0.6, '2026-10-28T16:00:00Z')
+  log(PARTNER, day(0), 'lunch', 'Bob burger', 300, 900, 50, 60, 50, '2026-10-28T16:30:00Z')
+  log(ME, day(1), 'dinner', 'Yesterday pasta', 300, 470, 17, 90, 4, '2026-10-27T23:00:00Z')
+}
 const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone']
 const code8 = () => Math.random().toString(16).slice(2, 10)
 
-const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS', 'Access-Control-Expose-Headers': '*' }
+const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Expose-Headers': '*' }
 const send = (res, status, body) => { res.writeHead(status, { ...cors, 'Content-Type': 'application/json' }); res.end(body === undefined ? '' : JSON.stringify(body)) }
 const pgErr = (res, message, status = 400) => send(res, status, { code: 'P0001', message, details: null, hint: null })
 
@@ -66,8 +78,24 @@ http.createServer((req, res) => {
     if (url.pathname === '/rest/v1/meal_logs' && req.method === 'POST') {
       const row = JSON.parse(body)
       if (row.user_id !== ME) return pgErr(res, 'new row violates row-level security policy for table "meal_logs"', 403)
-      mealLogs.push({ id: randomUUID(), ...row })
+      mealLogs.push({ id: randomUUID(), food_id: null, created_at: new Date().toISOString(), ...row })
       return send(res, 201)
+    }
+    // Reads see your rows and your household's (like the real RLS); updates and deletes only touch
+    // your own rows, and silently match 0 rows otherwise, as PostgREST does.
+    if (url.pathname === '/rest/v1/meal_logs') {
+      const mine = profiles[ME].household_id
+      const visible = mealLogs.filter((r) => r.user_id === ME || (mine && profiles[r.user_id]?.household_id === mine))
+      const fs = filters(url).filter((f) => f.k !== 'order')
+      if (req.method === 'GET') {
+        const rows = visible.filter((r) => match(r, fs))
+        if ((url.searchParams.get('order') || '').startsWith('created_at')) rows.sort((a, b) => a.created_at.localeCompare(b.created_at))
+        return send(res, 200, rows)
+      }
+      const hit = mealLogs.filter((r) => r.user_id === ME && match(r, fs))
+      if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
+      if (req.method === 'DELETE') hit.forEach((r) => mealLogs.splice(mealLogs.indexOf(r), 1))
+      return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
     if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs })
     if (url.pathname === '/rest/v1/rpc/create_household') {

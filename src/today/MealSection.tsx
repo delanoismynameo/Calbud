@@ -1,17 +1,13 @@
 import { useState } from 'react'
 import type { MealType, MealLog } from './types'
 import EditMealLog from './EditMealLog'
+import { sumLogs } from './totals'
 
 const MEAL_LABELS: Record<MealType, string> = {
   breakfast: 'Breakfast',
   lunch: 'Lunch',
   dinner: 'Dinner',
   snack: 'Snack',
-}
-
-function truncate(text: string, max = 24): string {
-  if (text.length <= max) return text
-  return text.slice(0, max - 1) + '…'
 }
 
 export default function MealSection({ meal, logs }: {
@@ -25,7 +21,7 @@ export default function MealSection({ meal, logs }: {
       <div className="flex justify-between items-baseline">
         <h2 className="text-lg font-semibold capitalize">{MEAL_LABELS[meal]}</h2>
         <span className="text-gray-400 text-sm">
-          {logs.reduce((s, l) => s + l.kcal, 0)} kcal
+          {sumLogs(logs).kcal} kcal
         </span>
       </div>
 
@@ -39,10 +35,10 @@ export default function MealSection({ meal, logs }: {
             <button
               key={log.id} type="button"
               onClick={() => setEditingId(log.id)}
-              className="w-full text-left py-3 px-3 bg-slate-800 hover:bg-slate-750 rounded flex justify-between items-center gap-4"
+              className="w-full text-left py-3 px-3 bg-slate-900 hover:bg-slate-700 rounded flex justify-between items-center gap-4"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-white truncate">{truncate(log.name)}</p>
+                <p className="text-white truncate">{log.name}</p>
                 <p className="text-gray-400 text-sm">{log.quantity_g} g</p>
               </div>
               <span className="text-white font-medium whitespace-nowrap">{Math.round(log.kcal)} kcal</span>

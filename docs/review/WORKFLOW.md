@@ -109,6 +109,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 09 | USDA / Open Food Facts clients and macro scaling | 35B (High), twice | Run 1 invented fixtures; run 2 was usable |
 | 10 | Add-food flow (search, portion, log) | 35B (High) | Usable after real fixes |
 | 11 | USDA Branded replaces Open Food Facts text search | 35B (High) | Usable as delivered |
+| 12 | Today screen (totals, edit, delete) | 35B (High) | Usable after small fixes; falsely reported a clean build |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
@@ -124,3 +125,5 @@ These come from the review notes and override the earlier guesses above where th
 - **Every UI task gets a click-through** against `scripts/dev/mock-supabase.mjs`. The 35B's React wiring bugs (a button with no handler, a wrong link) are invisible to the build.
 - **Mutation-check any "must never" rule.** A test named after the API-key rule couldn't fail.
 - **Its self-reports misquote the brief at times.** Check every claim against the code.
+- **Its "build passes" can be false** (task 12: two TypeScript errors). Ask it to paste the last lines of `npm run build`, and always rebuild before reviewing.
+- **Pointing the model at the brief file works** ("Your task is in `docs/review/NN-….md`; read that whole file first"), so the brief doesn't need pasting into the chat box.

@@ -101,3 +101,63 @@ Match `ServingPicker.tsx`: `bg-slate-800` cards with `rounded-lg p-4`, labels in
 5. You have re-read this brief section by section.
 
 Reply with: the files created and changed, the test count, the build result, and anything you were unsure about. **Report only what you actually did and saw.** Don't describe the brief from memory.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access (switched on by the user), web UI. The message only pointed it at this file instead of pasting the brief, and that worked: it read the file first and followed it.
+- **Wall time:** **5 min 51 s**, 32 steps, 1M tokens. It reached 31% of its context, with no compactions.
+- **Outcome:** it reported 63 tests passing, **a clean build** and 31/31 on the database tests. **The build claim was false.**
+- **Saved:** the harness output is committed unchanged as `42cbafb`.
+
+## Result
+**`npm run build` failed with two TypeScript errors**, even though the report said "passes — no TypeScript errors":
+1. `groupByMeal` built a `Map<string, …>`, so `meal` came out as `string` rather than `MealType`.
+2. `useMealLogs` ended with `as ReturnType<useQuery<MealLog[]>>`, which isn't valid TypeScript. `useQuery` is a value, not a type.
+
+`npm test` (vitest) strips types without checking them, so the tests passed. The model probably ran only `vite build`, or read the output wrongly.
+
+**The rest was right:**
+- every query filters on `user_id` (checked against a mock where the partner's entry is visible)
+- update and delete ask for rows back and fail on 0 rows
+- totals round properly
+- `useLocalDate` cleans up both listeners
+- every button has an `onClick`
+- "Add food" is still a `Link`
+- the two-tap delete works
+
+**Smaller problems:**
+- **The edit panel overflowed at 375px:** four `px-4 flex-1` meal buttons inside a card nested in a card, so "Snack" ran off the screen.
+- **Entry rows were the same colour as their card** (`bg-slate-800` on `bg-slate-800`), with a hover colour that doesn't exist (`slate-750`). They didn't look tappable.
+- **A character-count `truncate()` helper sat on top of Tailwind's `truncate` class.** It cut names at 24 characters even on wide screens.
+- **The section header summed kcal with a raw `reduce`** instead of `sumLogs`.
+- **Delete didn't await the cache refresh** before closing (Save did), and Cancel wasn't disabled while saving.
+
+## What I changed
+- **`totals.ts`:** `groupByMeal` is now `MEALS.map(meal => ({ meal, logs: logs.filter(...) }))`, which has the right type and is shorter.
+- **`useMealLogs.ts`:** removed the invalid cast. `fetchMealLogs` already returns `MealLog[]`.
+- **`EditMealLog.tsx`:**
+  - The meal buttons are a `grid-cols-4` of `text-sm` buttons, as in `ServingPicker`.
+  - The panel is a `bg-slate-900` inset instead of a second card.
+  - Delete awaits the cache refresh.
+  - Cancel is disabled while a save or delete is running.
+- **`MealSection.tsx`:** uses `sumLogs` for the header, drops the `truncate()` helper (the CSS class does that job), and gives rows `bg-slate-900` with a real hover colour.
+- **`scripts/dev/mock-supabase.mjs`:** `meal_logs` GET, PATCH and DELETE, behaving like the real RLS (reads include the household; writes only your own rows, matching 0 rows otherwise). A new `--with-logs` flag seeds two of Alice's entries for today, one of Bob's for today, and one of Alice's from yesterday.
+
+### Checked in the browser (375px, against the mock)
+- **Today shows 259 kcal:** oatmeal 170 plus yogurt 89. **Bob's 900 kcal and yesterday's pasta are left out.** Protein shows 21.3 / 150 g.
+- **A long name** is cut with an ellipsis by CSS.
+- **Editing the yogurt:**
+  - 300 g shows a live 178 kcal.
+  - Choosing Snack and pressing Save moves it to Snack.
+  - Totals go to 348 kcal and 36.6 g protein.
+- **Deleting the oatmeal on the server, then pressing Save** shows "That entry could not be changed." and the panel stays open.
+- **Delete:** the first tap shows "Tap again to delete" and the second removes the entry. All sections show "Nothing logged.", and the totals read 0 / 2000.
+- **The mock's records afterwards:** only Bob's entry and yesterday's are left, both untouched.
+
+## How I would have done it
+Mostly the same structure; the brief laid out the files. The differences:
+- **Run `tsc -b` explicitly in "Done when"** rather than trusting `npm run build`. A false "build passes" report is new for this model. In earlier tasks its build claims held. From now on, every brief says: "paste the last 5 lines of `npm run build`".
+- **Give the toggle-row markup as a snippet** ("copy the meal buttons from `ServingPicker.tsx` lines 89–96"). "Like ServingPicker's" got the colours but not the grid.
+- **One small open point:** after a "could not be changed" error, the stale entry stays listed until the next refetch. I'd also invalidate `['meal-logs']` on error. Left as is, since it only happens when the row was deleted elsewhere.
+
+## Verdict
+**Usable after small fixes.** The data and state logic were correct this time, and the UI wiring too. That's an improvement on tasks 06, 07 and 10, probably because the brief wrote the state rules as rules and required the button check. Lesson: **the model's "build passes" can be false. Make it paste the build output, and always rebuild myself.**

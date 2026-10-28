@@ -1,4 +1,4 @@
-import type { MealLog } from './types'
+import type { MealLog, MealType } from './types'
 import { MEALS } from './types'
 
 export function sumLogs(logs: MealLog[]): { kcal: number; protein_g: number; carbs_g: number; fat_g: number } {
@@ -20,15 +20,8 @@ export function sumLogs(logs: MealLog[]): { kcal: number; protein_g: number; car
   }
 }
 
-export function groupByMeal(logs: MealLog[]): { meal: typeof MEALS[number]; logs: MealLog[] }[] {
-  const map = new Map<string, MealLog[]>()
-  for (const meal of MEALS) {
-    map.set(meal, [])
-  }
-  for (const log of logs) {
-    map.get(log.meal_type)!.push(log)
-  }
-  return Array.from(map.entries()).map(([meal, logs]) => ({ meal, logs }))
+export function groupByMeal(logs: MealLog[]): { meal: MealType; logs: MealLog[] }[] {
+  return MEALS.map((meal) => ({ meal, logs: logs.filter((l) => l.meal_type === meal) }))
 }
 
 export function rescaleLog(log: MealLog, grams: number) {
