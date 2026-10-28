@@ -148,6 +148,8 @@ Two runs. The brief changed between them: after the first run, I added the "How 
 
 The cause: it tried to write the 300-line file in one go, rewrote it 7 times, then improvised with base64 and Python. Its context filled up, and it lost the brief.
 
+The context problem was partly the harness's fault. The browser app's agent presets ignored the profile's compaction setting, so the 35B compacted at **about 32K tokens instead of near its 128K window**, roughly every couple of minutes. Each compaction cost detail, which is how it lost the brief's path and its setup SQL. This was found and fixed on 2026-10-28 in the "Local LLM offloading with Ollama" session: compaction now starts at about 96K. The 35B should get another chance on a long task after this fix.
+
 **Run 2 (27B) was good:**
 - **31/31 pass.** `npm run test:db` exits 0 on success and 1 on failure. A crash also exits 1, since a top-level `await` that throws ends Node with code 1.
 - **It followed the brief to the letter.** It used the setup SQL exactly as given, and the `as()` helper matches the spec.
