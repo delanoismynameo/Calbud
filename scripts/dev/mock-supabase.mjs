@@ -105,11 +105,17 @@ http.createServer((req, res) => {
       profiles[ME].household_id = id
       return send(res, 200, id)
     }
+    // Same rules as 20261028000001_join_switch.sql: a solo member may switch, taking their foods along.
     if (url.pathname === '/rest/v1/rpc/join_household') {
-      if (profiles[ME].household_id) return pgErr(res, 'join_household: you are already in a household')
+      const members = (id) => Object.values(profiles).filter((p) => p.household_id === id).length
+      const old = profiles[ME].household_id
       const h = Object.values(households).find((x) => x.invite_code === JSON.parse(body).p_code)
       if (!h) return pgErr(res, 'join_household: no household has that invite code')
+      if (h.id === old) return pgErr(res, 'join_household: you are already in that household')
+      if (old && members(old) > 1) return pgErr(res, 'join_household: you are already in a household with someone')
+      if (members(h.id) >= 2) return pgErr(res, 'join_household: that household already has 2 members')
       profiles[ME].household_id = h.id
+      if (old) { foods.filter((f) => f.household_id === old).forEach((f) => (f.household_id = h.id)); delete households[old] }
       h.invite_code = code8()
       return send(res, 200, h.id)
     }
