@@ -1,0 +1,94 @@
+{
+  "hits": [
+    {
+      "code": "6052998811612",
+      "brands": [
+        "oatmeal"
+      ],
+      "nutriments": {
+        "carbohydrates_100g": 60.2,
+        "fat_100g": 16.72,
+        "proteins_100g": 9.82
+      },
+      "product_name": "cookies"
+    },
+    {
+      "code": "0030000315071",
+      "brands": [
+        "Oatmeal"
+      ],
+      "nutriments": {
+        "carbohydrates_100g": 67.9,
+        "energy-kcal_100g": 357,
+        "fat_100g": 7.14,
+        "fiber_100g": 10.7,
+        "proteins_100g": 14.3,
+        "salt_100g": 0.67,
+        "saturated-fat_100g": 1.79,
+        "sodium_100g": 0.268,
+        "sugars_100g": 0
+      },
+      "product_name": "Original instant oatmeal"
+    },
+    {
+      "code": "0094331036906",
+      "brands": [
+        "Granvita"
+      ],
+      "nutriments": {
+        "carbohydrates_100g": 57.9,
+        "energy-kcal_100g": 437.7,
+        "energy-kj_100g": 1837.1,
+        "fat_100g": 18.5,
+        "fiber_100g": 8.2,
+        "proteins_100g": 9.9,
+        "salt_100g": 0.0775,
+        "saturated-fat_100g": 4.2,
+        "sodium_100g": 0.031,
+        "sugars_100g": 0
+      },
+      "product_name": "Hojuelitas 0% Galletas de avena integrales"
+    },
+    {
+      "code": "6052028799002",
+      "brands": [
+        "OATMEAL"
+      ],
+      "nutriments": {
+        "carbohydrates_100g": 66.3,
+        "energy-kcal_100g": 490.4,
+        "energy-kj_100g": 2049.8,
+        "fat_100g": 22,
+        "proteins_100g": 6.8
+      },
+      "product_name": "Cookies de flocons d'avoine"
+    },
+    {
+      "code": "0014100078845",
+      "brands": [
+        "Pepperidge Farm",
+        "Santa Cruz"
+      ],
+      "nutriments": {
+        "carbohydrates_100g": 71,
+        "energy-kcal_100g": 452,
+        "fat_100g": 14.5,
+        "fiber_100g": 3.23,
+        "proteins_100g": 6.45,
+        "salt_100g": 0.806,
+        "saturated-fat_100g": 6.45,
+        "sodium_100g": 0.323,
+        "sugars_100g": 38.7
+      },
+      "product_name": "Santa Cruz Oatmeal Raisin"
+    }
+  ],
+  "page": 1,
+  "page_size": 5,
+  "page_count": 829,
+  "took": 4,
+  "timed_out": false,
+  "count": 4144,
+  "is_count_exact": true,
+  "warnings": null
+}

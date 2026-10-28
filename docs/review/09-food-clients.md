@@ -18,17 +18,19 @@ All of it comes with unit tests. **No UI in this task.** The search box comes la
 ### Install
 `npm install --save-dev --save-exact vitest`. Add the script `"test": "vitest run"` to `package.json`.
 
-### Step 1: save real sample responses (fixtures)
-The tests must use **real** API responses, not invented ones. Download them with `curl` or `node -e "fetch(...)"` into `src/food/__fixtures__/`, then **trim each file to its first 5 results**, keeping their fields unchanged.
+### Step 1: read the real sample responses (fixtures)
+Real API responses are **already saved** in `src/food/__fixtures__/`. Read every one of them before writing any parser.
 
-| File | URL |
+| File | What it is |
 |---|---|
-| `usda-search-egg.json` | `https://api.nal.usda.gov/fdc/v1/foods/search?query=egg&pageSize=5&dataType=Foundation,SR%20Legacy,Survey%20(FNDDS)&api_key=DEMO_KEY` |
-| `usda-search-banana.json` | same, with `query=banana` |
-| `off-search-oatmeal.json` | `https://world.openfoodfacts.org/cgi/search.pl?search_terms=oatmeal&search_simple=1&json=1&page_size=5&fields=code,product_name,brands,serving_size,serving_quantity,nutriments` |
-| `off-product-nutella.json` | `https://world.openfoodfacts.org/api/v2/product/3017620422003.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments` |
+| `usda-search-egg.json`, `usda-search-banana.json` | USDA search results (`foods` array) |
+| `off-search-oatmeal.json` | Open Food Facts search results. Note: the products are in **`hits`**, and `brands` is an **array**. |
+| `off-product-nutella.json` | Open Food Facts barcode lookup (`status: 1`, `product`). Here `brands` is a **string**. |
+| `off-product-not-found.json` | Barcode lookup for an unknown code. The API sends this body with **HTTP 404**. |
 
-Look at these files before writing the parsers. **Field names in this brief are a guide; the fixtures are the truth.** If they disagree, follow the fixture and say so in your reply.
+**Never download, edit, regenerate or invent fixture files**, and never call the real network (no `curl`, no `fetch` to real URLs). For a test that needs a variation (e.g. a missing nutrient), copy an item from a fixture *inside the test* and change the copy.
+
+**If something this brief needs is missing, or a fixture disagrees with the brief: follow the fixture and say so in your reply.** If you can't continue, stop and say what is missing. Never fill a gap with made-up data.
 
 ### Step 2: the code
 Put everything in `src/food/`. Keep each file under about 120 lines, and write **one file per write**.
@@ -72,16 +74,18 @@ export interface FoodResult {
     - Otherwise both are `null`.
   - Use `description` as the name and `brandOwner` (or `null`) as the brand.
 - **`searchUsda(query, { apiKey, fetchFn = fetch, signal })`** returns `Promise<FoodResult[]>`.
-  - It calls `https://api.nal.usda.gov/fdc/v1/foods/search` with:
-    - `query` (URL-encoded)
-    - `pageSize=25`
-    - `dataType=Foundation,SR Legacy,Survey (FNDDS)` (generic foods only; Open Food Facts covers packaged foods)
-    - `api_key`
+  - It sends a **POST** to `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=<key>`, with header `Content-Type: application/json` and this JSON body: `{ "query": <query>, "dataType": ["Foundation", "SR Legacy", "Survey (FNDDS)"], "pageSize": 25 }`. It searches generic foods only; Open Food Facts covers packaged foods.
+  - Use POST, not GET: the GET form rejects these data-type names.
   - It maps results through `normalizeUsdaFood` and drops the `null`s.
   - On a non-OK response it throws `Error('USDA search failed (HTTP <status>)')`. **The error must never include the API key.**
 
 **`off.ts`**
-- **`normalizeOffProduct(raw: unknown): FoodResult | null`** reads `product_name` (the name), `brands` (the first brand before a comma, or `null`), `code`, and `nutriments`:
+- **`normalizeOffProduct(raw: unknown): FoodResult | null`** reads `product_name` (the name), `code`, `nutriments` and `brands`. **Brand rule:**
+  - If `brands` is an array, use its first element.
+  - If it's a string, use the part before the first comma.
+  - In both cases, trim it. An empty result becomes `null`.
+
+  The nutriments are read like this:
   - **Energy:** `energy-kcal_100g`. If that's missing, use `energy-kj_100g / 4.184`, rounded to 1 decimal place.
   - **Protein, carbs, fat:** `proteins_100g`, `carbohydrates_100g`, `fat_100g`.
   - **Fibre and sugar:** `fiber_100g` and `sugars_100g`, or `null` when missing.
@@ -89,8 +93,12 @@ export interface FoodResult {
   - **Serving:** `serving_quantity` when it's a positive number, labelled with `serving_size`.
   - **Return `null`** if there is no name, or energy, protein, carbs or fat is missing.
   - `sourceId` and `barcode` are both the `code`.
-- **`searchOff(query, { fetchFn = fetch, signal })`** calls the search URL from the fixture table with `page_size=20` and the query URL-encoded. It maps `products` through `normalizeOffProduct`. On a non-OK response it throws `Error('Open Food Facts search failed (HTTP <status>)')`.
-- **`lookupBarcode(code, { fetchFn = fetch, signal })`** returns `Promise<FoodResult | null>`, using the product URL. It returns `null` when the response has `status: 0` (product not found) or the product doesn't normalise.
+- **`searchOff(query, { fetchFn = fetch, signal })`** sends a GET to `https://search.openfoodfacts.org/search?q=<query, URL-encoded>&page_size=20&fields=code,product_name,brands,serving_size,serving_quantity,nutriments`. It maps **`hits`** through `normalizeOffProduct`. On a non-OK response it throws `Error('Open Food Facts search failed (HTTP <status>)')`.
+- **`lookupBarcode(code, { fetchFn = fetch, signal })`** returns `Promise<FoodResult | null>`.
+  - It sends a GET to `https://world.openfoodfacts.org/api/v2/product/<code>.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments`.
+  - It **parses the JSON body before checking the HTTP status**. If the body has `status: 0`, it returns `null`, even when the HTTP status is 404 (see `off-product-not-found.json`).
+  - It also returns `null` when the product doesn't normalise.
+  - Any other non-OK response throws `Error('Open Food Facts lookup failed (HTTP <status>)')`.
 
 **`search.ts`**
 `searchFoods(query, { apiKey, fetchFn = fetch, signal })` returns `Promise<{ results: FoodResult[]; errors: string[] }>`:
@@ -105,7 +113,7 @@ export interface FoodResult {
 ### Step 3: tests (vitest)
 Use one test file next to each module: `nutrition.test.ts`, `usda.test.ts`, `off.test.ts`, `search.test.ts`.
 - Read fixtures with `readFileSync(new URL('./__fixtures__/<file>', import.meta.url), 'utf8')`.
-- **Never call the real network in tests.** Pass a fake `fetchFn` that returns `new Response(JSON.stringify(fixture))` and records the URL it was called with.
+- **Never call the real network in tests.** Pass a fake `fetchFn` that returns `new Response(JSON.stringify(fixture), { status })` and records the URL and the `init` (method and body) it was called with.
 
 Include at least these tests (more is fine):
 - **nutrition**
@@ -115,16 +123,18 @@ Include at least these tests (more is fine):
 - **usda**
   - Every egg fixture item normalises to a `FoodResult` with `source: 'usda'` and a numeric `kcal100g`.
   - The banana fixture normalises too.
-  - A copy of a fixture item with nutrient 1008 removed falls back to 2047.
+  - Energy fallback: take a copy of a fixture item, remove any `1008` entry, and make sure a `2047` entry exists (add one with a known value if the item has none). The result uses that `2047` value.
   - An item with protein removed returns `null`.
-  - `searchUsda` builds a URL containing the encoded query, `pageSize=25` and the three data types.
+  - `searchUsda` sends a POST whose JSON body has the query, `pageSize: 25` and the three data types, and whose URL has the key.
   - On a 403, `searchUsda` throws, and the message doesn't contain the key.
 - **off**
-  - The oatmeal fixture normalises, and items without a name or core values are dropped.
-  - Sodium is converted from g to mg.
-  - The kJ fallback works (on an edited copy of the fixture).
+  - `searchOff` on the oatmeal fixture returns the hits that have energy and macros. The first hit (`cookies`, no energy) is dropped.
+  - The brand is taken from a `brands` array (e.g. `Pepperidge Farm`) and from a `brands` string (`Nutella, Ferrero` becomes `Nutella`).
+  - Sodium is converted from g to mg. For Nutella, `0.0428` g becomes `42.8` mg (compare with `toBeCloseTo`).
+  - The kJ fallback works on a copy of a hit with `energy-kcal_100g` removed but `energy-kj_100g` kept.
   - `lookupBarcode` on the Nutella fixture returns a result whose `barcode` is `3017620422003`.
-  - `{ "status": 0 }` returns `null`.
+  - `lookupBarcode` returns `null` when the not-found fixture is served with **HTTP 404**.
+  - It throws on an HTTP 500 with a non-JSON body.
 - **search**
   - A 1-character query makes no fetch.
   - Duplicates (same name and brand, different case) are removed.
