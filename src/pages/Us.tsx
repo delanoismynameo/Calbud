@@ -2,6 +2,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../household/useProfile'
 import { supabase } from '../lib/supabase'
 import CopyCode from '../household/CopyCode'
+import SwitchHousehold from '../household/SwitchHousehold'
 
 export default function Us() {
   const { session } = useAuth()
@@ -42,6 +43,9 @@ export default function Us() {
                 <div className="max-w-sm mx-auto space-y-2">
                   <p className="text-sm text-gray-400">Waiting for your partner to join. Share this code:</p>
                   <CopyCode code={household.invite_code} />
+                  <div className="pt-4">
+                    <SwitchHousehold />
+                  </div>
                 </div>
               )}
             </div>
