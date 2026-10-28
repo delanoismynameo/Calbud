@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import type { Profile, Household } from '../lib/types'
 
 interface ProfileResult {
-  profile: Profile | null
+  profile: Profile
   household: Household | null
   partner: Profile | null
 }
@@ -18,7 +18,7 @@ async function queryFn(userId: string): Promise<ProfileResult> {
   if (profErr) throw new Error(profErr.message)
 
   if (!userProf.household_id) {
-    return { profile: userProf, household: null, partner: null } as ProfileResult
+    return { profile: userProf, household: null, partner: null }
   }
 
   const { data: hh, error: hhErr } = await supabase
@@ -36,7 +36,7 @@ async function queryFn(userId: string): Promise<ProfileResult> {
     .maybeSingle()
   if (partRes.error) throw new Error(partRes.error.message)
 
-  return { profile: userProf, household: hh, partner: partRes.data } as ProfileResult
+  return { profile: userProf, household: hh, partner: partRes.data }
 }
 
 export function useProfile(): {
@@ -59,14 +59,12 @@ export function useProfile(): {
     },
   })
 
-  const data = query.data ?? { profile: null, household: null, partner: null }
-
   return {
-    profile: data.profile,
-    household: data.household,
-    partner: data.partner,
+    profile: query.data?.profile ?? null,
+    household: query.data?.household ?? null,
+    partner: query.data?.partner ?? null,
     loading: query.isPending,
-    error: (query.isError && !query.data) ? String(query.error) : null,
+    error: query.isError && !query.data ? query.error.message : null,
     refresh: async () => { await query.refetch() },
   }
 }

@@ -59,3 +59,52 @@ Exports a hook, `useProfile()`, with **exactly the same return shape as today**:
 4. You have re-read this brief and confirmed each point.
 
 Reply with: the files created, changed and deleted, the build result, and anything you were unsure about.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access (enabled by the user), web UI.
+- **Wall time:** **4 min 3 s**, the fastest run so far.
+- **Outcome:** finished with a checklist mapping every brief point to its change, and named one honest doubt (the data type, see below).
+- **Saved:** harness output committed unchanged as `450b2a4`.
+
+## Result
+**This is the closest any run has come to the brief.**
+- Every file was created, changed or deleted as listed.
+- `ProfileProvider` is gone from `src`.
+- The query key, `enabled`, `loading = isPending`, the "error only when there's no data" rule, `refresh` and `queryClient.clear()` on `SIGNED_OUT` are all as specified.
+- The build passes, and the database tests are still 31/31.
+
+Two small issues:
+1. **`error` used `String(query.error)`,** which adds an `Error: ` prefix to every message shown on the error screen.
+2. **It typed the query result with `profile: Profile | null`** and used `as ProfileResult` casts, instead of the brief's `profile: Profile`. It flagged this itself, reasoning that the result is null before data arrives. That's true of the *hook's return*, not of the *query data*, which is never partial.
+
+## What I changed
+- `useProfile.ts`:
+  - The result type is now `profile: Profile`, and the two `as` casts are gone.
+  - The hook reads `query.data?.… ?? null` for each field.
+  - `error` uses `query.error.message`.
+
+### Checked in the browser
+Same mock Supabase and fake session as in task 07:
+- **Step 1 loads prefilled** through the new hook.
+- **Joining with `abcd1234`** lands in the app. The Us page shows "Bob's household" and both members.
+- **With the mock stopped,** a reload shows `TypeError: Failed to fetch` and **Retry**. The `TypeError:` is part of supabase-js's own message; there's no extra `Error:` any more.
+- **Restarting the mock and pressing Retry** loads normally.
+- **Sign out** goes to the sign-in screen, and local storage is empty afterwards.
+
+Afterwards: the mock was stopped, the service worker cleared, and the app rebuilt without test values. The build passes, the database tests are 31/31, and no test values are in `dist`.
+
+**Noticed, not changed:**
+- With the backend unreachable, "Loading…" showed for about **25 seconds** before the error. That's supabase-js's network failure time plus one retry.
+- If you create a household, switch apps to share the code, then come back, the refetch on focus sees the new household and **skips the code screen**. The old hand-written loader did the same thing. No harm is done, because the Us page shows the code.
+
+Both belong to the planned offline and PWA work, not this refactor.
+
+## How I would have done it
+The same. This is the textbook shape for TanStack Query: a hook with `useQuery` keyed by user, a `QueryClientProvider` at the root, and `clear()` on sign-out. The only additions I'd make:
+- **A shared `queryKeys` helper** (e.g. `queryKeys.household(userId)`), so later mutations can invalidate by key without retyping arrays.
+- **Moving the setup writes to `useMutation`** with `onSuccess: invalidate`. That's worth doing when meal logging adds the first real mutations.
+
+## Verdict
+**Usable after a two-line fix.** Lessons:
+1. **When the brief states the state rules explicitly, the 35B gets them right.** "`loading` must not turn back on", "`error` only when there's no data" and "`refresh` returns `Promise<void>`" were written as rules this time, and all three came out correct. Those were exactly the areas tasks 06 and 07 got wrong.
+2. **Small, precise refactors are the 35B's sweet spot:** 4 minutes, with an accurate self-report.
