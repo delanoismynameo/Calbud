@@ -4,7 +4,8 @@
 
 ## Where things stand
 - **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
-- **Task 12 (the Today screen) is done in local `main` but not pushed.** It lists today's food by meal, shows totals against goals, and lets you edit or delete an entry. It goes live when pushed, with the user's OK.
+- **Task 12 (the Today screen) is live** (pushed 2026-10-28).
+- **Task 13 (switching to a partner's household, SQL only) is in `main` but not applied:** `supabase/migrations/20261028000001_join_switch.sql` still has to be run in the Supabase SQL Editor. There's no UI for it yet (task 14).
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. Both migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
@@ -12,7 +13,7 @@
   | Command | Result |
   |---|---|
   | `npm test` | 63 passing |
-  | `npm run test:db` | 31 passing |
+  | `npm run test:db` | 43 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
 
@@ -32,10 +33,11 @@ Before sending a task to the harness:
 | 06–08 | Auth (PKCE), first-run setup, TanStack Query | [06](review/06-auth-client.md), [07](review/07-household-setup.md), [08](review/08-tanstack-query.md) |
 | 09–11 | Food API clients, add-food flow, USDA branded search | [09](review/09-food-clients.md), [10](review/10-add-food.md), [11](review/11-usda-branded.md) |
 | 12 | Today screen: meals, totals against goals, edit and delete | [12](review/12-today-screen.md) |
+| 13 | `join_household` lets a solo member switch households (SQL + 12 DB tests) | [13](review/13-switch-household.md) |
 
 ## Next, in order
-1. **Push task 12** (with the user's OK).
-2. **"Join a different household":** let someone who is alone in their household join their partner's from the Us page. It needs a migration changing `join_household`, plus updated DB tests and UI. See GAME_PLAN build step 4.
+1. **Apply the task 13 migration** in the SQL Editor (the user does this).
+2. **Task 14, "Join a different household" UI:** on the Us page, when you're alone in your household, offer "Join your partner's household" with a code field that calls `join_household`. See GAME_PLAN build step 4.
 3. **The rest of the build plan,** from step 7: recents, favorites and custom foods, then barcode scanning. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
 
 ## Waiting on the user

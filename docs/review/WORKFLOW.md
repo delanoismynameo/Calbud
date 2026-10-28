@@ -109,6 +109,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 10 | Add-food flow (search, portion, log) | 35B (High) | Usable after real fixes |
 | 11 | USDA Branded replaces Open Food Facts text search | 35B (High) | Usable as delivered |
 | 12 | Today screen (totals, edit, delete) | 35B (High) | Usable after small fixes; falsely reported a clean build |
+| 13 | `join_household` switch (SQL + DB tests) | 27B tuned (High) | Correct SQL; added 1 missing test. 1 h 5 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
