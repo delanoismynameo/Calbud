@@ -94,11 +94,11 @@ describe('normalizeOffProduct', () => {
 })
 
 describe('offServingLabel', () => {
-  it('trims text that already contains g and returns it unchanged ("0.75 cup (50 g)")', () => {
+  it('text that already has grams is returned unchanged ("0.75 cup (50 g)")', () => {
     expect(offServingLabel('0.75 cup (50 g)', 50)).toBe('0.75 cup (50 g)')
   })
 
-  it('gr without space returns trimmed text unchanged ("30g")', () => {
+  it('grams with no space are recognised ("30g")', () => {
     expect(offServingLabel('30g', 30)).toBe('30g')
   })
 
