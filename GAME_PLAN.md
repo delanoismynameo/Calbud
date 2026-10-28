@@ -285,7 +285,7 @@ Status as of 2026-10-28. ✅ = done, 🟡 = partly done, ⬜ = not started. Deta
 8. 🟡 Barcode scanning. *(Task 18: camera via `@zxing/browser` plus a typed code, looked up in Open Food Facts. Needs a camera test on a real phone. USDA `gtinUpc` is a possible fallback for misses.)*
 
 ### Phase 3: Planning and Export
-9. 🟡 Meal prep board + grocery list + Realtime. *(Task 21: the week board with add, edit, delete and Planned/Done. Still to do: the grocery list, Realtime, and "log servings to my day".)*
+9. 🟡 Meal prep board + grocery list + Realtime. *(Task 21: the week board with add, edit, delete and Planned/Done. Task 22: the grocery list and Realtime. Still to do: "log servings to my day".)*
 10. ⬜ Activity planner (week grid, both people).
 11. ⬜ `.ics` export with unit tests (check output imports cleanly into Google Calendar and an iPhone).
 

@@ -119,6 +119,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 19 | Open Food Facts serving labels without repeated grams | 35B (High) | Usable as delivered; its integration test caught its own bug. ~4 min |
 | 20 | Search ranking (cooking words, merged ranking) | 35B (High) | Usable after a one-line fix; it caught my brief's title-case slip. ~9 min |
 | 21 | Meal prep week view and form (8 sections) | 35B (High) | Usable after real fixes (form errors, label). ~20 min |
+| 22 | Grocery list, Plan/Grocery switch, Realtime on `meal_prep` | 35B (High) | Usable as delivered. ~8 min |
 | 22a | Grocery helper (side job, alongside 21) | 4B on the 3050, headless | Failed: spawn EPERM in the headless sandbox, edited `vite.config.ts`, 8/9 tests failing |
 
 ## Lessons That Change How Briefs Are Written

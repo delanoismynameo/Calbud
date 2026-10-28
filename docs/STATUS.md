@@ -11,14 +11,15 @@
 - **Task 17 (custom foods) is live** (pushed 2026-10-28).
 - **Task 18 (barcode scanning: "Scan a barcode" on Add food, camera via `@zxing/browser`, or a typed code, looked up in Open Food Facts) is live** (pushed 2026-10-28). The camera still needs a test on a real phone.
 - **Tasks 19–20 (Open Food Facts serving labels; search ranking) are live** (pushed 2026-10-28).
-- **Task 21 (the Prep page: a Sunday-to-Saturday week of shared prep sessions, with add, edit, delete and Planned/Done) is committed locally, not pushed.**
+- **Task 21 (the Prep page: a Sunday-to-Saturday week of shared prep sessions, with add, edit, delete and Planned/Done) is live** (pushed 2026-10-28).
+- **Task 22 (the week's grocery list with ticks, and Realtime so both phones' Prep pages update live) is committed locally, not pushed.** Realtime can only be checked on two signed-in phones after deploying.
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All three migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 167 passing |
+  | `npm test` | 177 passing |
   | `npm run test:db` | 43 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -48,11 +49,12 @@ Before sending a task to the harness:
 | 19 | Open Food Facts serving labels without repeated grams | [19](review/19-off-serving-label.md) |
 | 20 | Search ranking: cooking words, one ranked list | [20](review/20-search-ranking.md) |
 | 21 | Meal prep week view and form | [21](review/21-prep-week.md) |
+| 22 | Grocery list and live updates | [22](review/22-grocery-realtime.md) |
 | 22a | Grocery helper on the 4B (side job; failed) | [22a](review/22a-grocery-helper.md) |
 
 ## Next, in order
-1. **Try the barcode camera on a phone** (iPhone and Android if possible), and **push task 21** when the user says so.
-2. **Task 22:** the week's grocery list (`src/prep/grocery.ts`, spec in [22a](review/22a-grocery-helper.md)) plus Realtime on `meal_prep`, so both phones update live. Possibly with task 23: "log servings to my day" when a session is done. `meal_prep` has no nutrition yet, so ask the user how that should work first.
+1. **Push task 22** when the user says so. Then **on two phones:** try the barcode camera, and check that a prep change on one phone shows up on the other without a refresh.
+2. **Task 23:** "log servings to my day" when a session is done. `meal_prep` has no nutrition yet, so ask the user how that should work first.
 3. **The rest of meal prep** (GAME_PLAN step 9), as GAME_PLAN §3 describes it. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
 
 ## Waiting on the user

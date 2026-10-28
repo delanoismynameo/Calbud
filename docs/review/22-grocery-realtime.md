@@ -111,3 +111,27 @@ The DELETE listener has **no filter on purpose**. Supabase sends only the delete
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** about **8 min**, 35 steps. About 6 of those minutes went on one JSX bracket mistake in `Prep.tsx`, which it fixed by rewriting the block.
+- **Outcome:** finished.
+  - **First test count:** it first wrote 12 tests, then merged two to match the brief's 10.
+  - **Build lines:** its pasted lines were real, but not the last 5. It showed the `dist/` sizes rather than the PWA lines.
+  - **No test edits:** it didn't change any expected values. The new rule against that held.
+
+## Result
+- **Builds:** yes. **Tests:** 177 passing (167 + 10).
+- **Click-through** at 375 px against the mock, with an extra session added through the mock (`1 cups Rice`, `3 eggs`, `curry roux`):
+  - "Grocery list" shows `4 cup rice` (3 + 1, and "cups" counted as "cup"), `curry roux` once, `3 eggs`, `2 lb chicken thighs` and `2 tofu`
+  - Bob's done Meatballs is left out, and the list says "From 3 planned sessions"
+  - ticks are saved per week (`calbud:grocery:2026-10-25`) and survive a reload
+  - the next week starts with no ticks and shows the empty message
+  - going back restores the ticks, and "Clear ticks" empties them
+- **Realtime:** the page tries to open the Realtime WebSocket. The mock has none, so it fails as expected. **Not verified end to end:** that needs two signed-in phones on the live site.
+
+## What I changed
+Nothing.
+
+## Verdict
+Usable as delivered. The explicit "never change a test's expected value" rule held. Copying the Realtime code into the brief word for word kept it right.
