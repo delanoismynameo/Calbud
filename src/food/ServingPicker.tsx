@@ -39,6 +39,7 @@ export default function ServingPicker({ food, onLogged, onCancel }: {
     }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['meal-logs'] })
+      await queryClient.invalidateQueries({ queryKey: ['recent-foods'] })
       onLogged()
     },
   })

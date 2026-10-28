@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import { useFoodSearch } from '../food/useFoodSearch'
 import ServingPicker from '../food/ServingPicker'
 import type { FoodResult } from '../food/types'
+import { useRecentFoods } from '../food/useRecentFoods'
 
 export default function AddFood() {
   const navigate = useNavigate()
@@ -10,6 +11,8 @@ export default function AddFood() {
   // Keep the picked food itself, not its list position: the list can refresh underneath.
   const [selected, setSelected] = useState<FoodResult | null>(null)
   const { results, errors, isSearching, settled, failed, tooShort, refetch } = useFoodSearch(query)
+  const recents = useRecentFoods()
+  const empty = query.trim() === ''
 
   return (
     <div className="space-y-3">
@@ -27,7 +30,31 @@ export default function AddFood() {
             value={query} onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" />
 
-          {tooShort && <p className="text-gray-400 text-center py-4">Type at least 2 letters.</p>}
+          {empty && !selected && (
+            recents.isPending ? null : (
+              recents.isError ? (
+                <p className="text-gray-500 text-xs px-2">Couldn't load recent foods.</p>
+              ) : recents.data && recents.data.length > 0 ? (
+                <>
+                  <h2 className="text-sm font-semibold text-gray-400 px-1">Recent</h2>
+                  {recents.data.map((food) => (
+                    <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => setSelected(food)}
+                      className="w-full bg-slate-800 rounded-lg p-3 text-left hover:bg-slate-700 active:bg-slate-600">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold">{food.name}</span>
+                      </div>
+                      {food.brand && <p className="text-gray-400 text-sm">{food.brand}</p>}
+                      <p className="text-gray-400 text-xs mt-1">{Math.round(food.kcal100g)} kcal / 100 g</p>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <p className="text-gray-400 text-center py-6">Foods you log will show up here.</p>
+              )
+            )
+          )}
+
+          {tooShort && !empty && <p className="text-gray-400 text-center py-4">Type at least 2 letters.</p>}
           {!tooShort && isSearching && <p className="text-sm text-blue-400 text-center">Searching…</p>}
           {!tooShort && failed && (
             <div className="bg-slate-800 rounded p-3 text-center space-y-2">
