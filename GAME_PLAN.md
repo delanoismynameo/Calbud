@@ -270,7 +270,7 @@ calbud/
 ## Build Order
 
 ### Phase 1: Foundation
-Status as of 2026-10-28. ✅ = done, 🟡 = partly done, ⬜ = not started. Details are in [`docs/STATUS.md`](docs/STATUS.md).
+Status as of 2026-10-29. ✅ = done, 🟡 = partly done, ⬜ = not started. Details are in [`docs/STATUS.md`](docs/STATUS.md).
 
 1. ✅ Scaffold Vite + React + TS + Tailwind + PWA plugin; get an installable shell deploying to Pages **first**, so deployment issues surface early. *(Tasks 01–02. Live at https://delanoismynameo.github.io/Calbud/.)*
 2. ✅ Create the Supabase project; write migrations for the schema, RLS, the profile trigger and the household functions. *(Tasks 03–04. Applied to the real project through the SQL Editor.)*
@@ -281,11 +281,11 @@ Status as of 2026-10-28. ✅ = done, 🟡 = partly done, ⬜ = not started. Deta
 ### Phase 2: Calorie Tracking
 5. ✅ `usda.ts` and `off.ts` clients plus merged search with debounce. *(Tasks 09 and 11. Text search uses USDA generic + USDA Branded, because Open Food Facts search blocks browsers (no CORS). OFF is used only for barcode lookup.)*
 6. ✅ Serving picker with macro scaling; `foods` caching; meal log insert with snapshot. *(Task 10. Live.)*
-7. ✅ Day view with totals, recents, favorites, custom foods. *(Task 12: the Today screen, with meals, totals against goals, edit and delete. Task 15: recents. Task 16: favorites. Task 17: custom foods.)*
+7. ✅ Day view with totals, recents, favorites, custom foods. *(Task 12: the Today screen, with meals, totals against goals, edit and delete. Task 15: recents. Task 16: favorites. Task 17: custom foods. Task 25: past days, logging to them, "Copy yesterday". Task 26: 11 extra label nutrients (sodium, fiber, iron …) against daily values.)*
 8. 🟡 Barcode scanning. *(Task 18: camera via `@zxing/browser` plus a typed code, looked up in Open Food Facts. Needs a camera test on a real phone. USDA `gtinUpc` is a possible fallback for misses.)*
 
 ### Phase 3: Planning and Export
-9. 🟡 Meal prep board + grocery list + Realtime. *(Task 21: the week board with add, edit, delete and Planned/Done. Task 22: the grocery list and Realtime. Still to do: "log servings to my day".)*
+9. ✅ Meal prep board + grocery list + Realtime. *(Task 21: the week board with add, edit, delete and Planned/Done. Task 22: the grocery list and Realtime. Task 23: a dish's nutrition saved as a custom food, and "Log" a serving. Task 24, beyond the plan: the shared breakfast/lunch/dinner menu grid and "Today's menu", from the user's spreadsheet. Realtime still needs a two-phone check.)*
 10. ⬜ Activity planner (week grid, both people).
 11. ⬜ `.ics` export with unit tests (check output imports cleanly into Google Calendar and an iPhone).
 
@@ -316,7 +316,7 @@ Status as of 2026-10-28. ✅ = done, 🟡 = partly done, ⬜ = not started. Deta
 
 ## Decisions (v1)
 
-1. **Tracking scope:** calories and macros only. No weight or water tracking in v1.
+1. **Tracking scope:** calories and macros, plus (since task 26, at the user's request) the 11 Nutrition Facts label nutrients when the food reports them. No weight or water tracking in v1.
 2. **Burned calories:** informational only. Shown on activities and the dashboard, never added to the daily calorie goal.
 3. **Privacy:** full mutual visibility. No private flag; everything logged is visible to the partner.
 4. **Sign-in:** email + password via Supabase Auth. No Google sign-in or magic links in v1.
