@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { kcalByUserDay, lastWeek, averageKcal, onTarget, streak } from './stats'
+import type { ByDay } from './stats'
+import { addDays } from '../prep/week'
 
 describe('kcalByUserDay', () => {
   it('groups rows by user and day, summing kcal', () => {
@@ -102,11 +104,9 @@ describe('streak', () => {
   })
 
   it('respects maxDays cap', () => {
-    const people = Array.from({ length: 10 }, () => ({
-      byDay: Object.fromEntries(Array.from({ length: 10 }, (_, i) => [String(20 + (i + 1)), 2000] as [string, number])),
-      goal: 2000,
-    }))
-    expect(streak(people, '2026-10-29', 5)).toBe(5)
+    const byDay: ByDay = {}
+    for (let i = 0; i < 10; i++) byDay[addDays('2026-10-29', -i)] = 2000
+    expect(streak([{ byDay, goal: 2000 }], '2026-10-29', 5)).toBe(5)
   })
 
   it('empty people list gives 0', () => {

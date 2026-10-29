@@ -7,9 +7,11 @@ export type ByDay = Record<string, number> // date → that day's kcals
 export function kcalByUserDay(rows: KcalRow[]): Record<string, ByDay> {
   const result: Record<string, ByDay> = {}
   for (const row of rows) {
-    if (!result[row.user_id]) result[row.user_id] = {}
-    const dayKcal = result[row.user_id][row.logged_on]
-    result[row.user_id][row.logged_on] = Math.round((dayKcal ?? 0) + row.kcal)
+    const days = (result[row.user_id] ??= {})
+    days[row.logged_on] = (days[row.logged_on] ?? 0) + row.kcal
+  }
+  for (const days of Object.values(result)) {
+    for (const date in days) days[date] = Math.round(days[date])
   }
   return result
 }
@@ -55,42 +57,9 @@ export function onTarget(kcal: number | undefined, goal: number, tolerance = 0.1
 // An empty `people` list gives 0.
 export function streak(people: { byDay: ByDay | undefined; goal: number }[], today: string, maxDays: number): number {
   if (people.length === 0) return 0
-
-  // Check if everyone is on target today
-  let allOnTargetToday = true
-  for (const person of people) {
-    const kcal = person.byDay?.[today]
-    if (!onTarget(kcal, person.goal)) {
-      allOnTargetToday = false
-      break
-    }
-  }
-
-  // Start date: today if everyone on target, otherwise yesterday
-  let startDate = addDays(today, -1)
-  if (allOnTargetToday) {
-    startDate = today
-  }
-
+  const everyone = (date: string) => people.every((p) => onTarget(p.byDay?.[date], p.goal))
+  const start = everyone(today) ? today : addDays(today, -1)
   let count = 0
-  for (let i = 0; i < maxDays; i++) {
-    const date = addDays(startDate, -i)
-
-    // Check every person is on target for this date
-    let allOnTarget = true
-    for (const person of people) {
-      if (!onTarget(person.byDay?.[date], person.goal)) {
-        allOnTarget = false
-        break
-      }
-    }
-
-    if (allOnTarget) {
-      count++
-    } else {
-      break
-    }
-  }
-
+  while (count < maxDays && everyone(addDays(start, -count))) count++
   return count
 }
