@@ -8,6 +8,8 @@ import ExtrasFields from './ExtrasFields'
 import { foodRow } from './rows'
 import { supabase } from '../lib/supabase'
 import { useProfile } from '../household/useProfile'
+import { previewLabel } from './labelPreview'
+import NutritionLabel from './NutritionLabel'
 
 interface CustomFoodFormProps {
   onSaved: (food: FoodResult) => void
@@ -60,6 +62,8 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
   }
 
   const fieldClass = 'w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500'
+
+  const preview = previewLabel(input, extraInputs)
 
   return (
     <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg p-4 space-y-3">
@@ -116,6 +120,13 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
       <p className="text-gray-500 text-xs">Per serving. An estimate is fine.</p>
 
       <ExtrasFields values={extraInputs} errors={extraErrors} onChange={changeExtra} />
+
+      {preview && (
+        <div>
+          <p className="text-gray-400 text-sm mb-1">Label preview</p>
+          <NutritionLabel servingText={preview.servingText} kcal={preview.kcal} rows={preview.rows} />
+        </div>
+      )}
 
       {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
 

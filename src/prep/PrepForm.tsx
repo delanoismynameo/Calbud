@@ -12,6 +12,8 @@ import type { FoodResult } from '../food/types'
 import ExtrasFields from '../food/ExtrasFields'
 import type { ExtraInputs, ExtraKey } from '../food/extras'
 import { cleanExtras, extrasPerServing, parseExtraInputs } from '../food/extras'
+import { previewLabel } from '../food/labelPreview'
+import NutritionLabel from '../food/NutritionLabel'
 
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
@@ -122,6 +124,8 @@ export default function PrepForm({
 
   const headingText = prep ? 'Edit prep session' : 'New prep session'
 
+  const dishPreview = previewLabel({ ...dish, servingLabel: '' }, dishExtras)
+
   return (
     <div className="bg-slate-900 rounded p-3 space-y-4">
       <h2 className="text-sm font-semibold text-gray-400 px-1">{headingText}</h2>
@@ -231,6 +235,13 @@ export default function PrepForm({
         </div>
 
         <ExtrasFields values={dishExtras} errors={dishExtraErrors} onChange={(key, value) => { setDishExtras({ ...dishExtras, [key]: value }); if (dishExtraErrors[key]) setDishExtraErrors({ ...dishExtraErrors, [key]: undefined }) }} />
+
+        {dishPreview && (
+          <div className="mt-3">
+            <p className="text-gray-400 text-sm mb-1">Label preview</p>
+            <NutritionLabel servingText={dishPreview.servingText} kcal={dishPreview.kcal} rows={dishPreview.rows} />
+          </div>
+        )}
 
         <p className="text-gray-500 text-xs mt-2 px-1">
           Weigh one portion or estimate it (a bowl of curry is about 350 g). It's saved as a custom food named after this session, so leftovers show up in Add food.
