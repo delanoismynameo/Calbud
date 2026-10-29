@@ -37,7 +37,7 @@ export default function MoreNutrients({ logs }: { logs: MealLog[] }) {
                 return (
                   <div key={info.key} className="flex justify-between text-sm">
                     <span className="text-gray-500">{info.label}</span>
-                    <span className="text-gray-500">\u2014</span>
+                    <span className="text-gray-500">—</span>
                   </div>
                 )
               }
@@ -50,7 +50,10 @@ export default function MoreNutrients({ logs }: { logs: MealLog[] }) {
               return (
                 <div key={info.key} className="flex justify-between text-sm">
                   <span className="text-gray-500">{info.label}</span>
-                  <span>{label}{missing > 0 ? ` (${missing} without data)` : ''}</span>
+                  <span>
+                    {label}
+                    {missing > 0 && <span className="text-xs text-gray-500"> ({missing} without data)</span>}
+                  </span>
                 </div>
               )
             })}
