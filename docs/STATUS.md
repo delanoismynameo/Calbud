@@ -16,14 +16,14 @@
 - **Task 23 (a prep session's nutrition per serving, saved as a custom food, and a Log button on Prep) is committed locally, not pushed.** Its migration is applied.
 - **Task 24 (the shared weekly menu: a breakfast/lunch/dinner grid on Prep and "Today's menu" on Today) is reviewed and committed locally, not pushed.** Its migration is applied.
 - **Task 25 (past days on Today, logging to them, Copy yesterday) is reviewed and committed locally, not pushed.**
-- **Task 26 (more nutrients: the Nutrition Facts label set) is briefed ([26](review/26-more-nutrients.md)), not yet run.** Its migration `20261029000002_extras.sql` is **not applied** yet.
+- **Task 26 (more nutrients: 11 Nutrition Facts nutrients saved from USDA and OFF, and a "More nutrients" panel on Today) is reviewed and committed locally, not pushed.** Its migration `20261029000002_extras.sql` is **not applied** yet. **Apply it before pushing 26**, or every log will fail.
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All five migrations in `supabase/migrations/` have been applied through the SQL Editor (the last two, `prep_food` and `menu`, on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 202 passing |
+  | `npm test` | 213 passing |
   | `npm run test:db` | 48 passing (with the unapplied extras migration) |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -58,12 +58,14 @@ Before sending a task to the harness:
 | 23 | Prep dishes as custom foods, Log a serving | [23](review/23-prep-dish-food.md) |
 | 24 | Shared weekly menu (breakfast/lunch/dinner grid, Today's menu) | [24](review/24-menu-grid.md) |
 | 25 | Past days on Today, logging to them, Copy yesterday | [25](review/25-past-days.md) |
+| 26 | More nutrients (Nutrition Facts set) | [26](review/26-more-nutrients.md) |
 
 ## Next, in order
-1. **Push 23–25** when the user says so (their migrations are applied; 25 has none).
-2. **Task 26, more nutrients:** save the US Nutrition Facts label set and show it on Today. That covers saturated fat, trans fat, cholesterol, sodium, fiber, sugar, added sugar, vitamin D, calcium, iron and potassium. Store them in jsonb so more can be added later, and show them against FDA daily values, with missing data marked rather than counted as zero. Inputs for these on custom foods and dishes may become task 27.
-3. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
-4. **Possible follow-up:** Add food's search only covers USDA. The household's custom foods (dishes) show only under Recent and Favorites; searching "Curry" doesn't find them.
+1. **Push 23–25** when the user says so. Their migrations are applied, and 25 has none.
+2. **Push 26** only after the user applies `20261029000002_extras.sql`.
+3. **Possible task 27:** inputs for the extra nutrients on custom foods and prep dishes. They have none yet, so they show as "without data".
+4. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+5. **Possible follow-up:** Add food's search only covers USDA. The household's custom foods (dishes) show only under Recent and Favorites; searching "Curry" doesn't find them.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

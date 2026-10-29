@@ -152,3 +152,27 @@ Inside the totals card, right after the `space-y-3` div of macro bars, render `<
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** about **10 min**, 55 steps.
+- **Outcome:** finished on the first build.
+  - **The one allowed test edit:** it changed `rows.test.ts` exactly as allowed, and nothing else.
+  - **Pasted build lines:** not exact. It typed `precircie` for `precache`, so it retyped them rather than copying.
+
+## Result
+- **Builds:** yes. **Tests:** 213 passing (202 + 11).
+- **Click-through** at 375 px against the mock:
+  - "More nutrients ▾" opens and stays open after a reload (`calbud:more-nutrients`)
+  - with oatmeal (extras) and yogurt (none) logged, Sodium reads `117.6 mg · 5% (1 without data)`, Fiber `4.1 g · 15%`, Iron `2.2 mg · 12%`, and the others `—`
+  - **Logging from Recents:** oatmeal (240 g) saves `extra` scaled from the food's `extra_100g`.
+  - **Logging from a live USDA search:** "Banana, raw" (126 g) saves 9 extras, e.g. potassium 410.8 mg, fiber 2.1 g and sugar 19.9 g. The food row gets `extra_100g`.
+
+## What I changed
+- **The dash:** `MoreNutrients` had `—` in JSX **text**, which renders as the six characters `—`, not a dash. It's now a real `—`.
+- **The note:** "(N without data)" is now small and grey, as the brief said.
+
+## Verdict
+Usable after a one-character fix. The biggest data change so far (11 nutrients through 2 sources, rows, logs, copy and edit) landed cleanly because the brief named every key, unit and expected number.
+
+**Deploy note:** `foodRow` now always sends `extra_100g`. If this is pushed before `20261029000002_extras.sql` is applied, **every log fails**. Apply the migration first.
