@@ -121,6 +121,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 21 | Meal prep week view and form (8 sections) | 35B (High) | Usable after real fixes (form errors, label). ~20 min |
 | 22 | Grocery list, Plan/Grocery switch, Realtime on `meal_prep` | 35B (High) | Usable as delivered. ~8 min |
 | 22a | Grocery helper (side job, alongside 21) | 4B on the 3050, headless | Failed: spawn EPERM in the headless sandbox, edited `vite.config.ts`, 8/9 tests failing |
+| 23 | Prep dishes as custom foods, Log a serving | 35B (High) | Usable after two small fixes (select value, errors together). ~13 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

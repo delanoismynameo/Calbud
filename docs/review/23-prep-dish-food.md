@@ -124,3 +124,29 @@ Tests, one `it` each. The food row helper `row(o)` builds a `FoodRowFromDb` with
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** about **13 min**, 50 steps.
+- **Outcome:** finished.
+  - **Test file:** it added `food_id: null, foods: null` to a `MealPrep` fixture in `formValidation.test.ts` so the types compile, and said so. That's a fair exception; no expected value changed.
+  - **Test count:** it split brief test 1 into three `it`s, giving 11 tests where the brief asked for 8. That's harmless.
+  - **Pasted lines:** the test line and the build lines were real.
+
+## Result
+- **Builds:** yes. **Tests:** 188 passing (177 + 11).
+- **Click-through** at 375 px against the mock:
+  - Curry shows `520 kcal each` and a **Log** button between the title and Planned
+  - Log opens the serving picker (1 serving = 350 g, 520 kcal, 30 / 55 / 20 g), logs 520 kcal with the dish's `food_id`, and returns to Prep
+  - in a new session, "Same as a saved dish" lists Curry. Picking it fills the name and all five fields, and saving links the session to the **same** food, so no copy is made
+  - a blank name and `abc` calories show both errors at once (after my fix)
+  - valid numbers create a `Mabodofu` custom food (300 g, 150 kcal/100 g), and the line reads `450 kcal each`
+  - clearing all five fields and saving sets `food_id` to null; the food stays
+
+## What I changed
+- **The saved-dish select:** its `value` was the dish's `source_id`, but the options' values are food ids, so it always showed `—`. It now shows the linked dish.
+- **Errors together:** `save` returned on a form error before checking the dish, so the dish errors only showed on a second tap. It now sets both, as the brief said.
+- Merged a duplicate import.
+
+## Verdict
+Usable after two small fixes. The 50-step run was the biggest brief yet (6 sections, 4 changed files), and it followed it closely.
