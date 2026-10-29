@@ -10,6 +10,13 @@ import { supabase } from '../lib/supabase'
 import { useProfile } from '../household/useProfile'
 import { previewLabel } from './labelPreview'
 import NutritionLabel from './NutritionLabel'
+import { builtLabel } from './builtLabel'
+import { recipeFood, recipeError } from './recipe'
+import RecipeBuilder from './RecipeBuilder'
+import type { Recipe } from './types'
+
+const toggle = (on: boolean) =>
+  `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
 
 interface CustomFoodFormProps {
   onSaved: (food: FoodResult) => void
@@ -25,6 +32,9 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
   const [extraErrors, setExtraErrors] = useState<Partial<Record<ExtraKey, string>>>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [mode, setMode] = useState<'numbers' | 'ingredients'>('numbers')
+  const [recipe, setRecipe] = useState<Recipe>({ ingredients: [], yield: { kind: 'servings', servings: 1 } })
+  const [recipeErr, setRecipeErr] = useState<string>('')
   const { profile } = useProfile()
   const householdId = profile?.household_id
 
@@ -42,10 +52,30 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     setSaveError('')
-    // Check both parts first, so every error shows at once.
+    // Ingredients mode saving logic
+    if (mode === 'ingredients') {
+      if (input.name.trim() === '') {
+        setErrors({ name: 'Enter a name.' })
+        return
+      }
+      const err = recipeError(recipe)
+      if (err !== null) {
+        setRecipeErr(err)
+        return
+      }
+      const food = recipeFood(recipe, input.name, crypto.randomUUID())
+      if (!householdId) { setSaveError('Join or create a household first.'); return }
+      setSaving(true)
+      const { error } = await supabase.from('foods').insert(foodRow(food, householdId))
+      setSaving(false)
+      if (error) { setSaveError(error.message); return }
+      onSaved(food)
+      return
+    }
+
+    // Numbers mode saving logic
     const result = parseCustomFood(input, crypto.randomUUID())
     const extras = result.ok ? parseExtraInputs(extraInputs, result.food.servingG!) : null
     setErrors(result.ok ? {} : result.errors)
@@ -65,9 +95,19 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
 
   const preview = previewLabel(input, extraInputs)
 
+  // In ingredients mode, label preview as plain variables before return (null when error)
+  const err = recipeError(recipe)
+  const built: FoodResult | null = err === null ? recipeFood(recipe, input.name, 'preview') : null
+  const label: { servingText: string; kcal: number; rows: LabelRow[] } | null = built !== null ? builtLabel(built) : null
+
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-800 rounded-lg p-4 space-y-3">
+    <div className="bg-slate-800 rounded-lg p-4 space-y-3">
       <h2 className="text-sm font-semibold text-gray-400 px-1">Create a food</h2>
+
+      <div className="flex gap-2">
+        <button type="button" onClick={() => { setMode('numbers'); setRecipeErr('') }} className={toggle(mode === 'numbers')}>Type the numbers</button>
+        <button type="button" onClick={() => { setMode('ingredients'); setRecipeErr('') }} className={toggle(mode === 'ingredients')}>Build from ingredients</button>
+      </div>
 
       <div>
         <label htmlFor="cf-name" className="block text-gray-400 text-sm mb-1">Name</label>
@@ -76,7 +116,9 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
         {errors.name && <p className="text-red-400 text-xs">{errors.name}</p>}
       </div>
 
-      <div>
+      {mode === 'numbers' && (
+        <>
+          <div>
         <label htmlFor="cf-label" className="block text-gray-400 text-sm mb-1">Serving name</label>
         <input id="cf-label" type="text" value={input.servingLabel} onChange={change('servingLabel')}
           placeholder="1 serving" className={fieldClass} />
@@ -127,11 +169,28 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
           <NutritionLabel servingText={preview.servingText} kcal={preview.kcal} rows={preview.rows} />
         </div>
       )}
+        </>
+      )}
+
+      {mode === 'ingredients' && (
+        <>
+          <RecipeBuilder onChange={(r) => { setRecipe(r); setRecipeErr('') }} />
+
+          {label && (
+            <div>
+              <p className="text-gray-400 text-sm mb-1">Label preview</p>
+              <NutritionLabel servingText={label.servingText} kcal={label.kcal} rows={label.rows} />
+            </div>
+          )}
+
+          {recipeErr && <p className="text-red-400 text-sm">{recipeErr}</p>}
+        </>
+      )}
 
       {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
 
       <div className="space-y-2">
-        <button type="submit" disabled={saving}
+        <button type="button" onClick={handleSubmit} disabled={saving}
           className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded text-white font-semibold">
           {saving ? 'Saving…' : 'Save'}
         </button>
@@ -140,6 +199,6 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
           Cancel
         </button>
       </div>
-    </form>
+    </div>
   )
 }
