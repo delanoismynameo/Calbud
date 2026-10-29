@@ -72,3 +72,21 @@ Use `const base = { servingLabel: '1 bowl', servingG: '150', kcal: '250', protei
 2. You have re-read this brief and checked every test's expected value against your code by hand (you cannot run the tests).
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **7 min**, 22 steps. It stayed inside the brief's files.
+- **Outcome:** finished, and it reported "nothing unsure".
+
+## Result
+- **Tests:** 322 passing (316 + 6) after my fix. Before it, 1 failed: `kcal: '99.6'` gave 99.6 because it left out the `Math.round`. **Build:** clean.
+- **Click-through** at 375 px against the mock:
+  - **Create a food:** I typed Chili, 1 bowl, 350 g, 520 cal, 30 / 55 / 20 g and 900 mg sodium. The preview reads "1 bowl (350 g)", Total Fat 20 g 26%, Sodium 900 mg 39%, Carbohydrate 55 g 20%. It doesn't show until calories are typed.
+  - **Prep → Plan → + Add:** with the dish's weight, calories and protein typed, the preview reads "1 serving (350 g)", 520 cal, and 0 g for the blank macros.
+
+## What I changed
+- **`previewLabel`:** rounded `kcal`, as briefed.
+- **`NutritionLabel`:** dropped its built-in `mt-4`, which left a gap under "Label preview". Each parent already spaces it: `space-y-4` on the food screen, `mt-2` on Today.
+
+## Verdict
+Usable after a one-line fix. It missed one line of the brief. The test would have caught it, but it couldn't run tests.

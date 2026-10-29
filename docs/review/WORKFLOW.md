@@ -135,6 +135,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 34 | Export week (activities to .ics, share or download) | 35B (High) | Usable after small fixes (a hook after an early return again; text-matching for colour). ~8 min |
 | 35 | Nutrition Facts label on the food screen | 35B (High), headless, no npm | Usable after a tidy-up (three copied maps into one table). ~7 min |
 | 36 | The day's totals as a label (Today) | 35B (High), headless, no npm | Usable after small fixes (one type error it couldn't see; loose map types). ~10 min |
+| 37 | Live label preview in the food and dish forms | 35B (High), headless, no npm | Usable after a one-line fix (kcal not rounded; the test caught it). ~7 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
