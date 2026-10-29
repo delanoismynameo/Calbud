@@ -72,7 +72,11 @@ Before sending a task to the harness:
 1. **Push 29** when the user says so.
 2. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
    - 30: "Copy to other days" in the slot editor, and "Repeat last week" for the menu and prep
-   - 31: "Send to Keep" via the phone's share sheet, then offer to clear the list. The user chose this over an in-app shared list, because Google Keep has no personal API.
+   - 31: "Send to Keep" via the phone's share sheet, then offer to clear the list. The user chose this over an in-app shared list, because Google Keep has no personal API. Design agreed with the user:
+     - `navigator.share({ text })` with the list as plain lines
+     - on success, confirm "Sent. Clear the list?" Yes ticks every item, through the existing per-phone `calbud:grocery:<week>` ticks.
+     - never delete prep ingredients: the list is built from them
+     - without `navigator.share` (desktop), copy to the clipboard and ask the same question
    - then game plan steps 10 (activities) and 11 (`.ics` export)
 3. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
