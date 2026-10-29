@@ -66,6 +66,10 @@ It keeps its own state and calls `onChange` with the whole recipe after **every*
 - `editing: { food: FoodResult; index: number | null } | null`: the ingredient being added (`index` null) or changed.
 - `amountText: string` and `unit: 'g' | 'serving'`, for the amount step.
 
+**It will sit inside a `<form>`** (Create a food). So:
+- **Every button** in it is `type="button"`.
+- **Its outermost element** in every step is a `div` with `onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}`, so Enter in an input never submits the form.
+
 **A helper** `const update = (nextIngredients: Ingredient[], nextMode = mode, nextText = yieldText) => { setIngredients(nextIngredients); setMode(nextMode); setYieldText(nextText); onChange({ ingredients: nextIngredients, yield: yieldFrom(nextMode, nextText) }) }`. Every change goes through it. **No `useEffect`, `useMemo` or `useCallback`.**
 
 **`step === 'finding'`:**
