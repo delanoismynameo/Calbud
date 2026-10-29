@@ -75,3 +75,20 @@ Helper `log(overrides)`: `id: 'l1'`, `user_id: 'me'`, `logged_on: '2026-10-29'`,
 2. You have re-read this brief and checked every test's expected value against your code by hand (you cannot run the tests).
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm), like task 35.
+- **Wall time:** about **10 min**, 42 steps. It stayed inside the brief's files.
+- **Outcome:** finished. It said test 3 used one log instead of the brief's two.
+
+## Result
+- **Tests:** 316 passing (309 + 7). **Build:** failed on one type error (`input.missing?.[spec.key]` indexed with a macro key). It couldn't run `tsc`, so it couldn't have caught that.
+- **Click-through** at 375 px against the mock, after my fixes: Today's "Nutrition facts ▾" opens a label for "Logged 2 foods" with Calories 259, Protein 21 g, and "Sodium 118 mg (1 without data)" where the yogurt has no data. The footnote and the note fit on a phone.
+
+## What I changed
+- **`labelRows`:** it now reads `missing` only in the extras branch, which fixes the type error. I also replaced the two spread-ternaries with one, and dropped the stray `;(` it had added before the destructuring.
+- **`dayNutrition`:** typed its maps as `Extras` and `Partial<Record<ExtraKey, number>>` instead of `Record<string, number>`.
+- **Tests:** test 3 now uses the same two logs as the brief, and I removed the `(x as any).missing` casts, since `missing` is typed.
+
+## Verdict
+Usable after small fixes. Without npm, type errors slip through, so I should always run `tsc` first. A brief could name the exact types to use for new maps.
