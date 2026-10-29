@@ -1,14 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import { groceryList, formatGroceryItem, groceryKey } from './grocery'
 import type { MealPrep } from './types'
+import { sendText, groceryText, type SendNav } from './sendList'
 
 export default function GroceryList({ sessions, weekStart }: { sessions: MealPrep[]; weekStart: string }) {
   const items = groceryList(sessions.filter(s => s.status === 'planned').map(s => s.ingredients))
   const [ticked, setTicked] = useState<Set<string>>(() => loadTicks(weekStart))
+  const [sendState, setSendState] = useState('idle' as 'idle' | 'sending' | 'asking')
+  const [how, setHow] = useState<'shared' | 'copied'>('shared')
+  const [sendError, setSendError] = useState<string | null>(null)
 
   useEffect(() => {
     // Re-read from storage when weekStart changes
     setTicked(loadTicks(weekStart))
+    setSendState('idle')
+    setSendError(null)
   }, [weekStart])
 
   const toggle = useCallback((key: string) => {
@@ -66,6 +72,46 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
               )
             })}
           </div>
+
+          {(groceryText(items, ticked) !== '') && (
+            <button
+              type="button"
+              onClick={async () => {
+                setSendError(null)
+                setSendState('sending')
+                const result = await sendText(groceryText(items, ticked), navigator as unknown as SendNav)
+                if (result === 'cancelled') {
+                  setSendState('idle')
+                } else {
+                  setHow(result)
+                  setSendState('asking')
+                }
+              }}
+              disabled={sendState === 'sending'}
+              className="mt-2 text-sm text-blue-400 underline">
+              {sendState === 'sending' ? 'Sending…' : 'Send to Keep'}
+            </button>
+          )}
+
+          {sendState === 'asking' && (
+            <div className="bg-slate-800 rounded-lg p-3 mt-3 text-sm space-y-2">
+              <p>{how === 'shared' ? 'Sent. Clear the list?' : 'Copied. Clear the list?'}</p>
+              <p className="text-xs text-gray-400">This ticks every item on this phone. Your prep sessions stay as they are.</p>
+              <div className="flex gap-2">
+                <button onClick={() => {
+                  const keys = new Set(items.map(item => groceryKey(item)))
+                  setTicked(keys)
+                  saveTicks(weekStart, keys)
+                  setSendState('idle')
+                }} className="px-3 py-1 rounded bg-blue-600 text-white font-semibold">Yes, clear</button>
+                <button onClick={() => setSendState('idle')} className="px-3 py-1 rounded bg-slate-700 text-white">Not now</button>
+              </div>
+            </div>
+          )}
+
+          {sendError && (
+            <p className="text-red-400 text-xs mt-1">{sendError}</p>
+          )}
 
           {ticked.size > 0 && (
             <button onClick={clear} className="mt-2 text-sm text-blue-400 underline">Clear ticks</button>
