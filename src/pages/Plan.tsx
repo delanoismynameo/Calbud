@@ -1,8 +1,220 @@
-export default function Plan() {
+import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { queryClient } from '../lib/queryClient'
+import { useLocalDate } from '../lib/useLocalDate'
+import { weekStart, weekDays, weekLabel, dayLabel, addDays } from '../prep/week'
+import type { Activity } from '../activities/types'
+import { sortDay, visibleActivities } from '../activities/activities'
+import { updateActivity } from '../activities/activitiesApi'
+import { useActivityWeek } from '../activities/useActivityWeek'
+import { useActivityRealtime } from '../activities/useActivityRealtime'
+import ActivityForm from '../activities/ActivityForm'
+import { useProfile } from '../household/useProfile'
+
+function LoadingRow() {
+  return <p className="px-3 py-8 text-center text-gray-500">Loading…</p>
+}
+
+function ErrorBox({ error, onTryAgain }: { error: Error; onTryAgain: () => void }) {
   return (
-    <div className="text-center">
-      <h1 className="text-2xl font-bold mb-4">Week Plan</h1>
-      <p className="text-gray-400">Placeholder for the Week Plan page.</p>
+    <div className="px-3 py-6 text-center space-y-2">
+      <p className="text-red-400">{error.message}</p>
+      <button onClick={onTryAgain} className="text-sm text-blue-400 underline">Try again</button>
     </div>
   )
+}
+
+export default function Plan() {
+  const today = useLocalDate()
+  const [start, setStart] = useState(() => weekStart(today))
+  const [visibility, setVisibility] = useState<'mine' | 'both'>('both')
+  const [editing, setEditing] = useState<{ date: string; activity?: Activity } | null>(null)
+
+  const { data, isLoading, error, refetch } = useActivityWeek(start)
+  const profile = useProfile()
+  useActivityRealtime(profile.profile?.household_id)
+
+  if (editing) {
+    return <ActivityForm activity={editing.activity} date={editing.date} onClose={() => setEditing(null)} />
+  }
+
+  const weekStarts = weekStart(today)
+  const isFirstWeek = start === weekStarts
+
+  const prevWeek = () => setStart(addDays(start, -7))
+  const nextWeek = () => setStart(addDays(start, 7))
+  const thisWeek = () => setStart(weekStarts)
+
+  const visible = (data ?? []).filter(a => {
+    if (visibility === 'mine' && profile.profile) {
+      return a.user_id === profile.profile.id
+    }
+    return true
+  })
+
+  const showToggle = profile.partner != null
+
+  return (
+    <div className="bg-slate-900 min-h-screen text-white">
+      {/* Header */}
+      <div className="px-3 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-1">
+          <button onClick={prevWeek} aria-label="Previous week"
+            className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700">
+            ‹
+          </button>
+          <h1 className="text-lg font-semibold">{weekLabel(start)}</h1>
+          <button onClick={nextWeek} aria-label="Next week"
+            className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700">
+            ›
+          </button>
+        </div>
+        {!isFirstWeek && (
+          <button onClick={thisWeek} className="text-sm text-blue-400 underline">This week</button>
+        )}
+      </div>
+
+      {/* Toggle */}
+      {showToggle && (
+        <div className="flex mx-3 my-2 rounded overflow-hidden">
+          <button onClick={() => setVisibility('mine')} aria-pressed={visibility === 'mine'}
+            className={`flex-1 py-2 text-sm font-medium ${visibility === 'mine' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+            Me
+          </button>
+          <button onClick={() => setVisibility('both')} aria-pressed={visibility === 'both'}
+            className={`flex-1 py-2 text-sm font-medium ${visibility === 'both' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+            Both
+          </button>
+        </div>
+      )}
+
+      {/* Loading / Error */}
+      {isLoading && <LoadingRow />}
+      {error && !isLoading && (
+        <ErrorBox error={error} onTryAgain={() => refetch()} />
+      )}
+
+      {/* Week data */}
+      {data && !isLoading && !error && (
+        <>
+          {visible.length === 0 && (
+            <p className="px-3 py-6 text-center text-gray-500">Nothing planned this week. Tap + Add on a day.</p>
+          )}
+
+          {weekDays(start).map((day) => {
+            const dayActivities = sortDay(visible.filter(a => a.scheduled_date === day))
+            return (
+              <div key={day}>
+                {/* Day heading */}
+                <div className="px-3 py-2 flex items-center justify-between border-b border-slate-700">
+                  <h2 className="text-sm font-medium text-gray-300 flex items-center gap-1">
+                    {dayLabel(day)}
+                    {day === today && <span className="text-xs text-blue-400 ml-1">· Today</span>}
+                  </h2>
+                  <button onClick={() => setEditing({ date: day })} aria-label={`Add activity on ${dayLabel(day)}`}
+                    className="text-xs text-blue-400 font-semibold hover:text-blue-300">+ Add</button>
+                </div>
+
+                {dayActivities.map((a) => {
+                  const isMine = profile.profile && a.user_id === profile.profile.id
+                  const isPartner = profile.partner && !isMine
+
+                  // Find the owner's info
+                  let ownerName = ''
+                  let ownerColor = '#888'
+                  if (isMine) {
+                    ownerName = profile.profile!.display_name
+                    ownerColor = profile.profile!.color
+                  } else if (isPartner) {
+                    ownerName = profile.partner!.display_name
+                    ownerColor = profile.partner!.color
+                  }
+
+                  return (
+                    <div key={a.id} className="px-3 py-2 flex items-center gap-2">
+                      {/* Dot */}
+                      {showToggle && (
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: ownerColor }} title={ownerName} />
+                      )}
+
+                      {/* Main button/content */}
+                      {isMine ? (
+                        <button onClick={() => setEditing({ activity: a, date: a.scheduled_date })}
+                          className={`flex-1 text-left ${a.completed ? 'line-through opacity-60' : ''}`}>
+                          <p className="font-medium">{a.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{activityDetails(a)}</p>
+                        </button>
+                      ) : (
+                        <div className="flex-1 text-left">
+                          {isPartner && (
+                            <span className="text-xs text-gray-400 mr-1">{ownerName}</span>
+                          )}
+                          <p className="font-medium">{a.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {activityDetails(a)}
+                            {a.completed && isPartner ? (
+                              <span className="ml-1 text-green-500 text-xs">Done</span>
+                            ) : null}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* My toggle */}
+                      {isMine && (
+                        <ToggleStatus activityId={a.id} current={a.completed} />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </>
+      )}
+    </div>
+  )
+}
+
+function ToggleStatus({ activityId, current }: { activityId: string; current: boolean }) {
+  const other = !current
+  const mutation = useMutation({
+    mutationFn: () => updateActivity(activityId, { completed: other }),
+    onSuccess: async () => await queryClient.invalidateQueries({ queryKey: ['activities'] }),
+  })
+
+  return (
+    <button onClick={() => mutation.mutate()} aria-pressed={current} disabled={mutation.isPending}
+      className={`px-2 py-1 text-xs font-semibold rounded disabled:opacity-50 ${
+        mutation.isError ? 'bg-red-700 text-white'
+          : current ? 'bg-green-600 text-white' : 'bg-slate-600 text-gray-300 hover:bg-slate-500'
+      }`}>
+      {mutation.isError ? 'Try again' : current ? 'Done' : 'Planned'}
+    </button>
+  )
+}
+
+function activityDetails(a: Activity): string {
+  const parts: string[] = []
+
+  if (a.start_time != null) {
+    parts.push(a.start_time.slice(0, 5))
+  }
+
+  if (a.duration_min != null) {
+    const hours = Math.floor(a.duration_min / 60)
+    const mins = a.duration_min % 60
+    if (hours > 0 && mins > 0) {
+      parts.push(`${hours} h ${mins} min`)
+    } else if (hours > 0) {
+      parts.push(hours === 1 ? '1 h' : `${hours} h`)
+    } else if (mins > 0) {
+      parts.push(`${mins} min`)
+    }
+  }
+
+  if (a.kcal_burned != null) {
+    parts.push(`${a.kcal_burned} cal burned`)
+  }
+
+  return parts.join(' · ')
 }
