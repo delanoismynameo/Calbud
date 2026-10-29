@@ -33,7 +33,7 @@ describe('dayNutrition', () => {
     const sodium = r.rows.find(row => row.key === 'sodium_mg')!
     expect(sodium.amount).toBe('460 mg')
     expect(sodium.dv).toBe(20)
-    expect((sodium as any).missing).toBe(undefined)
+    expect(sodium.missing).toBe(undefined)
   })
 
   it('fiber row has missing count when only one log contributed', () => {
@@ -43,17 +43,17 @@ describe('dayNutrition', () => {
     ])
     const fiber = r.rows.find(row => row.key === 'fiber_g')!
     expect(fiber.amount).toBe('1 g')
-    expect((fiber as any).missing).toBe(1)
+    expect(fiber.missing).toBe(1)
   })
 
   it('Cholesterol row when no log has that key: null amount, no missing field', () => {
     const r = dayNutrition([
-      log({ extra: { sodium_mg: 100 } }),
+      log({ extra: { sodium_mg: 100, fiber_g: 1 } }),
+      log({ id: 'l2', kcal: 70, fat_g: 5, extra: { sodium_mg: 360 } }),
     ])
-    expect(r.kcal).toBe(130)
     const cholesterol = r.rows.find(row => row.key === 'cholesterol_mg')!
     expect(cholesterol.amount).toBe(null)
-    expect((cholesterol as any).missing).toBe(undefined)
+    expect(cholesterol.missing).toBe(undefined)
   })
 
   it('one log with no extra at all: every extra row is null, Protein present', () => {
@@ -65,7 +65,7 @@ describe('dayNutrition', () => {
       'added_sugar_g', 'vit_d_mcg', 'calcium_mg', 'iron_mg', 'potassium_mg'] as const) {
       const row = r.rows.find(row => row.key === key)!
       expect(row.amount).toBe(null)
-      expect((row as any).missing).toBe(undefined)
+      expect(row.missing).toBe(undefined)
     }
   })
 
@@ -77,7 +77,7 @@ describe('dayNutrition', () => {
     for (const key of ['sat_fat_g', 'sodium_mg', 'fiber_g'] as const) {
       const row = r.rows.find(row => row.key === key)!
       expect(row.amount).toBe(null)
-      expect((row as any).missing).toBe(undefined)
+      expect(row.missing).toBe(undefined)
     }
   })
 

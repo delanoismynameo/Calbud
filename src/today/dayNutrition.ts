@@ -1,6 +1,7 @@
 import type { MealLog } from './types'
 import type { LabelRow } from '../food/label'
 import { sumLogs } from './totals'
+import type { ExtraKey, Extras } from '../food/extras'
 import { cleanExtras, sumExtras } from '../food/extras'
 import { labelRows } from '../food/label'
 
@@ -10,8 +11,8 @@ export function dayNutrition(logs: MealLog[]): { kcal: number; rows: LabelRow[] 
   const summedExtras = sumExtras(logs.map((l) => cleanExtras(l.extra)))
 
   // Build extras (only keys that appear in at least one log)
-  const extras: Record<string, number> = {}
-  const missing: Record<string, number> = {}
+  const extras: Extras = {}
+  const missing: Partial<Record<ExtraKey, number>> = {}
   for (const e of summedExtras) {
     if (e.missing === logs.length) continue
     extras[e.info.key] = e.total

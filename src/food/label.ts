@@ -59,22 +59,20 @@ export function labelRows(input: LabelInput): LabelRow[] {
     let value: number | undefined
     let unit: string
     let dv: number | null
+    let missing: number | undefined
     if (spec.key === 'fat' || spec.key === 'carbs' || spec.key === 'protein') {
-      ;({ value, dv } = macros[spec.key])
+      ({ value, dv } = macros[spec.key])
       unit = 'g'
     } else {
       const info = EXTRAS.find((e) => e.key === spec.key)!
       value = input.extras[spec.key]
       unit = info.unit
       dv = info.dv
+      missing = input.missing?.[spec.key]
     }
-    let missingCount: number | undefined
-    const extraMissing = input.missing?.[spec.key]
-    if (extraMissing != null && extraMissing > 0) {
-      missingCount = extraMissing
-    }
-    if (value === undefined) return { ...spec, amount: null, dv: null, ...(missingCount != null ? { missing: missingCount } : {}) }
-    return { ...spec, amount: formatAmount(value, unit), dv: dvPercent(value, dv), ...(missingCount != null ? { missing: missingCount } : {}) }
+    const count = missing !== undefined && missing > 0 ? { missing } : {}
+    if (value === undefined) return { ...spec, amount: null, dv: null, ...count }
+    return { ...spec, amount: formatAmount(value, unit), dv: dvPercent(value, dv), ...count }
   })
 }
 
