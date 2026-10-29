@@ -54,7 +54,6 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
 
   const handleSubmit = async () => {
     setSaveError('')
-    // Ingredients mode saving logic
     if (mode === 'ingredients') {
       if (input.name.trim() === '') {
         setErrors({ name: 'Enter a name.' })
@@ -75,7 +74,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
       return
     }
 
-    // Numbers mode saving logic
+    // Check both parts first, so every error shows at once.
     const result = parseCustomFood(input, crypto.randomUUID())
     const extras = result.ok ? parseExtraInputs(extraInputs, result.food.servingG!) : null
     setErrors(result.ok ? {} : result.errors)
@@ -95,10 +94,10 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
 
   const preview = previewLabel(input, extraInputs)
 
-  // In ingredients mode, label preview as plain variables before return (null when error)
+  // The ingredients-mode label preview, when the recipe can be saved.
   const err = recipeError(recipe)
   const built: FoodResult | null = err === null ? recipeFood(recipe, input.name, 'preview') : null
-  const label: { servingText: string; kcal: number; rows: LabelRow[] } | null = built !== null ? builtLabel(built) : null
+  const label = built !== null ? builtLabel(built) : null
 
   return (
     <div className="bg-slate-800 rounded-lg p-4 space-y-3">
@@ -174,7 +173,8 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
 
       {mode === 'ingredients' && (
         <>
-          <RecipeBuilder onChange={(r) => { setRecipe(r); setRecipeErr('') }} />
+          {/* initial: switching modes unmounts the builder, so it restarts from the kept recipe. */}
+          <RecipeBuilder initial={recipe} onChange={(r) => { setRecipe(r); setRecipeErr('') }} />
 
           {label && (
             <div>
