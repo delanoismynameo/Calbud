@@ -140,6 +140,8 @@ describe('prepFormFrom → parsePrepForm round-trip', () => {
       notes: 'extra spices',
       status: 'planned',
       created_at: '2026-11-14T10:00:00Z',
+      food_id: null,
+      foods: null,
     }
 
     const form = prepFormFrom(row)

@@ -1,3 +1,5 @@
+import type { FoodRowFromDb } from '../food/recents'
+
 export interface Ingredient {
   name: string
   qty: number | null
@@ -18,6 +20,8 @@ export interface MealPrep {
   ingredients: Ingredient[]
   notes: string | null
   created_at: string        // timestamptz as ISO string
+  food_id: string | null
+  foods: FoodRowFromDb | null
 }
 
 export type PrepFields = Pick<

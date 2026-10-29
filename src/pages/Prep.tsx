@@ -10,11 +10,15 @@ import PrepForm from '../prep/PrepForm'
 import { useProfile } from '../household/useProfile'
 import { usePrepRealtime } from '../prep/usePrepRealtime'
 import GroceryList from '../prep/GroceryList'
+import ServingPicker from '../food/ServingPicker'
+import { foodResultFromRow } from '../food/recents'
+import { kcalPerServing } from '../prep/dishFood'
 
 export default function Prep() {
   const today = useLocalDate()
   const [start, setStart] = useState(() => weekStart(today))
   const [editing, setEditing] = useState<{ date: string; prep?: MealPrep } | null>(null)
+  const [logging, setLogging] = useState<MealPrep | null>(null)
   const { data, isLoading, error, refetch } = usePrepWeek(start)
   const profile = useProfile()
   usePrepRealtime(profile.profile?.household_id)
@@ -23,6 +27,8 @@ export default function Prep() {
   if (editing) {
     return <PrepForm date={editing.date} prep={editing.prep} onClose={() => setEditing(null)} />
   }
+
+  if (logging?.foods) return <ServingPicker food={foodResultFromRow(logging.foods)} onLogged={() => setLogging(null)} onCancel={() => setLogging(null)} />
 
   const weekStarts = weekStart(today)
   const isFirstWeek = start === weekStarts
@@ -108,6 +114,14 @@ export default function Prep() {
                       <p className="text-xs text-gray-400 mt-0.5">{sessionDetails(session)}</p>
                     </button>
 
+                    {/* Log button */}
+                    {session.foods && (
+                      <button onClick={() => setLogging(session)} aria-label={'Log a serving of ' + session.title}
+                        className="px-2 py-1 text-xs font-semibold rounded bg-blue-600 text-white">
+                        Log
+                      </button>
+                    )}
+
                     {/* Status toggle */}
                     <ToggleStatus id={session.id} current={session.status} />
                   </div>
@@ -123,10 +137,12 @@ export default function Prep() {
 
 function sessionDetails(s: MealPrep): string {
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+  const kcal = (s.foods != null && kcalPerServing(s.foods) != null) ? `${kcalPerServing(s.foods)} kcal each` : null
   return [
     s.start_time ? s.start_time.slice(0, 5) : null,
     `${s.duration_min} min`,
     plural(s.servings, 'serving'),
+    kcal,
     s.ingredients.length > 0 ? plural(s.ingredients.length, 'ingredient') : null,
   ].filter(Boolean).join(' · ')
 }

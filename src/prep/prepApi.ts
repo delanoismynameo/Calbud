@@ -1,12 +1,14 @@
 import { supabase } from '../lib/supabase'
 import type { MealPrep, PrepFields } from './types'
 import { addDays } from './week'
+import type { FoodResult } from '../food/types'
+import { foodRow } from '../food/rows'
 
 export async function fetchPrepWeek(householdId: string, start: string): Promise<MealPrep[]> {
   const end = addDays(start, 6)
   const { data, error } = await supabase
     .from('meal_prep')
-    .select('*')
+    .select('*, foods(*)')
     .eq('household_id', householdId)
     .gte('scheduled_date', start)
     .lte('scheduled_date', end)
@@ -17,10 +19,10 @@ export async function fetchPrepWeek(householdId: string, start: string): Promise
   return data ?? []
 }
 
-export async function insertPrep(householdId: string, userId: string, fields: PrepFields): Promise<void> {
+export async function insertPrep(householdId: string, userId: string, fields: PrepFields, foodId: string | null): Promise<void> {
   const { error } = await supabase
     .from('meal_prep')
-    .insert({ ...fields, household_id: householdId, created_by: userId, status: 'planned' })
+    .insert({ ...fields, household_id: householdId, created_by: userId, status: 'planned', food_id: foodId })
     .select('id')
 
   if (error) throw new Error(error.message)
@@ -28,7 +30,7 @@ export async function insertPrep(householdId: string, userId: string, fields: Pr
 
 export async function updatePrep(
   id: string,
-  changes: Partial<PrepFields> & { status?: 'planned' | 'done' },
+  changes: Partial<PrepFields> & { status?: 'planned' | 'done'; food_id?: string | null },
 ): Promise<void> {
   const { data, error } = await supabase
     .from('meal_prep')
@@ -49,4 +51,16 @@ export async function deletePrep(id: string): Promise<void> {
 
   if (error) throw new Error(error.message)
   if (!data || data.length === 0) throw new Error('That prep session could not be deleted.')
+}
+
+export async function saveDishFood(food: FoodResult, householdId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from('foods')
+    .upsert(foodRow(food, householdId), { onConflict: 'household_id,source,source_id' })
+    .select('id')
+    .single()
+
+  if (error) throw new Error(error.message)
+  if (!data?.id) throw new Error('Upsert returned no id')
+  return data.id
 }
