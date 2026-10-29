@@ -1,10 +1,15 @@
 import { Link } from 'react-router'
+import { useState } from 'react'
 import { useLocalDate } from '../lib/useLocalDate'
 import { useMealLogs } from '../today/useMealLogs'
 import { useProfile } from '../household/useProfile'
 import { sumLogs, groupByMeal } from '../today/totals'
 import MacroBar from '../today/MacroBar'
 import MealSection from '../today/MealSection'
+import TodayMenu from '../menu/TodayMenu'
+import ServingPicker from '../food/ServingPicker'
+import type { FoodResult } from '../food/types'
+import type { MenuMeal } from '../menu/types'
 
 export default function Today() {
   const date = useLocalDate()
@@ -20,6 +25,10 @@ export default function Today() {
   }
 
   const groups = logs.isPending ? [] : groupByMeal(logs.data ?? [])
+
+  const [logging, setLogging] = useState<{ food: FoodResult; meal: MenuMeal } | null>(null)
+
+  if (logging) return <ServingPicker food={logging.food} meal={logging.meal} onLogged={() => setLogging(null)} onCancel={() => setLogging(null)} />
 
   return (
     <div className="space-y-4">
@@ -69,6 +78,8 @@ export default function Today() {
           <Link to="/add" className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg text-center">
             Add food
           </Link>
+
+          <TodayMenu date={date} onLog={(food, meal) => setLogging({ food, meal })} />
 
           {groups.map((g) => (
             <MealSection key={g.meal} meal={g.meal} logs={g.logs} />

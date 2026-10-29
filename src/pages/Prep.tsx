@@ -4,9 +4,14 @@ import { queryClient } from '../lib/queryClient'
 import { useLocalDate } from '../lib/useLocalDate'
 import { weekStart, weekDays, weekLabel, dayLabel, addDays } from '../prep/week'
 import type { MealPrep } from '../prep/types'
+import type { MenuMeal, MenuSlot } from '../menu/types'
 import { updatePrep } from '../prep/prepApi'
 import { usePrepWeek } from '../prep/usePrepWeek'
+import { useMenuWeek } from '../menu/useMenuWeek'
+import { slotAt, menuCount } from '../menu/menu'
 import PrepForm from '../prep/PrepForm'
+import MenuGrid from '../menu/MenuGrid'
+import SlotEditor from '../menu/SlotEditor'
 import { useProfile } from '../household/useProfile'
 import { usePrepRealtime } from '../prep/usePrepRealtime'
 import GroceryList from '../prep/GroceryList'
@@ -22,13 +27,19 @@ export default function Prep() {
   const { data, isLoading, error, refetch } = usePrepWeek(start)
   const profile = useProfile()
   usePrepRealtime(profile.profile?.household_id)
-  const [view, setView] = useState<'plan' | 'grocery'>('plan')
+  const menu = useMenuWeek(start)
+  const [view, setView] = useState<'plan' | 'menu' | 'grocery'>('plan')
+  const [slotEditing, setSlotEditing] = useState<{ date: string; meal: MenuMeal } | null>(null)
 
   if (editing) {
     return <PrepForm date={editing.date} prep={editing.prep} onClose={() => setEditing(null)} />
   }
 
   if (logging?.foods) return <ServingPicker food={foodResultFromRow(logging.foods)} onLogged={() => setLogging(null)} onCancel={() => setLogging(null)} />
+
+  if (slotEditing) {
+    return <SlotEditor date={slotEditing.date} meal={slotEditing.meal} slot={slotAt(menu.data ?? [], slotEditing.date, slotEditing.meal)} dishes={data ?? []} onClose={() => setSlotEditing(null)} />
+  }
 
   const weekStarts = weekStart(today)
   const isFirstWeek = start === weekStarts
@@ -57,11 +68,15 @@ export default function Prep() {
         )}
       </div>
 
-      {/* Plan / Grocery list switch */}
+      {/* Plan / Menu / Grocery list switch */}
       <div className="flex mx-3 my-2 rounded overflow-hidden">
         <button onClick={() => setView('plan')} aria-pressed={view === 'plan'}
           className={`flex-1 py-2 text-sm font-medium ${view === 'plan' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
           Plan
+        </button>
+        <button onClick={() => setView('menu')} aria-pressed={view === 'menu'}
+          className={`flex-1 py-2 text-sm font-medium ${view === 'menu' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+          Menu
         </button>
         <button onClick={() => setView('grocery')} aria-pressed={view === 'grocery'}
           className={`flex-1 py-2 text-sm font-medium ${view === 'grocery' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
@@ -70,78 +85,87 @@ export default function Prep() {
       </div>
 
       {/* Loading / Error */}
-      {isLoading && <p className="px-3 py-8 text-center text-gray-500">Loading…</p>}
-      {error && !isLoading && (
+      {view === 'menu' && menu.isLoading && <p className="px-3 py-8 text-center text-gray-500">Loading…</p>}
+      {view === 'menu' && menu.error && !menu.isLoading && (
         <div className="px-3 py-6 text-center space-y-2">
-          <p className="text-red-400">{error.message}</p>
-          <button onClick={() => refetch()} className="text-sm text-blue-400 underline">Try again</button>
+          <p className="text-red-400">{menu.error.message}</p>
+          <button onClick={() => menu.refetch()} className="text-sm text-blue-400 underline">Try again</button>
         </div>
       )}
 
       {/* Week data */}
-      {data && !isLoading && !error && (view === 'grocery' ? (
-        <GroceryList sessions={data} weekStart={start} />
-      ) : (
+      {view === 'menu' && !menu.isLoading && !menu.error ? (
         <>
-          {data.length === 0 && (
-            <p className="px-3 py-6 text-center text-gray-500">Nothing planned this week. Tap + Add on a day.</p>
-          )}
-
-          {weekDays(start).map((day) => {
-            const daySessions = data.filter((s) => s.scheduled_date === day)
-            return (
-              <div key={day}>
-                {/* Day heading */}
-                <div className="px-3 py-2 flex items-center justify-between border-b border-slate-700">
-                  <h2 className="text-sm font-medium text-gray-300 flex items-center gap-1">
-                    {dayLabel(day)}
-                    {day === today && <span className="text-xs text-blue-400 ml-1">· Today</span>}
-                  </h2>
-                  <button onClick={() => setEditing({ date: day })} aria-label={`Add prep on ${dayLabel(day)}`}
-                    className="text-xs text-blue-400 font-semibold hover:text-blue-300">+ Add</button>
-                </div>
-
-                {/* Sessions */}
-                {daySessions.map((session) => (
-                  <div key={session.id}
-                    className={`px-3 py-2 flex items-center gap-2 ${
-                      session.status === 'done' ? 'bg-slate-800/50' : ''
-                    }`}>
-                    {/* Main button — title + info */}
-                    <button onClick={() => setEditing({ prep: session, date: session.scheduled_date })}
-                      className={`flex-1 text-left p-2 rounded ${session.status === 'done' ? 'line-through opacity-60' : ''}`}>
-                      <p className="font-medium">{session.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{sessionDetails(session)}</p>
-                    </button>
-
-                    {/* Log button */}
-                    {session.foods && (
-                      <button onClick={() => setLogging(session)} aria-label={'Log a serving of ' + session.title}
-                        className="px-2 py-1 text-xs font-semibold rounded bg-blue-600 text-white">
-                        Log
-                      </button>
-                    )}
-
-                    {/* Status toggle */}
-                    <ToggleStatus id={session.id} current={session.status} />
-                  </div>
-                ))}
-              </div>
-            )
-          })}
+          <MenuGrid days={weekDays(start)} today={today} slots={menu.data ?? []} onPick={(date, meal) => setSlotEditing({ date, meal })} />
+          <p className="text-gray-500 text-xs text-center mt-2">Tap a meal to fill it. Dishes come from this week's prep.</p>
         </>
-      ))}
+      ) : (data && !isLoading && !error) ? (
+        view === 'grocery' ? (
+          <GroceryList sessions={data} weekStart={start} />
+        ) : (
+          <>
+            {data.length === 0 && (
+              <p className="px-3 py-6 text-center text-gray-500">Nothing planned this week. Tap + Add on a day.</p>
+            )}
+
+            {weekDays(start).map((day) => {
+              const daySessions = data.filter((s) => s.scheduled_date === day)
+              return (
+                <div key={day}>
+                  {/* Day heading */}
+                  <div className="px-3 py-2 flex items-center justify-between border-b border-slate-700">
+                    <h2 className="text-sm font-medium text-gray-300 flex items-center gap-1">
+                      {dayLabel(day)}
+                      {day === today && <span className="text-xs text-blue-400 ml-1">· Today</span>}
+                    </h2>
+                    <button onClick={() => setEditing({ date: day })} aria-label={`Add prep on ${dayLabel(day)}`}
+                      className="text-xs text-blue-400 font-semibold hover:text-blue-300">+ Add</button>
+                  </div>
+
+                  {/* Sessions */}
+                  {daySessions.map((session) => (
+                    <div key={session.id}
+                      className={`px-3 py-2 flex items-center gap-2 ${
+                        session.status === 'done' ? 'bg-slate-800/50' : ''
+                      }`}>
+                      {/* Main button — title + info */}
+                      <button onClick={() => setEditing({ prep: session, date: session.scheduled_date })}
+                        className={`flex-1 text-left p-2 rounded ${session.status === 'done' ? 'line-through opacity-60' : ''}`}>
+                        <p className="font-medium">{session.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{sessionDetails(session, menu.data ?? [])}</p>
+                      </button>
+
+                      {/* Log button */}
+                      {session.foods && (
+                        <button onClick={() => setLogging(session)} aria-label={'Log a serving of ' + session.title}
+                          className="px-2 py-1 text-xs font-semibold rounded bg-blue-600 text-white">
+                          Log
+                        </button>
+                      )}
+
+                      {/* Status toggle */}
+                      <ToggleStatus id={session.id} current={session.status} />
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+          </>
+        )
+      ) : null}
     </div>
   )
 }
 
-function sessionDetails(s: MealPrep): string {
+function sessionDetails(s: MealPrep, menuSlots: MenuSlot[]): string {
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
   const kcal = (s.foods != null && kcalPerServing(s.foods) != null) ? `${kcalPerServing(s.foods)} kcal each` : null
+  const count = menuCount(menuSlots, s.id)
   return [
     s.start_time ? s.start_time.slice(0, 5) : null,
     `${s.duration_min} min`,
     plural(s.servings, 'serving'),
+    count > 0 ? `${count} in menu` : null,
     kcal,
     s.ingredients.length > 0 ? plural(s.ingredients.length, 'ingredient') : null,
   ].filter(Boolean).join(' · ')

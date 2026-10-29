@@ -15,15 +15,16 @@ const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 const toggle = (on: boolean) =>
   `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
 
-export default function ServingPicker({ food, onLogged, onCancel }: {
+export default function ServingPicker({ food, onLogged, onCancel, meal }: {
   food: FoodResult
   onLogged: () => void
   onCancel: () => void
+  meal?: MealType
 }) {
   const servingG = food.servingG
   const [unit, setUnit] = useState<'g' | 'serving'>(servingG != null ? 'serving' : 'g')
   const [amount, setAmount] = useState(servingG != null ? '1' : '100')
-  const [mealType, setMealType] = useState<MealType>(defaultMealType())
+  const [mealType, setMealType] = useState<MealType>(meal ?? defaultMealType())
   const { session } = useAuth()
   const { profile } = useProfile()
 
