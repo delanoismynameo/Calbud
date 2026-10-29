@@ -4,10 +4,14 @@ import { supabase } from '../lib/supabase'
 import CopyCode from '../household/CopyCode'
 import SwitchHousehold from '../household/SwitchHousehold'
 import GoalsCard from '../household/GoalsCard'
+import { installHint, installText } from '../pwa/install'
 
 export default function Us() {
   const { session } = useAuth()
   const { profile, household, partner } = useProfile()
+
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone === true
+  const hint = installHint(navigator.userAgent, navigator.maxTouchPoints, standalone)
 
   return (
     <div className="text-center">
@@ -18,6 +22,9 @@ export default function Us() {
           <button
             onClick={() => supabase.auth.signOut()}
             className="mt-2 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded">Sign out</button>
+          {hint !== null && (
+            <p className="mt-3 text-xs text-gray-400 max-w-sm mx-auto">{installText(hint)}</p>
+          )}
 
           {household && (
             <div className="mt-6 space-y-4">

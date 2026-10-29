@@ -10,6 +10,7 @@ import { useAuth } from './auth/AuthProvider'
 import AuthScreen from './auth/AuthScreen'
 import { useProfile } from './household/useProfile'
 import Setup from './household/Setup'
+import UpdatePrompt from './pwa/UpdatePrompt'
 
 const tabs = [
   { to: '/', label: 'Today' },
@@ -102,6 +103,7 @@ function SignedInApp() {
           </NavLink>
         ))}
       </nav>
+      <UpdatePrompt />
     </div>
   )
 }
