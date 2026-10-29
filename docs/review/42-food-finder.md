@@ -41,3 +41,19 @@ Move into it, **unchanged** except for the points below:
 2. You have compared the moved JSX with the original line by line.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **2 min**, 7 steps. It stayed inside the brief's files.
+
+## Result
+- **Type check:** clean. **Tests:** 381 passing. Nothing changed in the tests; this was a refactor.
+- **The moved JSX**, diffed against the old `AddFood`: identical apart from the briefed changes (`onPick`, the optional Create button).
+- **Click-through:** done together with tasks 43 and 44 (see 44).
+
+## What I changed
+- **Search text lost:** before the refactor, the search text survived tapping a food and pressing Cancel, because the query lived in `AddFood`. With `FoodFinder` unmounting, it was lost. `AddFood` now keeps the finder mounted and hides it with `hidden` while the serving picker or the create form is open.
+- **Duplicate button:** the brief's "grid-cols-1 without onCreate" became two whole copies of the button block. It's now one grid with a conditional class and an optional Create button.
+
+## Verdict
+Usable after small fixes. A refactor brief should say where state lives *and why*. The model moved the query as told, but nobody had pointed out what the move would lose.

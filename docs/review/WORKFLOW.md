@@ -140,6 +140,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 39 | Dashboard stats (weekly average, shared streak), data and hook | 35B (High), headless, no npm | Usable after small fixes (one test not as briefed; rounding per row). ~3 min |
 | 40 | This week card on the Us page | 35B (High), headless, no npm | Usable after a component rewrite (hooks after early returns, third time). ~2 min |
 | 41 | Recipe logic (ingredients summed, servings or cooked weight) | 35B (High), headless, no npm | Usable after a rewrite of recipe.ts (extras not per 100 g, `any` casts); tests mostly right. ~8 min |
+| 42 | FoodFinder out of Add food (refactor) | 35B (High), headless, no npm | Usable after small fixes (search text lost on Cancel; a copied button block). ~2 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
