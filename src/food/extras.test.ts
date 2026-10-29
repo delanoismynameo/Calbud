@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { ExtraKey, Extras } from './extras'
-import { EXTRAS, extrasFromUsda, extrasFromOff, cleanExtras, scaleExtras, sumExtras, dvPercent } from './extras'
+import { EXTRAS, extrasFromUsda, extrasFromOff, cleanExtras, scaleExtras, sumExtras, dvPercent, parseExtraInputs, extrasPerServing } from './extras'
 
 describe('EXTRAS', () => {
   it('has 11 entries, all different keys, first is sat_fat_g, sodium dv is 2300', () => {
@@ -87,5 +87,30 @@ describe('dvPercent', () => {
     expect(dvPercent(1150, 2300)).toBe(50)
     expect(dvPercent(5, null)).toBeNull()
     expect(dvPercent(0, 20)).toBe(0)
+  })
+})
+
+describe('parseExtraInputs', () => {
+  it('converts inputs to per-100g, handles blank and trim', () => {
+    expect(parseExtraInputs({ sodium_mg: '700', fiber_g: ' 3.5 ', iron_mg: '' }, 350))
+      .toEqual({ ok: true, extras100g: { sodium_mg: 200, fiber_g: 1 } as Extras })
+  })
+
+  it('returns errors for non-finite and out-of-range values', () => {
+    expect(parseExtraInputs({ sodium_mg: 'abc', sat_fat_g: '-1' }, 100))
+      .toEqual({ ok: false, errors: { sodium_mg: 'Enter a number (or leave it blank).', sat_fat_g: 'Enter a number (or leave it blank).' } })
+  })
+
+  it('handles comma as decimal and empty inputs', () => {
+    expect(parseExtraInputs({ calcium_mg: '1,5' }, 100)).toEqual({ ok: true, extras100g: { calcium_mg: 1.5 } as Extras })
+    expect(parseExtraInputs({}, 100)).toEqual({ ok: true, extras100g: {} as Extras })
+  })
+})
+
+describe('extrasPerServing', () => {
+  it('converts per-100g to per-serving and empty stays empty', () => {
+    expect(extrasPerServing({ sodium_mg: 200, fiber_g: 1 }, 350))
+      .toEqual({ sodium_mg: '700', fiber_g: '3.5' })
+    expect(extrasPerServing({}, 100)).toEqual({})
   })
 })

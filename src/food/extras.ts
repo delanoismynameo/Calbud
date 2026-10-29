@@ -62,6 +62,41 @@ export function cleanExtras(raw: unknown): Extras {
   return result
 }
 
+export type ExtraInputs = Partial<Record<ExtraKey, string>>
+
+export function parseExtraInputs(inputs: ExtraInputs, servingG: number):
+  | { ok: true; extras100g: Extras }
+  | { ok: false; errors: Partial<Record<ExtraKey, string>> } {
+  const extras100g: Extras = {}
+  const errors: Partial<Record<ExtraKey, string>> = {}
+  for (const info of EXTRAS) {
+    const raw = inputs[info.key]
+    if (raw === undefined || raw.trim() === '') continue
+    const withDot = raw.replace(',', '.')
+    const v = Number(withDot)
+    if (!isFinite(v) || v < 0 || v > 100000) {
+      errors[info.key] = 'Enter a number (or leave it blank).'
+      continue
+    }
+    extras100g[info.key] = Math.round(v / servingG * 100 * 100) / 100
+  }
+  if (Object.keys(errors).length > 0) {
+    return { ok: false, errors }
+  }
+  return { ok: true, extras100g }
+}
+
+export function extrasPerServing(extras100g: Extras, servingG: number): ExtraInputs {
+  const result: ExtraInputs = {}
+  for (const key in extras100g) {
+    const val = (extras100g as Record<string, unknown>)[key]
+    if (val !== undefined && typeof val === 'number') {
+      result[key as ExtraKey] = String(Math.round(val * servingG / 100 * 10) / 10)
+    }
+  }
+  return result
+}
+
 export function scaleExtras(extras: Extras, grams: number): Extras {
   const result: Extras = {}
   for (const key of EXTRA_KEYS) {

@@ -2,6 +2,9 @@ import { useState } from 'react'
 import type { FoodResult } from './types'
 import type { CustomFoodInput } from './customFood'
 import { parseCustomFood } from './customFood'
+import type { ExtraInputs, ExtraKey } from './extras'
+import { parseExtraInputs } from './extras'
+import ExtrasFields from './ExtrasFields'
 import { foodRow } from './rows'
 import { supabase } from '../lib/supabase'
 import { useProfile } from '../household/useProfile'
@@ -16,6 +19,8 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     name: '', servingLabel: '', servingG: '', kcal: '', protein: '', carbs: '', fat: '',
   })
   const [errors, setErrors] = useState<Partial<Record<keyof CustomFoodInput, string>>>({})
+  const [extraInputs, setExtraInputs] = useState<ExtraInputs>({})
+  const [extraErrors, setExtraErrors] = useState<Partial<Record<ExtraKey, string>>>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const { profile } = useProfile()
@@ -25,6 +30,13 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     setInput({ ...input, [field]: e.target.value })
     if (errors[field]) {
       setErrors({ ...errors, [field]: undefined })
+    }
+  }
+
+  const changeExtra = (key: ExtraKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setExtraInputs({ ...extraInputs, [key]: e.target.value })
+    if (extraErrors[key]) {
+      setExtraErrors({ ...extraErrors, [key]: undefined })
     }
   }
 

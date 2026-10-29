@@ -9,6 +9,10 @@ import { useProfile } from '../household/useProfile'
 import { emptyDish, isDishBlank, dishFromFood, parseDish, type DishInput } from './dishFood'
 import { useDishFoods } from './useDishFoods'
 import type { FoodResult } from '../food/types'
+import ExtrasFields from '../food/ExtrasFields'
+import type { ExtraInputs, ExtraKey } from '../food/extras'
+import { extrasPerServing, parseExtraInputs } from '../food/extras'
+import { cleanExtras } from '../food/extras'
 
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
@@ -28,6 +32,10 @@ export default function PrepForm({
 
   const [dish, setDish] = useState<DishInput>(prep?.foods ? dishFromFood(prep.foods) : emptyDish)
   const [dishSourceId, setDishSourceId] = useState<string | null>(prep?.foods?.source_id ?? null)
+  const [dishExtras, setDishExtras] = useState<ExtraInputs>(
+    prep?.foods?.serving_g != null ? extrasPerServing(cleanExtras(prep.foods.extra_100g), Number(prep.foods.serving_g)) : {},
+  )
+  const [dishExtraErrors, setDishExtraErrors] = useState<Partial<Record<ExtraKey, string>>>({})
 
   const { profile } = useProfile()
   const savedDishes = useDishFoods()
@@ -94,6 +102,17 @@ export default function PrepForm({
     setDishErrors(tempDishErrors)
 
     if (!parsed.ok || Object.keys(tempDishErrors).length > 0) return
+
+    if (dishFood !== null && dishFood.servingG != null) {
+      const parsedExtra = parseExtraInputs(dishExtras, dishFood.servingG)
+      if (!parsedExtra.ok) {
+        setDishExtraErrors(parsedExtra.errors)
+        return
+      } else {
+        setDishExtraErrors({})
+        dishFood = { ...dishFood, extras100g: parsedExtra.extras100g }
+      }
+    }
 
     saveMutation.mutate({ fields: parsed.fields, dishFood })
   }
@@ -164,6 +183,12 @@ export default function PrepForm({
                 if (food) {
                   setDish(dishFromFood(food))
                   setDishSourceId(food.source_id)
+                  if (prep?.foods && prep.foods.serving_g != null && food.extra_100g != null) {
+                    setDishExtras(extrasPerServing(cleanExtras(food.extra_100g), Number(prep.foods.serving_g)))
+                  } else {
+                    setDishExtras({})
+                  }
+                  setDishExtraErrors({})
                   if (!input.title.trim()) setInput({ ...input, title: food.name })
                 }
               }}
@@ -209,6 +234,8 @@ export default function PrepForm({
             {dishErrors.fat && <p className="text-red-400 text-xs mt-1">{dishErrors.fat}</p>}
           </div>
         </div>
+
+        <ExtrasFields values={dishExtras} errors={dishExtraErrors} onChange={(key, value) => { setDishExtras({ ...dishExtras, [key]: value }); if (dishExtraErrors[key]) setDishExtraErrors({ ...dishExtraErrors, [key]: undefined }) }} />
 
         <p className="text-gray-500 text-xs mt-2 px-1">
           Weigh one portion or estimate it (a bowl of curry is about 350 g). It's saved as a custom food named after this session, so leftovers show up in Add food.

@@ -6,6 +6,8 @@ import type { FoodResult } from '../food/types'
 import { useRecentFoods } from '../food/useRecentFoods'
 import { useFavoriteFoods } from '../food/useFavoriteFoods'
 import { withoutFavorites } from '../food/favorites'
+import { useHouseholdFoods } from '../food/useHouseholdFoods'
+import { householdMatches, withoutHousehold } from '../food/householdFoods'
 import CustomFoodForm from '../food/CustomFoodForm'
 import BarcodeScanner from '../food/BarcodeScanner'
 import { normalizeBarcode } from '../food/barcode'
@@ -32,6 +34,9 @@ export default function AddFood() {
   const recents = useRecentFoods()
   const favorites = useFavoriteFoods()
   const empty = query.trim() === ''
+  const household = useHouseholdFoods()
+  const yours = tooShort || empty ? [] : householdMatches(household.data ?? [], query)
+  const usdaResults = withoutHousehold(results, yours)
   const favoriteList = favorites.data ?? []
   // A favorite is listed once, under Favorites.
   const recentList = withoutFavorites(recents.data ?? [], favoriteList)
@@ -103,6 +108,13 @@ export default function AddFood() {
               className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">+ Create a food</button>
           </div>
 
+          {yours.length > 0 && (
+            <>
+              <h2 className="text-sm font-semibold text-gray-400 px-1">Your foods</h2>
+              {yours.map(quickPick)}
+            </>
+          )}
+
           {empty && (
             <div className="space-y-2">
               {favorites.isError && <p className="text-gray-500 text-xs px-2">Couldn't load favorites.</p>}
@@ -135,9 +147,9 @@ export default function AddFood() {
           )}
           {!tooShort && errors.map((e) => <p key={e} className="text-gray-500 text-xs px-2">{e}</p>)}
 
-          {!tooShort && !failed && results.length > 0 && (
+          {!tooShort && !failed && usdaResults.length > 0 && (
             <div className="space-y-2 pb-4">
-              {results.map((food) => (
+              {usdaResults.map((food) => (
                 <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => setSelected(food)}
                   className="w-full bg-slate-800 rounded-lg p-3 text-left hover:bg-slate-700 active:bg-slate-600">
                   <div className="flex items-center justify-between gap-2">
@@ -150,7 +162,7 @@ export default function AddFood() {
               ))}
             </div>
           )}
-          {settled && !failed && results.length === 0 && <p className="text-gray-400 text-center py-6">No foods found.</p>}
+          {settled && !failed && usdaResults.length === 0 && yours.length === 0 && <p className="text-gray-400 text-center py-6">No foods found.</p>}
         </>
       )}
     </div>
