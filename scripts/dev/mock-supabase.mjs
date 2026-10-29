@@ -16,6 +16,7 @@ const foods = []
 const mealLogs = []
 const mealPrep = []
 const menuSlots = []
+const activities = []
 // Start with Alice already in her own household, so the add-food flow is reachable.
 if (process.argv.includes('--in-household')) {
   households['h-alice'] = { id: 'h-alice', name: "Alice's household", invite_code: 'zzzz9999', created_at: '2026-10-27T00:00:00Z' }
@@ -57,6 +58,12 @@ if (process.argv.includes('--with-logs')) {
   mealPrep[mealPrep.length - 1].food_id = food('custom', 'dish-curry', 'Curry', null, 350, '1 serving', 148.57, 8.57, 15.71, 5.71)
   prep(PARTNER, wd(0), 'Meatballs', null, 'done', 4, [])
   prep(ME, wd(3), 'Mabodofu, a long dish name to check wrapping on a phone screen', '18:30:00', 'planned', 3, [{ name: 'tofu', qty: 2, unit: '' }])
+  // Activities this week (task 33): Alice's evening gym, Bob's morning run (his rows are read-only for Alice), an untimed one.
+  const act = (user_id, scheduled_date, title, start_time, duration_min, kcal_burned = null, completed = false) =>
+    activities.push({ id: randomUUID(), user_id, title, scheduled_date, start_time, duration_min, kcal_burned, completed, notes: null, created_at: new Date().toISOString() })
+  act(ME, wd(1), 'Gym: legs', '18:00:00', 90, 300)
+  act(PARTNER, wd(1), 'Run', '07:00:00', 45)
+  act(ME, wd(4), 'Yoga', null, null, null, true)
   // The menu: today's breakfast is free text and today's dinner is the Curry batch (which has a dish food);
   // Saturday lunch is a long list, to check wrapping in the grid. Later rows replace earlier ones in the same slot.
   const curryId = mealPrep[0].id
@@ -215,7 +222,29 @@ http.createServer((req, res) => {
       if (req.method === 'DELETE') hit.forEach((r) => menuSlots.splice(menuSlots.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
-    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep, menuSlots })
+    // activities: reads see your rows and your household's; writes only touch your own rows (0 rows otherwise).
+    if (url.pathname === '/rest/v1/activities') {
+      const mine = profiles[ME].household_id
+      const fs = filters(url)
+      if (req.method === 'POST') {
+        const savedRows = []
+        for (const row of [].concat(JSON.parse(body))) {
+          if (row.user_id !== ME) return pgErr(res, 'new row violates row-level security policy for table "activities"', 403)
+          if (!String(row.title ?? '').trim() || (row.duration_min != null && row.duration_min <= 0)) return pgErr(res, 'new row for relation "activities" violates check constraint')
+          const saved = { id: randomUUID(), start_time: null, duration_min: null, kcal_burned: null, completed: false, notes: null, created_at: new Date().toISOString(), ...row }
+          activities.push(saved)
+          savedRows.push({ id: saved.id })
+        }
+        return single ? send(res, 201, savedRows[0]) : send(res, 201, savedRows)
+      }
+      const visible = activities.filter((r) => r.user_id === ME || (mine && profiles[r.user_id]?.household_id === mine))
+      if (req.method === 'GET') return send(res, 200, sortBy(visible.filter((r) => match(r, fs)), url.searchParams.get('order') || ''))
+      const hit = activities.filter((r) => r.user_id === ME && match(r, fs))
+      if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
+      if (req.method === 'DELETE') hit.forEach((r) => activities.splice(activities.indexOf(r), 1))
+      return send(res, 200, hit.map((r) => ({ id: r.id })))
+    }
+    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep, menuSlots, activities })
     if (url.pathname === '/rest/v1/rpc/create_household') {
       if (profiles[ME].household_id) return pgErr(res, 'create_household: you are already in a household')
       const id = randomUUID()
