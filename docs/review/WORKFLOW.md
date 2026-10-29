@@ -129,6 +129,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 28 | Search finds the household's own foods | 35B (High), shared session with 27 | Usable as delivered |
 | 29 | "cal" wording, Menu first, editing goals | 35B (High) | Usable after small fixes (label layout, stuck Saving). ~8 min |
 | 30 | Copy to other days, Repeat last week | 35B (High) | Usable after small fixes (hook after an early return, `as any`); it overwrote the review note. ~8 min |
+| 31 | Send to Keep (share sheet, clear the list) | 35B (High) | Usable after small fixes (no try/catch on the send). ~5 min; the docs ban held |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

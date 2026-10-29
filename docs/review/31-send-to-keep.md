@@ -93,3 +93,26 @@ Add the button and the question. Keep everything that is already there working t
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI. One brief.
+- **Wall time:** about **5 min**, 29 steps.
+- **Outcome:** finished. **It left the note alone** this time: the `docs/` ban held.
+
+## Result
+- **Builds:** yes. **Tests:** 245 passing (236 + 9).
+- **Click-through** at 375 px against the mock, with `navigator.share` stubbed:
+  - **Share sheet closed (AbortError):** no question.
+  - **Share ok:** "Sent. Clear the list?". **Not now** hides it.
+  - **Share throws:** the error shows under the button, and the button is not stuck on "Sending…" (after my fix).
+  - **No share, clipboard only:** "Copied. Clear the list?". **Yes, clear** ticks all 6 items, and the Send button disappears.
+  - **Text sent:** one line per item, e.g. `2 lb chicken thighs\ncurry roux\n6 eggs\n5 cup rice\nsalt\n2 tofu`.
+- **Not testable here:** the real Android share sheet and Keep. That needs the user's phone, over HTTPS (the live site).
+
+## What I changed
+- **`GroceryList`:** the click handler had no `try/catch`, so a failed share left the button on "Sending…" and the error never showed. Added it.
+- **`GroceryList`:** `useState('idle' as …)` became `useState<…>('idle')`.
+- **`sendList.ts`:** the abort check used `instanceof Error`; it now reads `.name`, which also matches the share sheet's `DOMException` in every browser.
+
+## Verdict
+Usable after small fixes. The error path was the gap again: brief it explicitly next time ("a rejected promise must show its message and reset the state").

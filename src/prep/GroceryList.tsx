@@ -6,7 +6,7 @@ import { sendText, groceryText, type SendNav } from './sendList'
 export default function GroceryList({ sessions, weekStart }: { sessions: MealPrep[]; weekStart: string }) {
   const items = groceryList(sessions.filter(s => s.status === 'planned').map(s => s.ingredients))
   const [ticked, setTicked] = useState<Set<string>>(() => loadTicks(weekStart))
-  const [sendState, setSendState] = useState('idle' as 'idle' | 'sending' | 'asking')
+  const [sendState, setSendState] = useState<'idle' | 'sending' | 'asking'>('idle')
   const [how, setHow] = useState<'shared' | 'copied'>('shared')
   const [sendError, setSendError] = useState<string | null>(null)
 
@@ -79,12 +79,17 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
               onClick={async () => {
                 setSendError(null)
                 setSendState('sending')
-                const result = await sendText(groceryText(items, ticked), navigator as unknown as SendNav)
-                if (result === 'cancelled') {
+                try {
+                  const result = await sendText(groceryText(items, ticked), navigator as unknown as SendNav)
+                  if (result === 'cancelled') {
+                    setSendState('idle')
+                  } else {
+                    setHow(result)
+                    setSendState('asking')
+                  }
+                } catch (err) {
+                  setSendError(err instanceof Error ? err.message : 'Could not send the list.')
                   setSendState('idle')
-                } else {
-                  setHow(result)
-                  setSendState('asking')
                 }
               }}
               disabled={sendState === 'sending'}

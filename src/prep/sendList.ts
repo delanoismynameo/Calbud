@@ -19,7 +19,7 @@ export async function sendText(text: string, nav: SendNav): Promise<SendResult> 
       await nav.share({ text })
       return 'shared'
     } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      if ((err as { name?: string } | null)?.name === 'AbortError') {
         return 'cancelled'
       }
       throw err
