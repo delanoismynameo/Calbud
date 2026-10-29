@@ -164,3 +164,12 @@ These come from the review notes and override the earlier guesses above where th
 - **Say "never edit files under docs/"** (task 30: it wrote its report into the brief's own note file).
 - **A "Completed" with no report is a silent stop.** Check its to-do count; "continue" in the same session finished it.
 - **Pointing the model at the brief file works** ("Your task is in `docs/review/NN-….md`; read that whole file first"), so the brief doesn't need pasting into the chat box.
+
+## Unattended headless runs (from task 35)
+- **Command** (from the Calbud folder, Git Bash):
+  - Set `DSH_HOME=…/deepseek-harness/home` and `OLLAMA_LOCAL_API_KEY=ollama`.
+  - Run `dsh.cmd --profile headless --patch …/deepseek-harness/calbud-local.yml headless --json "<the usual one-line pointer to the brief>" > run.jsonl`.
+  - Start it in the background, so Claude is notified when it exits.
+- **Sandbox:** the default workspace-write sandbox lets the model write files but blocks npm, npx and node (EPERM). Setting `DSH_PERMISSION_MODE=danger-full-access` would lift the block, but Claude's auto-mode classifier refuses to start a full-access agent. So the brief says "you cannot run npm; don't work around it", and Claude runs `tsc`, the tests and the build afterwards.
+- **Overlay:** `calbud-local.yml` now has the 35B at a 16K reply budget with a `compaction-basic` block, like the web profile.
+- **Results (35–37):** 7–10 min each. Every run stayed in scope, and each needed one small fix. The model can't see type errors or test failures, so always run `npx tsc -b` and `npm test` first.
