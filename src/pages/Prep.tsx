@@ -84,21 +84,29 @@ export default function Prep() {
         </button>
       </div>
 
-      {/* Loading / Error */}
-      {view === 'menu' && menu.isLoading && <p className="px-3 py-8 text-center text-gray-500">Loading…</p>}
+      {/* Loading / Error, for the menu or for the prep sessions */}
+      {(view === 'menu' ? menu.isLoading : isLoading) && <p className="px-3 py-8 text-center text-gray-500">Loading…</p>}
       {view === 'menu' && menu.error && !menu.isLoading && (
         <div className="px-3 py-6 text-center space-y-2">
           <p className="text-red-400">{menu.error.message}</p>
           <button onClick={() => menu.refetch()} className="text-sm text-blue-400 underline">Try again</button>
         </div>
       )}
+      {view !== 'menu' && error && !isLoading && (
+        <div className="px-3 py-6 text-center space-y-2">
+          <p className="text-red-400">{error.message}</p>
+          <button onClick={() => refetch()} className="text-sm text-blue-400 underline">Try again</button>
+        </div>
+      )}
 
       {/* Week data */}
-      {view === 'menu' && !menu.isLoading && !menu.error ? (
-        <>
-          <MenuGrid days={weekDays(start)} today={today} slots={menu.data ?? []} onPick={(date, meal) => setSlotEditing({ date, meal })} />
-          <p className="text-gray-500 text-xs text-center mt-2">Tap a meal to fill it. Dishes come from this week's prep.</p>
-        </>
+      {view === 'menu' ? (
+        menu.data && !menu.isLoading && !menu.error && (
+          <>
+            <MenuGrid days={weekDays(start)} today={today} slots={menu.data} onPick={(date, meal) => setSlotEditing({ date, meal })} />
+            <p className="text-gray-500 text-xs text-center mt-2">Tap a meal to fill it. Dishes come from this week's prep.</p>
+          </>
+        )
       ) : (data && !isLoading && !error) ? (
         view === 'grocery' ? (
           <GroceryList sessions={data} weekStart={start} />

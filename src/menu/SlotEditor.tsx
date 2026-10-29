@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { queryClient } from '../lib/queryClient'
-import type { MenuMeal } from './types'
+import type { MenuMeal, MenuSlot } from './types'
 import type { MealPrep } from '../prep/types'
 import { dayLabel } from '../prep/week'
 import { mealLabel, parseSlotLabel } from './menu'
@@ -13,7 +13,7 @@ const inputClass = 'w-full bg-slate-800 border border-slate-700 rounded px-3 py-
 export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
   date: string
   meal: MenuMeal
-  slot?: import('./types').MenuSlot
+  slot?: MenuSlot
   dishes: MealPrep[]
   onClose: () => void
 }) {
@@ -23,11 +23,9 @@ export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
   const { profile } = useProfile()
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (label: string) => {
       if (!profile?.household_id) throw new Error('Join or create a household first.')
-      const parsed = parseSlotLabel(text)
-      if (!parsed.ok) throw new Error(parsed.error)
-      await saveSlot(profile.household_id, date, meal, parsed.label, prepId)
+      await saveSlot(profile.household_id, date, meal, label, prepId)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['menu'] })
@@ -48,6 +46,13 @@ export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
 
   const anyPending = saveMutation.isPending || clearMutation.isPending
 
+  // Check the label first so its error shows under the field.
+  const save = () => {
+    const parsed = parseSlotLabel(text)
+    if (!parsed.ok) { setError(parsed.error); return }
+    saveMutation.mutate(parsed.label)
+  }
+
   const handleDishClick = (dish: MealPrep) => {
     setPrepId(dish.id)
     setText(dish.title)
@@ -60,7 +65,7 @@ export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
 
       {dishes.length > 0 && (
         <div>
-          <label htmlFor="same-dish" className="block text-gray-400 text-sm mb-1">This week's dishes</label>
+          <p className="text-gray-400 text-sm mb-1">This week's dishes</p>
           <div className="flex flex-wrap gap-2">
             {dishes.map(dish => (
               <button
@@ -99,7 +104,7 @@ export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
       <div className="flex gap-2 pt-1">
         <button
           type="button"
-          onClick={() => saveMutation.mutate()}
+          onClick={save}
           disabled={anyPending}
           className="py-3 rounded font-semibold text-white flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-center"
         >

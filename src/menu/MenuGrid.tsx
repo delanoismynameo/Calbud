@@ -1,5 +1,5 @@
-import { MENU_MEALS, type MenuMeal } from './types'
-import type { MenuSlot } from './types'
+import { Fragment } from 'react'
+import { MENU_MEALS, type MenuMeal, type MenuSlot } from './types'
 import { mealLabel, slotAt } from './menu'
 import { dayLabel } from '../prep/week'
 
@@ -19,7 +19,7 @@ export default function MenuGrid({ days, today, slots, onPick }: {
 
       {/* Rows per day */}
       {days.map(day => (
-        <div key={day}>
+        <Fragment key={day}>
           {/* Day cell */}
           <div className={`text-sm ${day === today ? 'text-blue-400' : 'text-gray-500'}`}>
             <div>{dayLabel(day).slice(0, 3)}</div>
@@ -46,7 +46,7 @@ export default function MenuGrid({ days, today, slots, onPick }: {
               </button>
             )
           })}
-        </div>
+        </Fragment>
       ))}
     </div>
   )
