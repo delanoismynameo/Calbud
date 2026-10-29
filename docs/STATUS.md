@@ -62,9 +62,10 @@ Before sending a task to the harness:
 | 26 | More nutrients (Nutrition Facts set) | [26](review/26-more-nutrients.md) |
 
 ## Next, in order
-1. **Possible task 27:** inputs for the extra nutrients on custom foods and prep dishes. They have none yet, so they show as "without data".
+1. **Tasks 27 and 28, in one harness session** (the user asked for a couple at a time):
+   - [27](review/27-own-food-nutrients.md): extra-nutrient inputs on custom foods and prep dishes
+   - [28](review/28-search-own-foods.md): "Your foods" in Add food's search
 2. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
-3. **Possible follow-up:** Add food's search only covers USDA. The household's custom foods (dishes) show only under Recent and Favorites; searching "Curry" doesn't find them.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.
