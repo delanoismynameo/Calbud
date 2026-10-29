@@ -48,6 +48,7 @@ await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '202610270000
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261027000002_security.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000001_join_switch.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000002_prep_food.sql'), 'utf8'));
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261029000001_menu.sql'), 'utf8'));
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:
@@ -298,6 +299,39 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
        && unlink.error === undefined && after.length === 1 && after[0].food_id === null,
      `food: ${dish.error ?? dishId}; link: ${link.error ?? linked}; partner read: ${JSON.stringify(embed.rows)}; delete: ${unlink.error ?? 'ok'}; after: ${JSON.stringify(after)}`);
 
+  // Migration 20261029000001: the shared weekly menu.
+  const slot = await as(ALICE,
+    `insert into menu_slots (household_id, slot_date, meal, label, prep_id) values ($1, '2026-10-26', 'dinner', 'Curry', $2)`,
+    [aliceHouseholdId, mpId]);
+  const bobSees = await as(BOB, `select label, prep_id from menu_slots where slot_date = '2026-10-26'`);
+  const bobUpsert = await as(BOB,
+    `insert into menu_slots (household_id, slot_date, meal, label) values ($1, '2026-10-26', 'dinner', 'Leftovers')
+     on conflict (household_id, slot_date, meal) do update set label = excluded.label, prep_id = excluded.prep_id`,
+    [aliceHouseholdId]);
+  const slotNow = (await db.query(`select label, prep_id from menu_slots where household_id = $1 and slot_date = '2026-10-26'`, [aliceHouseholdId])).rows;
+  ok('partner sees and replaces a shared menu slot',
+     slot.error === undefined && bobSees.rows?.length === 1 && bobSees.rows[0].prep_id === mpId
+       && bobUpsert.error === undefined && slotNow.length === 1 && slotNow[0].label === 'Leftovers' && slotNow[0].prep_id === null,
+     `insert: ${slot.error ?? 'ok'}; Bob saw ${JSON.stringify(bobSees.rows)}; upsert: ${bobUpsert.error ?? 'ok'}; now ${JSON.stringify(slotNow)}`);
+
+  const blank = await as(ALICE,
+    `insert into menu_slots (household_id, slot_date, meal, label) values ($1, '2026-10-27', 'lunch', '  ')`, [aliceHouseholdId]);
+  const snack = await as(ALICE,
+    `insert into menu_slots (household_id, slot_date, meal, label) values ($1, '2026-10-27', 'snack', 'Chips')`, [aliceHouseholdId]);
+  ok('menu slot needs a label and breakfast, lunch or dinner', blank.error !== undefined && snack.error !== undefined,
+     `blank label: ${blank.error ?? 'accepted'}; snack: ${snack.error ?? 'accepted'}`);
+
+  await as(ALICE, `update menu_slots set prep_id = $1 where household_id = $2`, [mpId, aliceHouseholdId]);
+  const cSlots = await as(CAROL, 'select id from menu_slots');
+  const cSlotIns = await as(CAROL,
+    `insert into menu_slots (household_id, slot_date, meal, label) values ($1, '2026-10-28', 'lunch', 'Evil')`, [aliceHouseholdId]);
+  const delPrep = await as(BOB, 'delete from meal_prep where id = $1', [mpId]);
+  const kept = (await db.query(`select label, prep_id from menu_slots where household_id = $1`, [aliceHouseholdId])).rows;
+  ok('outsider cannot see or add menu slots; deleting the prep keeps the slot and clears the link',
+     cSlots.rows?.length === 0 && cSlotIns.error !== undefined && delPrep.error === undefined
+       && kept.length === 1 && kept[0].label === 'Leftovers' && kept[0].prep_id === null,
+     `Carol saw ${cSlots.rows?.length}; insert: ${cSlotIns.error ?? 'succeeded'}; prep delete: ${delPrep.error ?? 'ok'}; slots ${JSON.stringify(kept)}`);
+
   const cFd = await as(CAROL, 'select id from foods');
   const cFdIns = await as(CAROL,
     `insert into foods (household_id, source, name, kcal_100g, protein_100g, carbs_100g, fat_100g)
@@ -312,7 +346,7 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
 // ---- Not signed in --------------------------------------------------------------------
 {
   const problems = [];
-  for (const table of ['households', 'profiles', 'foods', 'meal_logs', 'meal_prep', 'activities']) {
+  for (const table of ['households', 'profiles', 'foods', 'meal_logs', 'meal_prep', 'activities', 'menu_slots']) {
     const r = await as(null, `select * from ${table}`);
     if (r.error === undefined && r.rows.length > 0) {
       problems.push(`${table}: ${r.rows.length} rows (want error or 0)`);

@@ -15,6 +15,7 @@ profiles[PARTNER] = { ...profiles[ME], id: PARTNER, display_name: 'Bob', color: 
 const foods = []
 const mealLogs = []
 const mealPrep = []
+const menuSlots = []
 // Start with Alice already in her own household, so the add-food flow is reachable.
 if (process.argv.includes('--in-household')) {
   households['h-alice'] = { id: 'h-alice', name: "Alice's household", invite_code: 'zzzz9999', created_at: '2026-10-27T00:00:00Z' }
@@ -53,6 +54,18 @@ if (process.argv.includes('--with-logs')) {
   mealPrep[mealPrep.length - 1].food_id = food('custom', 'dish-curry', 'Curry', null, 350, '1 serving', 148.57, 8.57, 15.71, 5.71)
   prep(PARTNER, wd(0), 'Meatballs', null, 'done', 4, [])
   prep(ME, wd(3), 'Mabodofu, a long dish name to check wrapping on a phone screen', '18:30:00', 'planned', 3, [{ name: 'tofu', qty: 2, unit: '' }])
+  // The menu: today's breakfast is free text and today's dinner is the Curry batch (which has a dish food);
+  // Saturday lunch is a long list, to check wrapping in the grid. Later rows replace earlier ones in the same slot.
+  const curryId = mealPrep[0].id
+  const slot = (slot_date, meal, label, prep_id = null) => {
+    const old = menuSlots.findIndex((s) => s.slot_date === slot_date && s.meal === meal)
+    if (old >= 0) menuSlots.splice(old, 1)
+    menuSlots.push({ id: randomUUID(), household_id: profiles[ME].household_id, slot_date, meal, label, prep_id })
+  }
+  slot(wd(6), 'lunch', 'Sandwich, Fruit Cup, Protein Bar')
+  slot(wd(1), 'dinner', 'Curry', curryId)
+  slot(day(0), 'breakfast', 'OYO')
+  slot(day(0), 'dinner', 'Curry', curryId)
 }
 const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone']
 const code8 = () => Math.random().toString(16).slice(2, 10)
@@ -160,10 +173,39 @@ http.createServer((req, res) => {
         return send(res, 200, rows)
       }
       if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
-      if (req.method === 'DELETE') hit.forEach((r) => mealPrep.splice(mealPrep.indexOf(r), 1))
+      if (req.method === 'DELETE') hit.forEach((r) => {
+        mealPrep.splice(mealPrep.indexOf(r), 1)
+        menuSlots.filter((s) => s.prep_id === r.id).forEach((s) => (s.prep_id = null))
+      })
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
-    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep })
+    // menu_slots: shared like meal_prep. POST is an upsert on (household_id, slot_date, meal); GET embeds
+    // meal_prep(title, foods(*)) when asked.
+    if (url.pathname === '/rest/v1/menu_slots') {
+      const mine = profiles[ME].household_id
+      const fs = filters(url).filter((f) => f.k !== 'on_conflict')
+      if (req.method === 'POST') {
+        const row = JSON.parse(body)
+        if (!mine || row.household_id !== mine) return pgErr(res, 'new row violates row-level security policy for table "menu_slots"', 403)
+        if (!['breakfast', 'lunch', 'dinner'].includes(row.meal) || !String(row.label ?? '').trim()) return pgErr(res, 'new row for relation "menu_slots" violates check constraint')
+        const existing = menuSlots.find((s) => s.household_id === mine && s.slot_date === row.slot_date && s.meal === row.meal)
+        const saved = existing ? Object.assign(existing, { prep_id: null, ...row }) : (menuSlots.push({ id: randomUUID(), prep_id: null, ...row }), menuSlots[menuSlots.length - 1])
+        return single ? send(res, 201, { id: saved.id }) : send(res, 201, [{ id: saved.id }])
+      }
+      const hit = menuSlots.filter((r) => mine && r.household_id === mine && match(r, fs))
+      if (req.method === 'GET') {
+        let rows = sortBy([...hit], url.searchParams.get('order') || '')
+        if ((url.searchParams.get('select') || '').includes('meal_prep(')) rows = rows.map((r) => {
+          const p = mealPrep.find((m) => m.id === r.prep_id && m.household_id === mine)
+          return { ...r, meal_prep: p ? { title: p.title, foods: foods.find((f) => f.id === p.food_id && f.household_id === mine) ?? null } : null }
+        })
+        return send(res, 200, rows)
+      }
+      if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
+      if (req.method === 'DELETE') hit.forEach((r) => menuSlots.splice(menuSlots.indexOf(r), 1))
+      return send(res, 200, hit.map((r) => ({ id: r.id })))
+    }
+    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep, menuSlots })
     if (url.pathname === '/rest/v1/rpc/create_household') {
       if (profiles[ME].household_id) return pgErr(res, 'create_household: you are already in a household')
       const id = randomUUID()

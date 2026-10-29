@@ -1,6 +1,6 @@
 # Calbud status: start here
 
-*Last updated 2026-10-28. Update this file at the end of every task.*
+*Last updated 2026-10-29. Update this file at the end of every task.*
 
 ## Where things stand
 - **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
@@ -12,15 +12,17 @@
 - **Task 18 (barcode scanning: "Scan a barcode" on Add food, camera via `@zxing/browser`, or a typed code, looked up in Open Food Facts) is live** (pushed 2026-10-28). The camera still needs a test on a real phone.
 - **Tasks 19–20 (Open Food Facts serving labels; search ranking) are live** (pushed 2026-10-28).
 - **Task 21 (the Prep page: a Sunday-to-Saturday week of shared prep sessions, with add, edit, delete and Planned/Done) is live** (pushed 2026-10-28).
-- **Task 22 (the week's grocery list with ticks, and Realtime so both phones' Prep pages update live) is committed locally, not pushed.** Realtime can only be checked on two signed-in phones after deploying.
-- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All three migrations in `supabase/migrations/` have been applied through the SQL Editor. "Confirm email" is **off**.
+- **Task 22 (the week's grocery list with ticks, and Realtime so both phones' Prep pages update live) is live** (pushed 2026-10-28). Realtime can only be checked on two signed-in phones.
+- **Task 23 (a prep session's nutrition per serving, saved as a custom food, and a Log button on Prep) is committed locally, not pushed.** It needs the migration `20261028000002_prep_food.sql` applied **before** pushing.
+- **Task 24 (the shared weekly menu: a breakfast/lunch/dinner grid on Prep and "Today's menu" on Today) has its brief and migration (`20261029000001_menu.sql`) written, not yet run.**
+- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. The first three migrations in `supabase/migrations/` have been applied through the SQL Editor; `20261028000002_prep_food.sql` and `20261029000001_menu.sql` have not. "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 177 passing |
-  | `npm run test:db` | 43 passing |
+  | `npm test` | 188 passing |
+  | `npm run test:db` | 47 passing (with the two unapplied migrations) |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
 
@@ -51,11 +53,13 @@ Before sending a task to the harness:
 | 21 | Meal prep week view and form | [21](review/21-prep-week.md) |
 | 22 | Grocery list and live updates | [22](review/22-grocery-realtime.md) |
 | 22a | Grocery helper on the 4B (side job; failed) | [22a](review/22a-grocery-helper.md) |
+| 23 | Prep dishes as custom foods, Log a serving | [23](review/23-prep-dish-food.md) |
 
 ## Next, in order
-1. **Push task 22** when the user says so. Then **on two phones:** try the barcode camera, and check that a prep change on one phone shows up on the other without a refresh.
-2. **Task 23:** "log servings to my day" when a session is done. `meal_prep` has no nutrition yet, so ask the user how that should work first.
-3. **The rest of meal prep** (GAME_PLAN step 9), as GAME_PLAN §3 describes it. Meal prep (step 9) follows GAME_PLAN §3 as written (the user decided 2026-10-28). See the checked-off list in [`GAME_PLAN.md`](../GAME_PLAN.md#build-order).
+1. **Task 24, the shared menu:** run [24](review/24-menu-grid.md) in the harness. The mock needs a `menu_slots` store first. The user asked for this on 2026-10-28: the menu is shared by the household, with breakfast, lunch and dinner columns (no snack), like their spreadsheet.
+2. **Before pushing 23 and 24:** the user applies `20261028000002_prep_food.sql`, then `20261029000001_menu.sql`, in the SQL Editor.
+3. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+4. **Possible follow-up:** Add food's search only covers USDA. The household's custom foods (dishes) show only under Recent and Favorites; searching "Curry" doesn't find them.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.
