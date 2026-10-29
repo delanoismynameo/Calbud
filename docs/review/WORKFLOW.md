@@ -147,6 +147,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 46 | You card (name, colour, time zone) | 35B (High), headless, no npm | Usable as delivered; the component's first lines given as code kept the hooks in order. ~3.5 min |
 | 47 | Download your data (CSV food log, JSON everything) | 35B (High), headless, no npm | Usable after small fixes (a wrong import path; a reused query with `any`; a copied deliver step). ~7.5 min |
 | 48 | Offline banner | 35B (High), headless, no npm | Usable as delivered. ~1.5 min |
+| 49 | Install app button (beforeinstallprompt) | 35B (High), headless, no npm | Usable after small fixes (an unawaited async test; added the button but didn't replace the text). ~2 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

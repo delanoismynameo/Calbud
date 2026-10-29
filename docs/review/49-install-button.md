@@ -105,3 +105,25 @@ Write it exactly like this.
 2. You have re-read this brief and checked every test's expected value against your code by hand.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **2 min**, 9 steps. It stayed inside the brief's files.
+- **Before the run, I added** PNG icons (192, 512 and a maskable 512, rendered from `icon.svg` with Pillow) to the manifest, plus an `apple-touch-icon.png` (180) linked from `index.html`. Chrome wants raster icons before it offers installation, and without the Apple icon an iPhone home-screen icon was a page screenshot.
+
+## Result
+- **Type check:** clean. **Tests:** 414 passing (408 + 6) after my fix. Before it, 1 failed: an `expect(…).resolves` that wasn't awaited.
+- **Click-through** at 375 px against the mock:
+  - **Before an install event:** the page shows the install text and no button.
+  - **After a fake `beforeinstallprompt`:** it was `preventDefault`ed, and **Install app** shows next to Sign out with the text hidden.
+  - **Tapping it:** calls the event's `prompt()` once. Afterwards the button goes and the text comes back.
+  - **Icons:** all the manifest's icons and the Apple icon load (200).
+- **Not tested:** a real Chrome install prompt on Android, and the new icons on the home screens.
+
+## What I changed
+- **Both showing:** the brief said to *replace* the hint paragraph with the button when it is available. The model added the button and kept the paragraph unconditionally, so the page would show both. The paragraph now shows only when `!canInstall`.
+- **The failing test:** made `async` and awaited.
+- **Imports:** merged the two from `installPromptInstance`.
+
+## Verdict
+Usable after small fixes.
