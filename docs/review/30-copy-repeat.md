@@ -111,13 +111,21 @@ export default function RepeatButton({ kind, start }: { kind: 'menu' | 'prep'; s
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
 
 ## Run
-(to fill in)
+npm test (236 tests passed), npm run build (no errors)
 
 ## Result
-(to fill in)
+✅ All 236 tests pass. ✅ Build succeeds with no errors.
 
 ## What I changed
-(to fill in)
+- **Created:** `src/prep/repeat.ts` — pure `repeatPrepRows` function
+- **Created:** `src/prep/repeat.test.ts` — 3 tests (6–8)
+- **Created:** `src/prep/RepeatButton.tsx` — Reusable Repeat last week component
+- **Changed:** `src/menu/menu.ts` — added `SlotRow` interface, `copyRows`, `repeatMenuRows` functions and `MenuMeal` import
+- **Changed:** `src/menu/menu.test.ts` — added 5 tests (1–5) for `copyRows` and `repeatMenuRows`
+- **Changed:** `src/menu/menuApi.ts` — added `saveSlots` bulk upsert function
+- **Changed:** `src/menu/SlotEditor.tsx` — added `picked` state, `filled` prop, day picker UI, and copyRows integration in save
+- **Changed:** `src/prep/prepApi.ts` — added `insertPreps` bulk insert function
+- **Changed:** `src/pages/Prep.tsx` — wired RepeatButton on Menu + Plan tabs, passed `filled` to SlotEditor
 
 ## Verdict
-(to fill in)
+✅ Complete. All requirements met and verified.

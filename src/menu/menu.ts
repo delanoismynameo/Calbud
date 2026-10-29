@@ -1,4 +1,19 @@
-import type { MenuSlot } from './types'
+import type { MenuSlot, MenuMeal } from './types'
+import { addDays } from '../prep/week'
+
+export interface SlotRow { slot_date: string; meal: MenuMeal; label: string; prep_id: string | null }
+
+export function copyRows(from: string, meal: MenuMeal, label: string, prepId: string | null, dates: string[]): SlotRow[] {
+  return dates.filter(d => d !== from).map(date => ({ slot_date: date, meal, label, prep_id: prepId }))
+}
+
+export function repeatMenuRows(lastWeek: MenuSlot[], thisWeek: MenuSlot[]): SlotRow[] {
+  const filled = new Set(thisWeek.map(s => `${s.slot_date},${s.meal}`))
+  return lastWeek
+    .map(s => ({ ...s, slot_date: addDays(s.slot_date, 7) }))
+    .filter(r => !filled.has(`${r.slot_date},${r.meal}`))
+    .map(r => ({ slot_date: r.slot_date, meal: r.meal, label: r.label, prep_id: null }))
+}
 
 export function mealLabel(meal: string): string {
   return meal.charAt(0).toUpperCase() + meal.slice(1)

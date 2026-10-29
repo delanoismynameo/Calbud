@@ -13,6 +13,8 @@ import PrepForm from '../prep/PrepForm'
 import MenuGrid from '../menu/MenuGrid'
 import SlotEditor from '../menu/SlotEditor'
 import { useProfile } from '../household/useProfile'
+import { useAuth } from '../auth/AuthProvider'
+import RepeatButton from '../prep/RepeatButton'
 import { usePrepRealtime } from '../prep/usePrepRealtime'
 import GroceryList from '../prep/GroceryList'
 import ServingPicker from '../food/ServingPicker'
@@ -30,6 +32,7 @@ export default function Prep() {
   const menu = useMenuWeek(start)
   const [view, setView] = useState<'plan' | 'menu' | 'grocery'>('menu')
   const [slotEditing, setSlotEditing] = useState<{ date: string; meal: MenuMeal } | null>(null)
+  const { session } = useAuth()
 
   if (editing) {
     return <PrepForm date={editing.date} prep={editing.prep} onClose={() => setEditing(null)} />
@@ -38,7 +41,8 @@ export default function Prep() {
   if (logging?.foods) return <ServingPicker food={foodResultFromRow(logging.foods)} onLogged={() => setLogging(null)} onCancel={() => setLogging(null)} />
 
   if (slotEditing) {
-    return <SlotEditor date={slotEditing.date} meal={slotEditing.meal} slot={slotAt(menu.data ?? [], slotEditing.date, slotEditing.meal)} dishes={data ?? []} onClose={() => setSlotEditing(null)} />
+    const filled = (menu.data ?? []).filter(s => s.meal === slotEditing.meal).map(s => s.slot_date)
+    return <SlotEditor date={slotEditing.date} meal={slotEditing.meal} slot={slotAt(menu.data ?? [], slotEditing.date, slotEditing.meal)} dishes={data ?? []} filled={filled} onClose={() => setSlotEditing(null)} />
   }
 
   const weekStarts = weekStart(today)
@@ -104,6 +108,7 @@ export default function Prep() {
           <>
             <MenuGrid days={weekDays(start)} today={today} slots={menu.data} onPick={(date, meal) => setSlotEditing({ date, meal })} />
             <p className="text-gray-500 text-xs text-center mt-2">Tap a meal to fill it. Dishes come from this week's prep.</p>
+            <RepeatButton kind="menu" start={start} key={start} />
           </>
         )
       ) : (data && !isLoading && !error) ? (
@@ -157,6 +162,7 @@ export default function Prep() {
                 </div>
               )
             })}
+            <RepeatButton kind="prep" start={start} key={start} />
           </>
         )
       ) : null}

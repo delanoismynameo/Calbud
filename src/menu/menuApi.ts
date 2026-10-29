@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { MenuSlot, MenuMeal } from './types'
+import type { SlotRow } from './menu'
 import { addDays } from '../prep/week'
 
 export async function fetchMenuWeek(householdId: string, start: string): Promise<MenuSlot[]> {
@@ -21,6 +22,13 @@ export async function saveSlot(householdId: string, date: string, meal: MenuMeal
     .from('menu_slots')
     .upsert({ household_id: householdId, slot_date: date, meal, label, prep_id: prepId }, { onConflict: 'household_id,slot_date,meal' })
     .select('id')
+
+  if (error) throw new Error(error.message)
+}
+
+export async function saveSlots(householdId: string, rows: SlotRow[]): Promise<void> {
+  if (rows.length === 0) return
+  const { error } = await supabase.from('menu_slots').upsert(rows.map(r => ({ ...r, household_id: householdId })), { onConflict: 'household_id,slot_date,meal' }).select('id')
 
   if (error) throw new Error(error.message)
 }

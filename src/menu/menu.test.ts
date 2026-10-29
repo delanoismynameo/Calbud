@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mealLabel, slotAt, menuCount, parseSlotLabel } from './menu'
+import { mealLabel, slotAt, menuCount, parseSlotLabel, copyRows, repeatMenuRows } from './menu'
 import type { MenuSlot } from './types'
 
 function slot(o: Partial<MenuSlot> = {}): MenuSlot {
@@ -47,5 +47,43 @@ describe('parseSlotLabel', () => {
   it('allows up to 200 chars and rejects 201', () => {
     expect(parseSlotLabel('x'.repeat(200)).ok).toBe(true)
     expect(parseSlotLabel('x'.repeat(201))).toEqual({ ok: false, error: 'Keep it under 200 characters.' })
+  })
+})
+
+describe('copyRows', () => {
+  it("test 1: copyRows('2026-03-01', 'dinner', 'Curry', null, ['2026-03-01', '2026-03-03']) equals [{ slot_date: '2026-03-03', meal: 'dinner', label: 'Curry', prep_id: null }]", () => {
+    expect(copyRows('2026-03-01', 'dinner', 'Curry', null, ['2026-03-01', '2026-03-03'])).toEqual([{ slot_date: '2026-03-03', meal: 'dinner', label: 'Curry', prep_id: null }])
+  })
+
+  it("test 2: copyRows with prepId 'p1' keeps prep_id: 'p1' on every row", () => {
+    expect(copyRows('2026-03-01', 'lunch', 'Salad', 'p1', ['2026-03-01', '2026-03-02', '2026-03-05']).map(r => r.prep_id)).toEqual(['p1', 'p1'])
+  })
+})
+
+describe('repeatMenuRows', () => {
+  it('test 3: a lunch on 2026-03-01 and dinner on 2026-03-02, with thisWeek empty, gives same two meals on 2026-03-08 and 2026-03-09, both prep_id: null', () => {
+    const lastWeek = [
+      slot({ id: 'a', slot_date: '2026-03-01', meal: 'lunch', label: 'Salad' }),
+      slot({ id: 'b', slot_date: '2026-03-02', meal: 'dinner', label: 'Curry' }),
+    ]
+    expect(repeatMenuRows(lastWeek, [])).toEqual([
+      { slot_date: '2026-03-08', meal: 'lunch', label: 'Salad', prep_id: null },
+      { slot_date: '2026-03-09', meal: 'dinner', label: 'Curry', prep_id: null },
+    ])
+  })
+
+  it('test 4: if thisWeek already has a slot on 2026-03-08 lunch, that one is skipped and the dinner is kept', () => {
+    const lastWeek = [
+      slot({ id: 'a', slot_date: '2026-03-01', meal: 'lunch', label: 'Salad' }),
+      slot({ id: 'b', slot_date: '2026-03-02', meal: 'dinner', label: 'Curry' }),
+    ]
+    const thisWeek = [slot({ id: 'c', slot_date: '2026-03-08', meal: 'lunch', label: 'Burger' })]
+    expect(repeatMenuRows(lastWeek, thisWeek)).toEqual([
+      { slot_date: '2026-03-09', meal: 'dinner', label: 'Curry', prep_id: null },
+    ])
+  })
+
+  it('test 5: repeatMenuRows([], []) equals []', () => {
+    expect(repeatMenuRows([], [])).toEqual([])
   })
 })

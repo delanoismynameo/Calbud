@@ -4,6 +4,15 @@ import { addDays } from './week'
 import type { FoodResult } from '../food/types'
 import { foodRow } from '../food/rows'
 
+export async function insertPreps(householdId: string, userId: string, rows: (PrepFields & { food_id: string | null })[]): Promise<void> {
+  if (rows.length === 0) return
+  const data = rows.map(r => ({ ...r, household_id: householdId, created_by: userId, status: 'planned' as const }))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await supabase.from('meal_prep').insert(data as any).select('id')
+
+  if (error) throw new Error(error.message)
+}
+
 export async function fetchPrepWeek(householdId: string, start: string): Promise<MealPrep[]> {
   const end = addDays(start, 6)
   const { data, error } = await supabase

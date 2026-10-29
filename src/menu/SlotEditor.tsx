@@ -3,22 +3,24 @@ import { useMutation } from '@tanstack/react-query'
 import { queryClient } from '../lib/queryClient'
 import type { MenuMeal, MenuSlot } from './types'
 import type { MealPrep } from '../prep/types'
-import { dayLabel } from '../prep/week'
-import { mealLabel, parseSlotLabel } from './menu'
-import { saveSlot, clearSlot } from './menuApi'
+import { dayLabel, weekDays, weekStart } from '../prep/week'
+import { mealLabel, parseSlotLabel, copyRows } from './menu'
+import { saveSlot, clearSlot, saveSlots } from './menuApi'
 import { useProfile } from '../household/useProfile'
 
 const inputClass = 'w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500'
 
-export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
+export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }: {
   date: string
   meal: MenuMeal
   slot?: MenuSlot
   dishes: MealPrep[]
+  filled: string[]
   onClose: () => void
 }) {
   const [text, setText] = useState(slot?.label ?? '')
   const [prepId, setPrepId] = useState<string | null>(slot?.prep_id ?? null)
+  const [picked, setPicked] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const { profile } = useProfile()
 
@@ -26,6 +28,9 @@ export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
     mutationFn: async (label: string) => {
       if (!profile?.household_id) throw new Error('Join or create a household first.')
       await saveSlot(profile.household_id, date, meal, label, prepId)
+      if (picked.length > 0) {
+        await saveSlots(profile.household_id, copyRows(date, meal, label, prepId, picked))
+      }
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['menu'] })
@@ -96,6 +101,32 @@ export default function SlotEditor({ date, meal, slot, dishes, onClose }: {
           className={inputClass}
         />
         {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+      </div>
+
+      <div>
+        <p className="text-gray-400 text-sm mb-1">Also put it on</p>
+        <div className="flex flex-wrap gap-2">
+          {weekDays(weekStart(date)).filter(d => d !== date).map(day => (
+            <button
+              key={day}
+              type="button"
+              onClick={() => {
+                if (picked.includes(day)) setPicked(picked.filter(x => x !== day))
+                else setPicked([...picked, day])
+              }}
+              disabled={anyPending}
+              aria-pressed={picked.includes(day)}
+              className={`py-1 px-3 rounded text-xs font-medium ${
+                picked.includes(day) ? 'bg-blue-600 text-white' : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+              }`}
+            >
+              {dayLabel(day).slice(0, 3)}{filled.includes(day) ? '*' : ''}
+            </button>
+          ))}
+        </div>
+        {picked.some(d => filled.includes(d)) && (
+          <p className="text-gray-500 text-xs mt-1">* already has a meal. Saving replaces it.</p>
+        )}
       </div>
 
       {saveMutation.isError && <p className="text-red-400 text-sm px-1">{saveMutation.error.message}</p>}
