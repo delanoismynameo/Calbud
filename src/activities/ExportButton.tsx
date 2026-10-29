@@ -1,19 +1,9 @@
+import { downloadFile } from '../lib/download'
 import { useState } from 'react'
 import { useProfile } from '../household/useProfile'
 import type { Activity } from './types'
 import { buildIcs } from '../calendar/ics'
 import { activityEvents, exportFileName, isIosStandalone, deliverIcs, type ShareNav } from '../calendar/exportWeek'
-
-function downloadFile(file: File): void {
-  const url = URL.createObjectURL(file)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = file.name
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
 
 export default function ExportButton({
   items,

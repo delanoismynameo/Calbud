@@ -72,6 +72,7 @@ export async function deliverIcs(
   preferShare: boolean,
   nav: ShareNav,
   download: (file: File) => void,
+  title = 'Calbud week',
 ): Promise<DeliverResult> {
   if (!preferShare) {
     download(file)
@@ -80,7 +81,7 @@ export async function deliverIcs(
 
   if (nav.share && nav.canShare && nav.canShare({ files: [file] })) {
     try {
-      await nav.share({ files: [file], title: 'Calbud week' })
+      await nav.share({ files: [file], title })
       return 'shared'
     } catch (err) {
       if ((err as Error).name === 'AbortError') {

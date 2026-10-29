@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from './useProfile'
 import { supabase } from '../lib/supabase'
-
-const COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#ef4444']
+import { COLORS } from './colors'
 
 interface ProfileStepProps {
   onDone: () => void
