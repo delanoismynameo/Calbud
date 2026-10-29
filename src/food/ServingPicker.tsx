@@ -4,6 +4,9 @@ import type { FoodResult } from './types'
 import { foodKey, setFavorite } from './favorites'
 import { useFavoriteFoods } from './useFavoriteFoods'
 import { scaleNutrition } from './nutrition'
+import NutritionLabel from './NutritionLabel'
+import { labelRows, servingLine } from './label'
+import { scaleExtras } from './extras'
 import { defaultMealType, localDateString } from '../lib/dates'
 import { dayLabel } from '../prep/week'
 import { logFood } from './logFood'
@@ -136,6 +139,10 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       </div>
 
       {mutation.isError && <p className="text-red-400 text-sm text-center">{mutation.error.message}</p>}
+
+      {nutrition && (
+        <NutritionLabel servingText={servingLine(unit, amount, grams, food.servingLabel)} kcal={nutrition.kcal} rows={labelRows({ fat_g: nutrition.fat_g, carbs_g: nutrition.carbs_g, protein_g: nutrition.protein_g, extras: scaleExtras(food.extras100g ?? {}, grams) })} />
+      )}
     </div>
   )
 }
