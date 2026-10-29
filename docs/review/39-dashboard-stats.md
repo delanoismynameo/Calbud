@@ -81,3 +81,19 @@ export function useHouseholdKcal(today: string)
 2. You have re-read this brief and checked every test's expected value against your code by hand (you cannot run the tests).
 
 Reply with: the files created, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **3 min**, 7 steps. It stayed inside the brief's files.
+- **Outcome:** finished, and it reported "no uncertainties or deviations".
+
+## Result
+- **Type check:** clean. **Tests:** 344 passing (328 + 16) after my fix. Before it, 1 failed: the `maxDays` test didn't match the brief.
+
+## What I changed
+- **The `maxDays` test:** it built 10 people whose dates were `'21'`–`'30'`, not one person on target for the 10 dates ending on 2026-10-29. I rewrote it as briefed, using `addDays`. The code was right.
+- **`kcalByUserDay`:** it rounded after each added row. It now rounds each day's sum once, as briefed. With many fractional rows, rounding every step can drift.
+- **`streak`:** it had two copies of the "everyone on target" loop. It now uses one `everyone(date)` helper and a `while` loop.
+
+## Verdict
+Usable after small fixes. It said it hand-checked test 9, but the test it wrote doesn't test what the brief said. As in task 09, its self-report about tests can't be trusted.

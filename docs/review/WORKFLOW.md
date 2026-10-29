@@ -137,6 +137,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 36 | The day's totals as a label (Today) | 35B (High), headless, no npm | Usable after small fixes (one type error it couldn't see; loose map types). ~10 min |
 | 37 | Live label preview in the food and dish forms | 35B (High), headless, no npm | Usable after a one-line fix (kcal not rounded; the test caught it). ~7 min |
 | 38 | Update prompt and install instructions | 35B (High), headless, no npm | Usable after a one-word fix (missed the 'iPad' check). ~4 min |
+| 39 | Dashboard stats (weekly average, shared streak), data and hook | 35B (High), headless, no npm | Usable after small fixes (one test not as briefed; rounding per row). ~3 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
