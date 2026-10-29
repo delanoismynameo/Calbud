@@ -3,7 +3,7 @@
 //  'other': anything else.
 export function installHint(userAgent: string, maxTouchPoints: number, standalone: boolean): 'ios' | 'other' | null {
   if (standalone) return null
-  const isiPhone = userAgent.includes('iPhone')
+  const isiPhone = userAgent.includes('iPhone') || userAgent.includes('iPad')
   const isiPad = userAgent.includes('Macintosh') && maxTouchPoints > 1
   if (isiPhone || isiPad) return 'ios'
   return 'other'
