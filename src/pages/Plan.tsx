@@ -10,6 +10,7 @@ import { useActivityWeek } from '../activities/useActivityWeek'
 import { useActivityRealtime } from '../activities/useActivityRealtime'
 import ActivityForm from '../activities/ActivityForm'
 import { useProfile } from '../household/useProfile'
+import ExportButton from '../activities/ExportButton'
 
 function LoadingRow() {
   return <p className="px-3 py-8 text-center text-gray-500">Loading…</p>
@@ -161,6 +162,8 @@ export default function Plan() {
               </div>
             )
           })}
+
+          <ExportButton items={visible} start={start} prefixNames={showToggle && visibility === 'both'} key={start} />
         </>
       )}
     </div>
