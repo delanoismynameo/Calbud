@@ -86,6 +86,7 @@ describe('yieldFrom', () => {
 
   it("has totalG NaN for 'weight', ''", () => {
     const result = yieldFrom('weight', '')
-    expect(Number.isNaN(result.totalG)).toBe(true)
+    expect(result.kind).toBe('weight')
+    expect(result.kind === 'weight' && Number.isNaN(result.totalG)).toBe(true)
   })
 })

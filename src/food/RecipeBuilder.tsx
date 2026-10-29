@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import type { Recipe, Ingredient, FoodResult } from './types'
-import { recipeTotals, ingredientGrams } from './recipe'
-import { yieldFrom, startAmount, readAmount } from './recipeDraft'
+import { recipeTotals } from './recipe'
+import { yieldFrom, startAmount, readAmount, ingredientLine } from './recipeDraft'
 import FoodFinder from './FoodFinder'
 
 const toggle = (on: boolean) =>
@@ -24,11 +25,12 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
     onChange({ ingredients: nextIngredients, yield: yieldFrom(nextMode, nextText) })
   }
 
-  let body: JSX.Element
+  let body: ReactNode
 
   if (step === 'finding') {
     body = (
-      <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}>
+      <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
+        className="space-y-3">
         <FoodFinder onPick={(food) => { const s = startAmount(food); setEditing({ food, index: null }); setAmountText(s.text); setUnit(s.unit); setStep('amount') }} />
         <button type="button" onClick={() => setStep('list')} className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold">Cancel</button>
       </div>
@@ -37,7 +39,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
     const amount = readAmount(amountText)
     const canSubmit = amount !== null
 
-    let toggleMarkup: JSX.Element | null = null
+    let toggleMarkup: ReactNode = null
     if (editing.food.servingG != null) {
       const isServing = unit === 'serving'
       toggleMarkup = (
@@ -71,6 +73,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
 
         <div className="flex gap-2">
           <button type="button" disabled={!canSubmit} onClick={() => {
+            if (amount === null) return
             const ing: Ingredient = { food: editing.food, amount, unit }
             const next = editing.index !== null ? ingredients.map((item, i) => i === editing.index ? ing : item) : [...ingredients, ing]
             update(next)
@@ -97,7 +100,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
     // step === 'list'
     const totals = recipeTotals(ingredients)
 
-    let ingredientList: JSX.Element | null = null
+    let ingredientList: ReactNode = null
     if (ingredients.length > 0) {
       ingredientList = (
         <div className="space-y-3">
@@ -112,7 +115,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
       )
     }
 
-    let yieldMarkup: JSX.Element | null = null
+    let yieldMarkup: ReactNode = null
     if (ingredients.length > 0) {
       const servToggleActive = mode === 'servings'
       const weightToggleActive = mode === 'weight'
