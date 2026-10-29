@@ -113,3 +113,26 @@ It keeps its own state and calls `onChange` with the whole recipe after **every*
 2. You have re-read this brief and checked every test's expected value against your code by hand.
 
 Reply with: the files created, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **5 min**, 22 steps. It stayed inside the brief's files.
+
+## Result
+- **Tests:** 395 passing (381 + 14), all expected values right.
+- **Type check:** 6 errors before my fixes:
+  - `JSX.Element` used without the namespace (React 19 dropped the global);
+  - `ingredientLine` called but never imported;
+  - `amount` possibly null in the Add handler;
+  - a test reading `totalG` on the `RecipeYield` union without narrowing.
+- **Click-through:** with task 44, inside Create a food (see 44).
+
+## What I changed
+- `ReactNode` from `react` for the JSX variables.
+- Imported `ingredientLine`, and dropped the unused `ingredientGrams` import.
+- A `null` guard in the Add/Save handler. The button is already disabled then, but the type needs it.
+- `space-y-3` between the finder and its Cancel button.
+- The test narrows on `kind` before reading `totalG`.
+
+## Verdict
+Usable after type fixes. The structure and the form guards (`type="button"`, the Enter guard) were all as briefed. Without `tsc`, a big component reliably arrives with a handful of type errors. Next time, put the needed imports in the brief's code block.
