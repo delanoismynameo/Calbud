@@ -10,10 +10,14 @@ import { emptyDish, isDishBlank, dishFromFood, parseDish, type DishInput } from 
 import { useDishFoods } from './useDishFoods'
 import type { FoodResult } from '../food/types'
 import ExtrasFields from '../food/ExtrasFields'
+import RecipeBuilder from '../food/RecipeBuilder'
 import type { ExtraInputs, ExtraKey } from '../food/extras'
 import { cleanExtras, extrasPerServing, parseExtraInputs } from '../food/extras'
 import { previewLabel } from '../food/labelPreview'
 import NutritionLabel from '../food/NutritionLabel'
+import { cleanRecipe, recipeError, recipeFood } from '../food/recipe'
+import { builtLabel } from '../food/builtLabel'
+import type { Recipe } from '../food/types'
 
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
@@ -26,6 +30,13 @@ export default function PrepForm({
   date: string
   onClose: () => void
 }) {
+  const startRecipe = prep?.foods ? cleanRecipe(prep.foods.recipe) : null
+
+  const [dishMode, setDishMode] = useState<'numbers' | 'ingredients'>(startRecipe ? 'ingredients' : 'numbers')
+  const [recipe, setRecipe] = useState<Recipe | null>(startRecipe)
+  const [builderKey, setBuilderKey] = useState(0)
+  const [recipeErr, setRecipeErr] = useState('')
+
   const [input, setInput] = useState<PrepFormInput>(prep ? prepFormFrom(prep) : { ...emptyInput, date })
   const [errors, setErrors] = useState<Partial<Record<keyof PrepFormInput, string>>>({})
   const [dishErrors, setDishErrors] = useState<Partial<Record<keyof DishInput, string>>>({})
@@ -88,6 +99,24 @@ export default function PrepForm({
     const parsed = parsePrepForm(input)
     setErrors(parsed.ok ? {} : parsed.errors)
 
+    if (dishMode === 'ingredients') {
+      let dishFood: FoodResult | null = null
+
+      if (!recipe || recipe.ingredients.length === 0) {
+        dishFood = null
+      } else {
+        const err = recipeError(recipe)
+        if (err !== null) {
+          setRecipeErr(err)
+          return
+        }
+        dishFood = recipeFood(recipe, input.title.trim(), dishSourceId ?? crypto.randomUUID())
+      }
+
+      saveMutation.mutate({ fields: parsed.fields, dishFood })
+      return
+    }
+
     let dishFood: FoodResult | null = null
     const tempDishErrors: Partial<Record<keyof DishInput, string>> = {}
 
@@ -125,6 +154,17 @@ export default function PrepForm({
   const headingText = prep ? 'Edit prep session' : 'New prep session'
 
   const dishPreview = previewLabel({ ...dish, servingLabel: '' }, dishExtras)
+
+  // toggle helper (same pattern as CustomFoodForm toggles)
+  const toggle = (on: boolean) =>
+    `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
+
+  // ingredients label preview (same pattern as CustomFoodForm's built recipe preview)
+  let builtLabelResult: { servingText: string; kcal: number; rows: any[] } | null = null
+  if (recipe && recipe.ingredients.length > 0 && recipeError(recipe) === null) {
+    const built = recipeFood(recipe, input.title, 'preview')
+    builtLabelResult = builtLabel(built)
+  }
 
   return (
     <div className="bg-slate-900 rounded p-3 space-y-4">
@@ -175,6 +215,11 @@ export default function PrepForm({
       <div>
         <h3 className="text-gray-400 text-sm mb-2 px-1">Nutrition per serving (optional)</h3>
 
+        <div className="flex gap-2 mb-3">
+          <button type="button" onClick={() => { setDishMode('numbers'); setRecipeErr('') }} className={toggle(dishMode === 'numbers')}>Type the numbers</button>
+          <button type="button" onClick={() => { setDishMode('ingredients'); setRecipeErr('') }} className={toggle(dishMode === 'ingredients')}>Build from ingredients</button>
+        </div>
+
         {savedDishes.data && savedDishes.data.length > 0 && (
           <div className="mb-3">
             <label htmlFor="same-dish" className="block text-gray-400 text-sm mb-1">Same as a saved dish</label>
@@ -184,6 +229,9 @@ export default function PrepForm({
                 if (!foodId) return
                 const food = savedDishes.data!.find(f => f.id === foodId)
                 if (food) {
+                  const saved = cleanRecipe(food.recipe)
+                  if (saved) { setRecipe(saved); setDishMode('ingredients'); setBuilderKey(k => k + 1) }
+                  else { setRecipe(null); setDishMode('numbers') }
                   setDish(dishFromFood(food))
                   setDishSourceId(food.source_id)
                   setDishExtras(food.serving_g != null ? extrasPerServing(cleanExtras(food.extra_100g), Number(food.serving_g)) : {})
@@ -201,46 +249,55 @@ export default function PrepForm({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="dish-serving-g" className="block text-gray-400 text-sm mb-1">Serving weight (g)</label>
-            <input id="dish-serving-g" type="text" inputMode="decimal" value={dish.servingG} onChange={changeDishField('servingG')} placeholder="350"
-              className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-            {dishErrors.servingG && <p className="text-red-400 text-xs mt-1">{dishErrors.servingG}</p>}
+        {dishMode === 'numbers' && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="dish-serving-g" className="block text-gray-400 text-sm mb-1">Serving weight (g)</label>
+              <input id="dish-serving-g" type="text" inputMode="decimal" value={dish.servingG} onChange={changeDishField('servingG')} placeholder="350"
+                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
+              {dishErrors.servingG && <p className="text-red-400 text-xs mt-1">{dishErrors.servingG}</p>}
+            </div>
+            <div>
+              <label htmlFor="dish-kcal" className="block text-gray-400 text-sm mb-1">Calories</label>
+              <input id="dish-kcal" type="text" inputMode="decimal" value={dish.kcal} onChange={changeDishField('kcal')} placeholder="520"
+                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
+              {dishErrors.kcal && <p className="text-red-400 text-xs mt-1">{dishErrors.kcal}</p>}
+            </div>
+            <div>
+              <label htmlFor="dish-protein" className="block text-gray-400 text-sm mb-1">Protein (g)</label>
+              <input id="dish-protein" type="text" inputMode="decimal" value={dish.protein} onChange={changeDishField('protein')} placeholder="30"
+                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
+              {dishErrors.protein && <p className="text-red-400 text-xs mt-1">{dishErrors.protein}</p>}
+            </div>
+            <div>
+              <label htmlFor="dish-carbs" className="block text-gray-400 text-sm mb-1">Carbs (g)</label>
+              <input id="dish-carbs" type="text" inputMode="decimal" value={dish.carbs} onChange={changeDishField('carbs')} placeholder="55"
+                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
+              {dishErrors.carbs && <p className="text-red-400 text-xs mt-1">{dishErrors.carbs}</p>}
+            </div>
+            <div>
+              <label htmlFor="dish-fat" className="block text-gray-400 text-sm mb-1">Fat (g)</label>
+              <input id="dish-fat" type="text" inputMode="decimal" value={dish.fat} onChange={changeDishField('fat')} placeholder="20"
+                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
+              {dishErrors.fat && <p className="text-red-400 text-xs mt-1">{dishErrors.fat}</p>}
+            </div>
           </div>
-          <div>
-            <label htmlFor="dish-kcal" className="block text-gray-400 text-sm mb-1">Calories</label>
-            <input id="dish-kcal" type="text" inputMode="decimal" value={dish.kcal} onChange={changeDishField('kcal')} placeholder="520"
-              className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-            {dishErrors.kcal && <p className="text-red-400 text-xs mt-1">{dishErrors.kcal}</p>}
-          </div>
-          <div>
-            <label htmlFor="dish-protein" className="block text-gray-400 text-sm mb-1">Protein (g)</label>
-            <input id="dish-protein" type="text" inputMode="decimal" value={dish.protein} onChange={changeDishField('protein')} placeholder="30"
-              className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-            {dishErrors.protein && <p className="text-red-400 text-xs mt-1">{dishErrors.protein}</p>}
-          </div>
-          <div>
-            <label htmlFor="dish-carbs" className="block text-gray-400 text-sm mb-1">Carbs (g)</label>
-            <input id="dish-carbs" type="text" inputMode="decimal" value={dish.carbs} onChange={changeDishField('carbs')} placeholder="55"
-              className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-            {dishErrors.carbs && <p className="text-red-400 text-xs mt-1">{dishErrors.carbs}</p>}
-          </div>
-          <div>
-            <label htmlFor="dish-fat" className="block text-gray-400 text-sm mb-1">Fat (g)</label>
-            <input id="dish-fat" type="text" inputMode="decimal" value={dish.fat} onChange={changeDishField('fat')} placeholder="20"
-              className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-            {dishErrors.fat && <p className="text-red-400 text-xs mt-1">{dishErrors.fat}</p>}
-          </div>
-        </div>
 
-        <ExtrasFields values={dishExtras} errors={dishExtraErrors} onChange={(key, value) => { setDishExtras({ ...dishExtras, [key]: value }); if (dishExtraErrors[key]) setDishExtraErrors({ ...dishExtraErrors, [key]: undefined }) }} />
+        )}
 
-        {dishPreview && (
-          <div className="mt-3">
-            <p className="text-gray-400 text-sm mb-1">Label preview</p>
-            <NutritionLabel servingText={dishPreview.servingText} kcal={dishPreview.kcal} rows={dishPreview.rows} />
-          </div>
+        {dishMode === 'ingredients' && (
+          <>
+            <RecipeBuilder key={builderKey} initial={recipe ?? undefined} onChange={(r) => { setRecipe(r); setRecipeErr('') }} />
+
+            {builtLabelResult && (
+              <div className="mt-3">
+                <p className="text-gray-400 text-sm mb-1">Label preview</p>
+                <NutritionLabel servingText={builtLabelResult.servingText} kcal={builtLabelResult.kcal} rows={builtLabelResult.rows} />
+              </div>
+            )}
+
+            {recipeErr && <p className="text-red-400 text-xs mt-1">{recipeErr}</p>}
+          </>
         )}
 
         <p className="text-gray-500 text-xs mt-2 px-1">
