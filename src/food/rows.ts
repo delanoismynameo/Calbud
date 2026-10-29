@@ -1,4 +1,4 @@
-import type { FoodResult } from './types'
+import type { FoodResult, Recipe } from './types'
 import { scaleNutrition } from './nutrition'
 import type { Extras } from './extras'
 import { scaleExtras } from './extras'
@@ -19,6 +19,7 @@ type FoodRow = {
   sugar_100g: number | null
   sodium_mg_100g: number | null
   extra_100g: Extras
+  recipe?: Recipe
 }
 
 export function foodRow(food: FoodResult, householdId: string): FoodRow {
@@ -38,6 +39,8 @@ export function foodRow(food: FoodResult, householdId: string): FoodRow {
     sugar_100g: food.sugar100g,
     sodium_mg_100g: food.sodiumMg100g,
     extra_100g: food.extras100g ?? {},
+    // Only built foods send the column, so saving other foods doesn't depend on the recipe migration.
+    ...(food.recipe ? { recipe: food.recipe } : {}),
   }
 }
 

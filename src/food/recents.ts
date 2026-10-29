@@ -1,5 +1,6 @@
 import type { FoodResult } from './types'
 import { cleanExtras } from './extras'
+import { cleanRecipe } from './recipe'
 
 export type FoodRowFromDb = {
   id: string
@@ -18,6 +19,7 @@ export type FoodRowFromDb = {
   sugar_100g: number | null
   sodium_mg_100g: number | null
   extra_100g?: unknown
+  recipe?: unknown
   is_favorite: boolean
 }
 
@@ -40,8 +42,11 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
     sugar100g: row.sugar_100g != null ? Number(row.sugar_100g) : null,
     sodiumMg100g: row.sodium_mg_100g != null ? Number(row.sodium_mg_100g) : null,
     extras100g: cleanExtras(row.extra_100g),
+    ...withRecipe(cleanRecipe(row.recipe)),
   }
 }
+
+const withRecipe = (recipe: FoodResult['recipe'] | null) => (recipe ? { recipe } : {})
 
 export function recentFoods(rows: RecentLogRow[], limit = 10): FoodResult[] {
   const seen = new Set<string>()
