@@ -93,3 +93,21 @@ Returns the instant at which the wall clock in `timeZone` shows `date` + `time`.
 3. You have re-read this brief and checked each rule and every test's expected value against your code.
 
 Reply with: the files created, the pasted lines, and anything you were unsure about (especially the daylight-saving cases). Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.8:27b (tuned server, 64k)` at **High**, Full access, web UI. One brief, run unattended overnight.
+- **Wall time:** about **1 h 10 min** to a green build, at ~8 tok/s. It then spent 10+ more minutes re-checking the brief with its context at 94%, so I reviewed while it was still going.
+- **Outcome:** finished the code. It wrote the 22 tests first (as told), then the code in chunks. Its first run had 21/22: it had left out `END:VEVENT`. It found and fixed that itself.
+
+## Result
+- **Builds:** yes. **Tests:** 267 passing (245 + 22).
+- **Extra checks by me:**
+  - **Round trip:** `localToUtc` for 7 zones (New York, London, Sydney, Kolkata, Sao Paulo, Auckland, Lord Howe) × 365 days × 6 wall times, each converted back to the zone's wall clock. Only the nonexistent spring-forward times differed, and there were few of them.
+  - **Mutation:** removing the "never split inside a character" loop in `foldLine` fails the multi-byte test, so that test guards the rule.
+- **Not checked:** an import into real Google Calendar or Apple Calendar. That belongs with the export button.
+
+## What I changed
+Nothing. The code is clear and small, and every rule in the brief is covered.
+
+## Verdict
+Usable as delivered. Lesson: the 27B is slow (~8 tok/s) but careful on a pure-logic brief with exact expected values, and writing the tests first worked. Tell it to stop after the build: it burned its last 10 minutes re-reading the brief.
