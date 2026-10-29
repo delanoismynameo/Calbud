@@ -11,9 +11,10 @@ export interface LabelRow {
   indent: 0 | 1 | 2
   bold: boolean
   group: 'main' | 'vitamins'
+  missing?: number // how many foods logged had no value for this nutrient
 }
 
-export interface LabelInput { fat_g: number; carbs_g: number; protein_g: number; extras: Extras }
+export interface LabelInput { fat_g: number; carbs_g: number; protein_g: number; extras: Extras; missing?: Partial<Record<ExtraKey, number>> }
 
 // Under 10: rounded to one decimal, without a trailing '.0'. 10 or more: rounded to a whole number.
 // Then a space and the unit. formatAmount(4.96, 'g') = '5 g', (0.46, 'g') = '0.5 g', (12.4, 'g') = '12 g', (0, 'mg') = '0 mg'.
@@ -59,7 +60,7 @@ export function labelRows(input: LabelInput): LabelRow[] {
     let unit: string
     let dv: number | null
     if (spec.key === 'fat' || spec.key === 'carbs' || spec.key === 'protein') {
-      ({ value, dv } = macros[spec.key])
+      ;({ value, dv } = macros[spec.key])
       unit = 'g'
     } else {
       const info = EXTRAS.find((e) => e.key === spec.key)!
@@ -67,8 +68,13 @@ export function labelRows(input: LabelInput): LabelRow[] {
       unit = info.unit
       dv = info.dv
     }
-    if (value === undefined) return { ...spec, amount: null, dv: null }
-    return { ...spec, amount: formatAmount(value, unit), dv: dvPercent(value, dv) }
+    let missingCount: number | undefined
+    const extraMissing = input.missing?.[spec.key]
+    if (extraMissing != null && extraMissing > 0) {
+      missingCount = extraMissing
+    }
+    if (value === undefined) return { ...spec, amount: null, dv: null, ...(missingCount != null ? { missing: missingCount } : {}) }
+    return { ...spec, amount: formatAmount(value, unit), dv: dvPercent(value, dv), ...(missingCount != null ? { missing: missingCount } : {}) }
   })
 }
 

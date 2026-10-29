@@ -6,9 +6,11 @@ function RowContent({ row }: { row: LabelRow }) {
 
   let leftContent: React.ReactNode
   if (row.amount != null) {
+    const missingNote = row.missing != null && row.missing > 0 ? ` (${row.missing} without data)` : ''
     leftContent = <>
       {labelPart}
       {row.amount}
+      {missingNote && <span className="text-xs text-gray-500">{missingNote}</span>}
     </>
   } else {
     leftContent = <>
@@ -30,10 +32,12 @@ function RowContent({ row }: { row: LabelRow }) {
   )
 }
 
-export default function NutritionLabel({ servingText, kcal, rows }: {
+export default function NutritionLabel({ servingText, kcal, rows, servingName, note }: {
   servingText: string
   kcal: number
   rows: LabelRow[]
+  servingName?: string // left text of the serving line; default 'Serving size'
+  note?: string // a text-xs mt-1 line after the footnote, only when given
 }) {
   // Split rows into main and vitamins groups
   let sepIdx = -1
@@ -55,7 +59,7 @@ export default function NutritionLabel({ servingText, kcal, rows }: {
 
       {/* Serving line */}
       <div className="flex justify-between text-sm font-bold mt-1">
-        <span>Serving size</span>
+        <span>{servingName ?? 'Serving size'}</span>
         <span>{servingText}</span>
       </div>
       <div className="border-b-8 border-black" />
@@ -88,6 +92,7 @@ export default function NutritionLabel({ servingText, kcal, rows }: {
 
       {/* Footnote */}
       <p className="text-xs mt-1">* The % Daily Value shows how much of a day&apos;s amount the food gives, on a 2,000-calorie diet.</p>
+      {note && <p className="text-xs mt-1">{note}</p>}
     </div>
   )
 }

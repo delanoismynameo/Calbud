@@ -98,6 +98,13 @@ describe('labelRows', () => {
     expect(r.find(x => x.key === 'carbs')!.amount).toBeDefined()
     expect(r.find(x => x.key === 'protein')!.amount).toBeDefined()
   })
+
+  it('extra rows get missing count from input.missing when positive, and never macros', () => {
+    const r = labelRows({ ...input, missing: { sodium_mg: 2, sat_fat_g: 0 } })
+    expect(r.find(x => x.key === 'sodium_mg')!.missing).toBe(2)
+    expect(r.find(x => x.key === 'sat_fat_g')!.missing).toBe(undefined)
+    expect(r.find(x => x.key === 'fat')!.missing).toBe(undefined)
+  })
 })
 
 describe('servingLine', () => {
