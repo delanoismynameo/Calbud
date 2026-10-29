@@ -24,6 +24,7 @@
 - **Task 29 ("cal" instead of "kcal", Prep opens on Menu, goals editable on the Us page) is live** (pushed 2026-10-29; no migration needed).
 - **Task 30 (Copy to other days in the slot editor; Repeat last week on Menu and Plan) is live** (pushed 2026-10-29) (no migration needed).
 - **Task 31 (Send to Keep on the Grocery list) is live (pushed 2026-10-29).** The real share sheet needs a test on a phone.
+- **Task 34 (Export week on the Plan tab: the activities on screen as an `.ics` file, shared on an iPhone web app, downloaded elsewhere) is in `main`, not pushed.** Task 33 below is also still unpushed.
 - **Task 33 (the activity planner on the Plan tab: gym and other activities with day, time and length, you and your partner, tick off when done) is in `main`, not pushed.** No migration needed.
 - **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is live (deploy run 40880794963), with no screen using it yet.**
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All six migrations in `supabase/migrations/` have been applied through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
@@ -32,7 +33,7 @@
 
   | Command | Result |
   |---|---|
-  | `npm test` | 279 passing |
+  | `npm test` | 298 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -75,12 +76,12 @@ Before sending a task to the harness:
 | 31 | Send to Keep | [31](review/31-send-to-keep.md) |
 | 32 | `.ics` builder | [32](review/32-ics-builder.md) |
 | 33 | Activity planner | [33](review/33-activity-planner.md) |
+| 34 | Export week (activities) | [34](review/34-export-week.md) |
 
 ## Next, in order
 1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
-   - 34: the Export week button, now for activities (gym sessions with times) on the finished `.ics` builder; download, or share on an iOS PWA. Meals become an optional extra
    - the nutrition-facts label (food detail first, then Today's totals)
-2. **On a phone:** try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+2. **On a phone:** import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

@@ -111,13 +111,21 @@ export default function ExportButton({ items, start, prefixNames }: { items: Act
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
 
 ## Run
-_(filled in at review)_
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI. One brief.
+- **Wall time:** about **8 min**, 32 steps. The docs ban held.
+- **Outcome:** finished, and it reported "nothing unsure". It added `ExportButton` and the page line as briefed.
 
 ## Result
-_(filled in at review)_
+- **Builds:** yes. **Tests:** 298 passing (279 + 19: the 14 asked for, and its tests split a few cases).
+- **Click-through** at 375 px against the mock, capturing the file the button builds:
+  - **Both:** three events with name prefixes ("Bob: Run", "alice: Gym: legs", "alice: Yoga"). The 18:00 gym on 26 Oct is `22:00Z` (New York in daylight time), the 07:00 run is `11:00Z`, and the untimed yoga is an all-day event.
+  - **Me:** two events, no prefixes. File name `calbud-2026-10-25.ics`, message "Exported 3 activities." in green.
+- **Not tested:** a real import into Google or Apple Calendar, and the iPhone share sheet. Both need your phone or calendar.
 
 ## What I changed
-_(filled in at review)_
+- **`ExportButton`:** a `useCallback` came after `if (!profile) return null`, which changes the hook count when the profile loads (the same crash as in task 30). I made the handler a plain function.
+- **Message colour:** it was chosen by searching the text for "Exported". It now uses a `failed` flag, as briefed.
+- **Imports:** merged the two imports from `exportWeek`.
 
 ## Verdict
-_(filled in at review)_
+Usable after small fixes. The hook-after-return mistake came back, so the brief rule "never put an early return before a hook" is not enough: the 35B also wraps things in `useCallback` after the guard. Next time say "no `useCallback` or `useMemo`; plain functions".

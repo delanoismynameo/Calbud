@@ -1,10 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useProfile } from '../household/useProfile'
 import type { Activity } from './types'
-import { activityEvents } from '../calendar/exportWeek'
 import { buildIcs } from '../calendar/ics'
-import { exportFileName, isIosStandalone, deliverIcs } from '../calendar/exportWeek'
-import type { ShareNav } from '../calendar/exportWeek'
+import { activityEvents, exportFileName, isIosStandalone, deliverIcs, type ShareNav } from '../calendar/exportWeek'
 
 function downloadFile(file: File): void {
   const url = URL.createObjectURL(file)
@@ -28,6 +26,7 @@ export default function ExportButton({
 }) {
   const { profile, partner } = useProfile()
   const [message, setMessage] = useState<string | null>(null)
+  const [failed, setFailed] = useState(false)
 
   if (!profile) return null
 
@@ -38,8 +37,9 @@ export default function ExportButton({
     names[partner.id] = partner.display_name
   }
 
-  const handleClick = useCallback(async () => {
+  const handleClick = async () => {
     setMessage(null)
+    setFailed(false)
     try {
       const events = activityEvents(items, names, prefixNames)
       const text = buildIcs(events, { timeZone: profile.timezone, now: new Date(), calendarName: 'Calbud' })
@@ -57,9 +57,10 @@ export default function ExportButton({
         )
       }
     } catch (err) {
+      setFailed(true)
       setMessage((err as Error).message)
     }
-  }, [items, names, prefixNames, start])
+  }
 
   return (
     <div className="px-3 py-3 text-center">
@@ -75,7 +76,7 @@ export default function ExportButton({
         Import the file into a Calbud calendar. In Google Calendar: Settings, then Import &amp; export, then Import.
       </p>
       {message && (
-        <p className={`text-xs mt-1 ${message.includes('Exported') ? 'text-green-400' : 'text-red-400'}`}>
+        <p className={`text-xs mt-1 ${failed ? 'text-red-400' : 'text-green-400'}`}>
           {message}
         </p>
       )}

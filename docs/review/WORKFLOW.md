@@ -132,6 +132,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 31 | Send to Keep (share sheet, clear the list) | 35B (High) | Usable after small fixes (no try/catch on the send). ~5 min; the docs ban held |
 | 32 | `.ics` builder (pure logic, 22 tests) | 27B tuned (High), overnight | Usable as delivered. ~1 h 10 min; it fixed its own missing END:VEVENT |
 | 33 | Activity planner (Plan tab, both people) | 35B (High) | Usable after small fixes (a copied helper instead of the tested one). ~15 min |
+| 34 | Export week (activities to .ics, share or download) | 35B (High) | Usable after small fixes (a hook after an early return again; text-matching for colour). ~8 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
