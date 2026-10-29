@@ -25,11 +25,13 @@ export default function AddFood() {
 
       {selected ? (
         <ServingPicker food={selected} onLogged={() => navigate(home)} loggedOn={day ?? undefined} onCancel={() => setSelected(null)} />
-      ) : creating ? (
+      ) : creating && (
         <CustomFoodForm onSaved={(food) => { setCreating(false); setSelected(food) }} onCancel={() => setCreating(false)} />
-      ) : (
-        <FoodFinder onPick={setSelected} onCreate={() => setCreating(true)} />
       )}
+      {/* Kept mounted while hidden, so the search text survives picking a food and pressing Cancel. */}
+      <div className={selected || creating ? 'hidden' : 'space-y-3'}>
+        <FoodFinder onPick={setSelected} onCreate={() => setCreating(true)} />
+      </div>
     </div>
   )
 }

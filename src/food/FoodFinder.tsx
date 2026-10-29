@@ -78,19 +78,14 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
             value={query} onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" />
 
-          {onCreate ? (
-            <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => { setScanning(true); setScanError(null) }}
-                className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">Scan a barcode</button>
-              <button type="button" onClick={() => onCreate()}
+          <div className={`grid ${onCreate ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+            <button type="button" onClick={() => { setScanning(true); setScanError(null) }}
+              className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">Scan a barcode</button>
+            {onCreate && (
+              <button type="button" onClick={onCreate}
                 className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">+ Create a food</button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-2">
-              <button type="button" onClick={() => { setScanning(true); setScanError(null) }}
-                className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">Scan a barcode</button>
-            </div>
-          )}
+            )}
+          </div>
 
           {yours.length > 0 && (
             <>
