@@ -77,3 +77,22 @@ export default function UpdatePrompt()
 2. You have re-read this brief and checked every test's expected value against your code by hand.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **4 min**, 17 steps. It stayed inside the brief's files.
+- **Outcome:** finished, and it reported "no uncertainties".
+
+## Result
+- **Type check:** clean. **Tests:** 328 passing (322 + 6). **Build:** clean. The build adds no second `registerSW` script, because the plugin sees the virtual import.
+- **Click-through** against the mock, using the built app and its real service worker:
+  - **Detecting the update:** I loaded the app, let the worker take control, then changed `dist/sw.js` on disk to stand in for a deploy. Making the page visible again showed "A new version of Calbud is ready." with **Reload** and **Later**, just above the tab bar at 375 px.
+  - **Reload:** activated the new worker and reloaded the page, and the bar was gone afterwards.
+  - **Install hint:** the Us page shows the line for a non-iOS browser under Sign out.
+- **Not tested:** the hourly check, and the iPhone and Android installed apps. Those need your phones.
+
+## What I changed
+- **`installHint`:** it checked for 'iPhone' but not 'iPad', which the brief asked for. Older iPads report 'iPad', so I added it.
+
+## Verdict
+Usable after a one-word fix. Short, exact briefs keep working well headless.
