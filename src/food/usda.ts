@@ -1,4 +1,5 @@
 import type { FoodResult } from './types'
+import { extrasFromUsda } from './extras'
 
 interface UsdaFoodNutrient {
   nutrientId: number
@@ -145,6 +146,7 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
     sugar100g: nutrients.has(2000) ? (nutrients.get(2000) as number) : null,
     sodiumMg100g: nutrients.has(1093) ? (nutrients.get(1093) as number) : null,
     barcode,
+    extras100g: extrasFromUsda(nutrients),
   }
 }
 

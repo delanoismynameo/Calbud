@@ -1,4 +1,5 @@
 import type { FoodResult } from './types'
+import { extrasFromOff } from './extras'
 
 const gramRegex = /\d\s*(g|gr|grams?)\b/i
 
@@ -103,6 +104,7 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
     sugar100g: sugar,
     sodiumMg100g: sodiumMg,
     barcode: code,
+    extras100g: extrasFromOff(nutriments),
   }
 }
 

@@ -10,6 +10,7 @@ import { insertMealLogs } from '../today/mealLogApi'
 import { useMutation } from '@tanstack/react-query'
 import { queryClient } from '../lib/queryClient'
 import MacroBar from '../today/MacroBar'
+import MoreNutrients from '../today/MoreNutrients'
 import MealSection from '../today/MealSection'
 import TodayMenu from '../menu/TodayMenu'
 import ServingPicker from '../food/ServingPicker'
@@ -112,6 +113,7 @@ export default function Today() {
                 <MacroBar label="Carbs" value={total.carbs_g} goal={goals.carbs_g} unit="g" />
                 <MacroBar label="Fat" value={total.fat_g} goal={goals.fat_g} unit="g" />
               </div>
+              {logs.data && logs.data.length > 0 && <MoreNutrients logs={logs.data} />}
             </div>
           )}
 

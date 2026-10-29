@@ -1,4 +1,5 @@
 import type { FoodResult } from './types'
+import { cleanExtras } from './extras'
 
 export type FoodRowFromDb = {
   id: string
@@ -16,6 +17,7 @@ export type FoodRowFromDb = {
   fiber_100g: number | null
   sugar_100g: number | null
   sodium_mg_100g: number | null
+  extra_100g?: unknown
   is_favorite: boolean
 }
 
@@ -37,6 +39,7 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
     fiber100g: row.fiber_100g != null ? Number(row.fiber_100g) : null,
     sugar100g: row.sugar_100g != null ? Number(row.sugar_100g) : null,
     sodiumMg100g: row.sodium_mg_100g != null ? Number(row.sodium_mg_100g) : null,
+    extras100g: cleanExtras(row.extra_100g),
   }
 }
 

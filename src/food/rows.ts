@@ -1,5 +1,7 @@
 import type { FoodResult } from './types'
 import { scaleNutrition } from './nutrition'
+import type { Extras } from './extras'
+import { scaleExtras } from './extras'
 
 type FoodRow = {
   household_id: string
@@ -16,6 +18,7 @@ type FoodRow = {
   fiber_100g: number | null
   sugar_100g: number | null
   sodium_mg_100g: number | null
+  extra_100g: Extras
 }
 
 export function foodRow(food: FoodResult, householdId: string): FoodRow {
@@ -34,6 +37,7 @@ export function foodRow(food: FoodResult, householdId: string): FoodRow {
     fiber_100g: food.fiber100g,
     sugar_100g: food.sugar100g,
     sodium_mg_100g: food.sodiumMg100g,
+    extra_100g: food.extras100g ?? {},
   }
 }
 
@@ -48,6 +52,7 @@ type MealLogRow = {
   protein_g: number
   carbs_g: number
   fat_g: number
+  extra: Extras
 }
 
 interface MealLogRowParams {
@@ -73,5 +78,6 @@ export function mealLogRow({ food, foodId, grams, mealType, loggedOn, userId }: 
     protein_g: nutrition.protein_g,
     carbs_g: nutrition.carbs_g,
     fat_g: nutrition.fat_g,
+    extra: scaleExtras(food.extras100g ?? {}, grams),
   }
 }

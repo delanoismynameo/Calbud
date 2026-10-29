@@ -25,11 +25,11 @@ const ALL_KEYS = [
   'household_id', 'source', 'source_id', 'name', 'brand',
   'serving_g', 'serving_label',
   'kcal_100g', 'protein_100g', 'carbs_100g', 'fat_100g',
-  'fiber_100g', 'sugar_100g', 'sodium_mg_100g',
+  'fiber_100g', 'sugar_100g', 'sodium_mg_100g', 'extra_100g',
 ]
 
 describe('foodRow', () => {
-  it('has exactly the 14 column keys', () => {
+  it('has exactly the 15 column keys', () => {
     const row = foodRow(FOOD, 'hh-1')
     const keys = Object.keys(row) as (keyof typeof row)[]
     expect(keys).toEqual(ALL_KEYS)
@@ -85,5 +85,17 @@ describe('mealLogRow', () => {
     expect(row.food_id).toBe('food-uuid')
     expect(row.quantity_g).toBe(100)
     expect(row.kcal).toBe(143)
+  })
+
+  it('carries extra scaled to grams', () => {
+    const row = mealLogRow({
+      food: { ...FOOD, extras100g: { sodium_mg: 49 } },
+      foodId: 'x',
+      grams: 240,
+      mealType: 'lunch',
+      loggedOn: '2026-01-01',
+      userId: 'u',
+    })
+    expect(row.extra).toEqual({ sodium_mg: 117.6 })
   })
 })

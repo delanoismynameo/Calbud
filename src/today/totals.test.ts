@@ -69,6 +69,11 @@ describe('rescaleLog', () => {
     const base = log()
     expect(() => rescaleLog(base, NaN)).toThrow(RangeError)
   })
+
+  it('scales extra proportionally', () => {
+    const result = rescaleLog(log({ quantity_g: 200, extra: { sodium_mg: 100 } }), 300)
+    expect(result.extra).toEqual({ sodium_mg: 150 })
+  })
 })
 
 describe('progress', () => {

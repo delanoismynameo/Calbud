@@ -30,6 +30,7 @@ export function copyRows(logs: MealLog[], toDate: string): MealLogInsert[] {
     protein_g: log.protein_g,
     carbs_g: log.carbs_g,
     fat_g: log.fat_g,
+    ...(log.extra ? { extra: log.extra } : {}),
     logged_on: toDate,
   }))
 }

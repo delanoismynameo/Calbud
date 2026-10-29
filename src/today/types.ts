@@ -1,3 +1,5 @@
+import type { Extras } from '../food/extras'
+
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 export const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 
@@ -13,5 +15,6 @@ export interface MealLog {
   protein_g: number
   carbs_g: number
   fat_g: number
+  extra?: Extras
   created_at: string
 }

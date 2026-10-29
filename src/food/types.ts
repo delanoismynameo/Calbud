@@ -1,3 +1,5 @@
+import type { Extras } from './extras'
+
 export type FoodSource = 'usda' | 'off' | 'custom'
 
 export interface FoodResult {
@@ -15,4 +17,5 @@ export interface FoodResult {
   sugar100g: number | null
   sodiumMg100g: number | null
   barcode: string | null
+  extras100g?: Extras
 }

@@ -16,7 +16,7 @@ export async function fetchMealLogs(userId: string, date: string): Promise<MealL
 
 export async function updateMealLog(
   id: string,
-  changes: Partial<Pick<MealLog, 'meal_type' | 'quantity_g' | 'kcal' | 'protein_g' | 'carbs_g' | 'fat_g'>>,
+  changes: Partial<Pick<MealLog, 'meal_type' | 'quantity_g' | 'kcal' | 'protein_g' | 'carbs_g' | 'fat_g' | 'extra'>>,
 ): Promise<void> {
   const { data, error } = await supabase
     .from('meal_logs')

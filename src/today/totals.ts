@@ -1,5 +1,6 @@
 import type { MealLog, MealType } from './types'
 import { MEALS } from './types'
+import { scaleExtras } from '../food/extras'
 
 export function sumLogs(logs: MealLog[]): { kcal: number; protein_g: number; carbs_g: number; fat_g: number } {
   let kcal = 0
@@ -35,6 +36,7 @@ export function rescaleLog(log: MealLog, grams: number) {
     protein_g: Math.round(log.protein_g * factor * 10) / 10,
     carbs_g: Math.round(log.carbs_g * factor * 10) / 10,
     fat_g: Math.round(log.fat_g * factor * 10) / 10,
+    ...(log.extra ? { extra: scaleExtras(log.extra, grams / log.quantity_g * 100) } : {}),
   }
 }
 

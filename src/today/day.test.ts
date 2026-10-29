@@ -69,4 +69,9 @@ describe('copyRows', () => {
   it('returns empty array for empty input', () => {
     expect(copyRows([], '2026-10-28')).toEqual([])
   })
+
+  it('copies extra when present', () => {
+    const result = copyRows([log({ extra: { sodium_mg: 5 } })], '2026-10-28')
+    expect(result[0].extra).toEqual({ sodium_mg: 5 })
+  })
 })
