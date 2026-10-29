@@ -111,23 +111,24 @@ export default function RepeatButton({ kind, start }: { kind: 'menu' | 'prep'; s
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
 
 ## Run
-- **Model and effort:**  at **High**, Full access, web UI. One brief.
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI. One brief.
 - **Wall time:** about **8 min**, 43 steps.
-- **Outcome:** finished. It **overwrote this note's empty Run/Result/Verdict sections** with its own report (this file had been in its to-read list). I restored the note.
+- **Outcome:** finished. It **overwrote this note's empty Run/Result/Verdict sections** with its own report (the brief's file was its reading list). I restored the note.
 
 ## Result
 - **Builds:** yes. **Tests:** 236 passing (228 + 8).
 - **Click-through** at 375 px against the mock, with last week seeded:
-  - **Menu, Repeat last week:**  (Soup moved to Mon). Tacos was skipped because Thu dinner was already filled. A second click:   - **Plan, Repeat last week:**  Chili came over as .
-  - **Slot editor:** the Thu button read  and the replace note showed. Picking Tue, Wed, Fri and then un-picking Wed saved Pasta on Sun, Tue and Fri only.
+  - **Menu, Repeat last week:** "Copied 1 meal." (Soup moved to Mon). Tacos was skipped because Thu dinner was already filled. A second click: "Nothing to copy."
+  - **Plan, Repeat last week:** "Copied 1 session." Chili came over as planned.
+  - **Slot editor:** the Thu button read `Thu*` and the replace note showed. Picking Tue, Wed, Fri and then un-picking Wed saved Pasta on Sun, Tue and Fri only.
 
 ## What I changed
-- **:**  came before , so the hook count would change when the profile loaded (a crash). Guard moved below the hook. Also  became , and the message clears at each click.
-- **:** removed an unused  import and .
-- **:** removed an  and its eslint comment; the build passes without them (it blamed supabase-js types).
-- **:** merged a duplicate import.
-- **:** the day toggle uses the functional , so two quick taps can't lose one.
-- **:**  and  POST now accept arrays, as the real API does.
+- **`RepeatButton`:** `return null` came before `useMutation`, so the hook count would change when the profile loaded (a crash). Guard moved below the hook. Also `return null as never` became `0`, and the message clears at each click.
+- **`Prep.tsx`:** removed an unused `useAuth` import and `session`.
+- **`prepApi.ts`:** removed an `as any` and its eslint comment; the build passes without them (the model blamed supabase-js types).
+- **`repeat.ts`:** merged a duplicate import.
+- **`SlotEditor`:** the day toggle uses the functional `setPicked(p => …)`, so two quick taps can't lose one.
+- **`mock-supabase.mjs`:** `meal_prep` and `menu_slots` POST now accept arrays, as the real API does.
 
 ## Verdict
-Usable after small fixes. Lessons: don't list the brief's own note file where the model can edit it, and say "never edit files under docs/".
+Usable after small fixes. Lessons: don't put the brief's own note file where the model can edit it, and say "never edit files under docs/".
