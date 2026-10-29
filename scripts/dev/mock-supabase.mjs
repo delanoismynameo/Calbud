@@ -129,9 +129,10 @@ http.createServer((req, res) => {
       return single ? send(res, 201, { id: saved.id }) : send(res, 201, [{ id: saved.id }])
     }
     if (url.pathname === '/rest/v1/meal_logs' && req.method === 'POST') {
-      const row = JSON.parse(body)
-      if (row.user_id !== ME) return pgErr(res, 'new row violates row-level security policy for table "meal_logs"', 403)
-      mealLogs.push({ id: randomUUID(), food_id: null, created_at: new Date().toISOString(), ...row })
+      // One row, or a list (Copy yesterday); all-or-nothing like a single insert statement.
+      const rows = [JSON.parse(body)].flat()
+      if (rows.some((r) => r.user_id !== ME)) return pgErr(res, 'new row violates row-level security policy for table "meal_logs"', 403)
+      rows.forEach((row) => mealLogs.push({ id: randomUUID(), food_id: null, created_at: new Date().toISOString(), ...row }))
       return send(res, 201)
     }
     // Reads see your rows and your household's (like the real RLS); updates and deletes only touch

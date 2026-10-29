@@ -13,16 +13,17 @@
 - **Tasks 19–20 (Open Food Facts serving labels; search ranking) are live** (pushed 2026-10-28).
 - **Task 21 (the Prep page: a Sunday-to-Saturday week of shared prep sessions, with add, edit, delete and Planned/Done) is live** (pushed 2026-10-28).
 - **Task 22 (the week's grocery list with ticks, and Realtime so both phones' Prep pages update live) is live** (pushed 2026-10-28). Realtime can only be checked on two signed-in phones.
-- **Task 23 (a prep session's nutrition per serving, saved as a custom food, and a Log button on Prep) is committed locally, not pushed.** It needs the migration `20261028000002_prep_food.sql` applied **before** pushing.
-- **Task 24 (the shared weekly menu: a breakfast/lunch/dinner grid on Prep and "Today's menu" on Today) has its brief and migration (`20261029000001_menu.sql`) written, not yet run.**
-- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. The first three migrations in `supabase/migrations/` have been applied through the SQL Editor; `20261028000002_prep_food.sql` and `20261029000001_menu.sql` have not. "Confirm email" is **off**.
+- **Task 23 (a prep session's nutrition per serving, saved as a custom food, and a Log button on Prep) is committed locally, not pushed.** Its migration is applied.
+- **Task 24 (the shared weekly menu: a breakfast/lunch/dinner grid on Prep and "Today's menu" on Today) is reviewed and committed locally, not pushed.** Its migration is applied.
+- **Task 25 (past days on Today, logging to them, Copy yesterday) has its brief written, not yet run.** Task 26 (more nutrients: the Nutrition Facts label set) comes after it.
+- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All five migrations in `supabase/migrations/` have been applied through the SQL Editor (the last two, `prep_food` and `menu`, on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 188 passing |
-  | `npm run test:db` | 47 passing (with the two unapplied migrations) |
+  | `npm test` | 194 passing |
+  | `npm run test:db` | 47 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
 
@@ -54,10 +55,11 @@ Before sending a task to the harness:
 | 22 | Grocery list and live updates | [22](review/22-grocery-realtime.md) |
 | 22a | Grocery helper on the 4B (side job; failed) | [22a](review/22a-grocery-helper.md) |
 | 23 | Prep dishes as custom foods, Log a serving | [23](review/23-prep-dish-food.md) |
+| 24 | Shared weekly menu (breakfast/lunch/dinner grid, Today's menu) | [24](review/24-menu-grid.md) |
 
 ## Next, in order
-1. **Task 24, the shared menu:** run [24](review/24-menu-grid.md) in the harness. The mock needs a `menu_slots` store first. The user asked for this on 2026-10-28: the menu is shared by the household, with breakfast, lunch and dinner columns (no snack), like their spreadsheet.
-2. **Before pushing 23 and 24:** the user applies `20261028000002_prep_food.sql`, then `20261029000001_menu.sql`, in the SQL Editor.
+1. **Push 23 and 24** when the user says so (their migrations are applied).
+2. **Task 25, past days:** run [25](review/25-past-days.md). Then **task 26, more nutrients:** save the US Nutrition Facts label set and show it on Today. That covers saturated fat, trans fat, cholesterol, sodium, fiber, sugar, added sugar, vitamin D, calcium, iron and potassium. Store them in jsonb so more can be added later, and show them against FDA daily values, with missing data marked rather than counted as zero. Inputs for these on custom foods and dishes may become task 27.
 3. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 4. **Possible follow-up:** Add food's search only covers USDA. The household's custom foods (dishes) show only under Recent and Favorites; searching "Curry" doesn't find them.
 
