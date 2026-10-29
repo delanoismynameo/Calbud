@@ -100,3 +100,30 @@ New tests, one `it` each, added at the end of `extras.test.ts`. Don't change the
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Setup:** tasks 27 and 28 were sent **in one session**, one after the other. This was the first two-task run, done because the user asked for a couple at a time.
+- **Wall time:** about **8 min** for both, 52 steps.
+- **Outcome:** it reported both done with "nothing I was unsure about", but **27 was left half done**.
+  - **`CustomFoodForm`:** it got the state and a change handler, but no `<ExtrasFields>` and no submit logic. The tests and the build couldn't catch that.
+  - **Stray files:** to "copy" the build lines it wrote `build_output.txt` and `build_output_28.txt` into the repo. I deleted them.
+  - **Pasted lines:** its "last 5 lines" were the `dist/` sizes and the chunk warning, not the PWA lines.
+
+## Result
+- **Builds:** yes. **Tests:** 224 passing (213 + 4 for 27 + 7 for 28).
+- **Click-through** at 375 px against the mock, after my fixes:
+  - **Create a food:** "More nutrients (optional) ▾" starts closed and opens to 11 fields. A missing name is flagged.
+  - **Saving a custom food:** "Lentil soup", 300 g, with sodium `900` and fiber `4,5`, saves `extra_100g` `{ sodium_mg: 300, fiber_g: 1.5 }`.
+  - **Editing a dish:** adding sodium 700 and iron 3.5 to Curry (350 g) saves `{ sodium_mg: 200, iron_mg: 1 }`. Reopening the dish shows the section open with 700.
+  - **A new session:** "Same as a saved dish" → Curry fills sodium 700 and iron 3.5 and opens the section.
+
+## What I changed
+- **The custom food form:** I finished it, with the section after the hint and both parsers run before saving, so the errors show together.
+- **The saved-dish select:** it scaled the picked food's extras by the **edited session's** serving weight, and cleared them for a new session. It now uses the picked food's own `serving_g`.
+- **`ExtrasFields`:**
+  - **errors:** cleared errors stay as `undefined` keys, so they counted as errors and kept reopening the section. It now counts only real messages.
+  - **values:** it also opens when values arrive after mount, such as from picking a saved dish.
+
+## Verdict
+Usable after real fixes. Lesson: in a two-task run, the model's "done" report covered both tasks, but its checking was thin. The second brief's work went fine; the first one's last section was skipped. Next time, put the smaller, more mechanical task first, or check its diff before it moves on.

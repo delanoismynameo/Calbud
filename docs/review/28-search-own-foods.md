@@ -80,3 +80,20 @@ Tests, one `it` each. Copy the `food()` helper from `rank.test.ts`, with a third
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, in the same session as task 27 (see that note).
+- **Outcome:** finished. At one point its `edit` dropped the Favorites/Recent block, but it noticed and put it back.
+
+## Result
+- **Tests:** 7 new, all passing (224 in total).
+- **Click-through** at 375 px against the mock:
+  - typing `cur` shows **Your foods → Curry (149 kcal / 100 g)** above the USDA results
+  - `oat` lists the household's "Oatmeal, cooked" once
+  - nonsense (`zzqx`) still shows "No foods found."
+
+## What I changed
+Nothing.
+
+## Verdict
+Usable as delivered.

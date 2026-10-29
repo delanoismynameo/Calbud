@@ -18,13 +18,16 @@
   - 24: the shared breakfast/lunch/dinner menu, and Today's menu
   - 25: past days on Today, logging to them, and Copy yesterday
   - 26: 11 extra nutrients from USDA and OFF, in a More nutrients panel
+- **Tasks 27–28 are reviewed and committed locally, not pushed** (no migration needed):
+  - 27: extra-nutrient inputs on custom foods and prep dishes
+  - 28: "Your foods" in Add food's search
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All six migrations in `supabase/migrations/` have been applied through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 213 passing |
+  | `npm test` | 224 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -60,12 +63,13 @@ Before sending a task to the harness:
 | 24 | Shared weekly menu (breakfast/lunch/dinner grid, Today's menu) | [24](review/24-menu-grid.md) |
 | 25 | Past days on Today, logging to them, Copy yesterday | [25](review/25-past-days.md) |
 | 26 | More nutrients (Nutrition Facts set) | [26](review/26-more-nutrients.md) |
+| 27 | Extra-nutrient inputs on own foods and dishes | [27](review/27-own-food-nutrients.md) |
+| 28 | Search finds household foods | [28](review/28-search-own-foods.md) |
 
 ## Next, in order
-1. **Tasks 27 and 28, in one harness session** (the user asked for a couple at a time):
-   - [27](review/27-own-food-nutrients.md): extra-nutrient inputs on custom foods and prep dishes
-   - [28](review/28-search-own-foods.md): "Your foods" in Add food's search
-2. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+1. **Push 27–28** when the user says so.
+2. **Next pair, by the game plan:** step 10 (activity planner), then step 11 (`.ics` export of the week). The export includes activities, so the planner comes first.
+3. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

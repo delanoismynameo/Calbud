@@ -125,6 +125,8 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 24 | Shared weekly menu (grid, slot editor, Today card) | 35B (High) | Usable after fixes (grid rows, lost loading states, slot validation). ~14 min, 6 lost to JSX |
 | 25 | Past days on Today, log to them, Copy yesterday | 35B (High) | Usable after two small fixes (double copy, heading). ~10 min |
 | 26 | More nutrients (11 label nutrients, USDA + OFF, Today panel) | 35B (High) | Usable after a one-character fix (2014 in JSX text). ~10 min |
+| 27 | Extra-nutrient inputs on custom foods and dishes | 35B (High), shared session with 28 | Usable after real fixes: the custom form was left half done, plus a wrong serving scale. ~8 min for both |
+| 28 | Search finds the household's own foods | 35B (High), shared session with 27 | Usable as delivered |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
