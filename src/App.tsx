@@ -11,6 +11,7 @@ import AuthScreen from './auth/AuthScreen'
 import { useProfile } from './household/useProfile'
 import Setup from './household/Setup'
 import UpdatePrompt from './pwa/UpdatePrompt'
+import OfflineBanner from './pwa/OfflineBanner'
 
 const tabs = [
   { to: '/', label: 'Today' },
@@ -80,6 +81,7 @@ function SignedInApp() {
       <header className="sticky top-0 z-10 bg-slate-800 px-4 py-3 text-center text-lg font-semibold">
         Calbud
       </header>
+      <OfflineBanner />
       <main className="px-4 py-6">
         <Routes>
           <Route path="/" element={<Today />} />
