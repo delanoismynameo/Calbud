@@ -26,15 +26,18 @@
 - **Task 31 (Send to Keep on the Grocery list) is live (pushed 2026-10-29).** The real share sheet needs a test on a phone.
 - **Tasks 33–34 are live** (deploy run 40911439097, 2026-10-29; no migration needed): 33 the activity planner on the Plan tab, 34 Export week (`.ics`, shared on an iPhone web app, downloaded elsewhere).
 - **Tasks 35–37 (the Nutrition Facts label) are live** (deploy run 40918771600, 2026-10-29): 35 the label on the food screen (prep dishes too), 36 Today's "Nutrition facts" panel for the day, 37 a live label preview in the Create a food and prep dish forms.
-- **Tasks 38–40 are in `main`, not pushed** (no migration needed): 38 a "new version is ready" bar with Reload (checked hourly and when the app comes back to the screen), plus install instructions on Us; 39 the dashboard logic (7-day average, shared streak within 10% of goal) and a 60-day household query; 40 the "This week" card on Us.
+- **Tasks 38–40 are live** (deploy run 40925785018, 2026-10-29): 38 the "new version is ready" bar and install instructions, 39–40 the Us "This week" card (7-day averages, a shared streak within 10% of goal).
+- **Tasks 41–45 (build a food from ingredients) are in `main`, not pushed. They need migration `20261029000003_recipe.sql` (adds `foods.recipe`, nullable jsonb) applied in the SQL Editor *before* pushing.** Without it, saving a built food fails. Ordinary foods still save, because only built foods send the column.
+  - Create a food and the prep dish form get **Type the numbers / Build from ingredients**. Ingredients come from search, favorites, recents, Your foods or a barcode scan, each with an amount in servings or grams. The dish is divided into servings or by **the cooked weight of the whole dish**, and a label preview shows as you go.
+  - A built prep dish reopens with its ingredients, so one line can be changed; it updates the same saved food. 41 is the logic, 42 moved Add food's finder into `FoodFinder`, 43 the `RecipeBuilder`, 44 Create a food, 45 the prep dish.
 - **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is live (deploy run 40880794963), with no screen using it yet.**
-- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All six migrations in `supabase/migrations/` have been applied through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
+- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. The first six migrations in `supabase/migrations/` have been applied (the seventh, `20261029000003_recipe.sql`, is **not yet**) through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 352 passing |
+  | `npm test` | 397 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -86,10 +89,15 @@ Before sending a task to the harness in the web UI:
 | 38 | Update prompt and install instructions | [38](review/38-update-prompt.md) |
 | 39 | Dashboard stats, data and hook | [39](review/39-dashboard-stats.md) |
 | 40 | This week card (Us) | [40](review/40-dashboard-card.md) |
+| 41 | Recipe logic (sum ingredients, servings or cooked weight) | [41](review/41-recipe-logic.md) |
+| 42 | FoodFinder out of Add food | [42](review/42-food-finder.md) |
+| 43 | RecipeBuilder component | [43](review/43-recipe-builder.md) |
+| 44 | Build from ingredients in Create a food | [44](review/44-create-from-ingredients.md) |
+| 45 | Build a prep dish from ingredients | [45](review/45-dish-from-ingredients.md) |
 
 ## Next, in order
 1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
-   - **recipe builder for prep dishes** (ingredients from search or barcode, e.g. a seasoning packet, summed and divided by servings, with an optional total-pot weight). Proposed 2026-10-29; waiting for the user's go-ahead.
+   - **Before pushing 41–45:** apply `supabase/migrations/20261029000003_recipe.sql` in the SQL Editor.
    - then the rest of game plan items 13 and 15 (offline app shell, settings: timezone, data export, rotate invite code)
 2. **On a phone:** after the next deploy, check the "new version is ready" bar appears and Reload works; import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 

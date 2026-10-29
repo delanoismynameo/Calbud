@@ -62,3 +62,24 @@ Then the existing `saveMutation.mutate({ fields: parsed.fields, dishFood })`. In
 2. You have re-read this brief and checked each lettered part against your code.
 
 Reply with: what you changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **7 min**, 28 steps. It stayed inside `PrepForm.tsx`.
+
+## Result
+- **Tests:** 397 passing. **Type check:** 1 error before my fix: it saved without checking `parsed.ok`.
+- **Click-through** at 375 px against the mock:
+  - **Building:** Prep → Plan → + Add, name "Chicken and sauce", **Build from ingredients**: 900 g of Oatmeal (standing in for chicken), then 1 serving of Greek yogurt (standing in for the packet). **Weigh the cooked dish**, 1200 g. The list reads "900 g · 639 cal" and "1 × 1 cup · 89 cal", "Total: 728 cal · 1050 g as weighed in", and the preview shows 100 g = 61 cal.
+  - **Saving:** the mock's foods table has one "Chicken and sauce" with `kcal_100g` 60.67, `serving_g` null and a recipe of 2 ingredients, `{ kind: 'weight', totalG: 1200 }`.
+  - **Reopening:** tapping the session shows both ingredients and 1200 in the weight box. Changing Oatmeal to 800 g and saving updates **the same** food (still one row; 54.75 cal per 100 g; first ingredient 800).
+  - **Numbers mode:** still shows "More nutrients" and its preview (after my fix).
+
+## What I changed
+- **Broken numbers mode:** it had dropped `ExtrasFields` and the numbers label preview, which the brief said to keep. Both are back inside the numbers-mode block.
+- **Save path:** it now returns when the session fields fail, after setting the recipe error, so every error still shows at once. That fixes the type error.
+- **Types and layout:** removed a `rows: any[]` annotation, and moved the `toggle` helper out of the component.
+- **`RecipeBuilder`:** the ingredient rows get a border. In the prep form they had the same background as the form, so the rows looked like loose text.
+
+## Verdict
+Usable after fixes. Again it removed code it was told to keep while rewrapping a block, and reported "nothing changed in numbers mode". When a brief moves JSX into a conditional block, list each element that must stay.

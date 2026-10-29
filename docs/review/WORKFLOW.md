@@ -143,6 +143,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 42 | FoodFinder out of Add food (refactor) | 35B (High), headless, no npm | Usable after small fixes (search text lost on Cancel; a copied button block). ~2 min |
 | 43 | RecipeBuilder component (ingredients, amounts, yield) | 35B (High), headless, no npm | Usable after 6 type fixes (JSX namespace, a missing import); logic and tests right. ~5 min |
 | 44 | Build from ingredients in Create a food | 35B (High), headless, no npm | Usable after small fixes (1 type error; ingredients lost on a mode switch, a gap in my brief). ~11 min |
+| 45 | Build a prep dish from ingredients; reopen keeps them | 35B (High), headless, no npm | Usable after fixes (dropped numbers-mode nutrients it was told to keep; 1 type error). ~7 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
@@ -181,3 +182,4 @@ These come from the review notes and override the earlier guesses above where th
 - **Overlay:** `calbud-local.yml` now has the 35B at a 16K reply budget with a `compaction-basic` block, like the web profile.
 - **Results (35–37):** 7–10 min each. Every run stayed in scope, and each needed one small fix. The model can't see type errors or test failures, so always run `npx tsc -b` and `npm test` first.
 - **Hooks after an early return** (tasks 30, 34 and 40) survive even a bold rule. Give the component's first lines as code in the brief: the hook calls, then the guard.
+- **Rewrapping JSX in a conditional block loses parts** (task 45 dropped ExtrasFields and a preview while reporting no change). List every element that must stay.
