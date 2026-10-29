@@ -123,6 +123,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 22a | Grocery helper (side job, alongside 21) | 4B on the 3050, headless | Failed: spawn EPERM in the headless sandbox, edited `vite.config.ts`, 8/9 tests failing |
 | 23 | Prep dishes as custom foods, Log a serving | 35B (High) | Usable after two small fixes (select value, errors together). ~13 min |
 | 24 | Shared weekly menu (grid, slot editor, Today card) | 35B (High) | Usable after fixes (grid rows, lost loading states, slot validation). ~14 min, 6 lost to JSX |
+| 25 | Past days on Today, log to them, Copy yesterday | 35B (High) | Usable after two small fixes (double copy, heading). ~10 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

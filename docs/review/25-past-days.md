@@ -132,3 +132,28 @@ export async function insertMealLogs(rows: MealLogInsert[]): Promise<void>
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** about **10 min**, 44 steps.
+- **Outcome:** finished.
+  - **One build failure:** an `edit` joined two import lines. It found and fixed that.
+  - **Pasted lines:** real (202 tests, the PWA build lines).
+  - **No test edits.** The "keep ternaries shallow" rule held: no JSX trouble this time.
+
+## Result
+- **Builds:** yes. **Tests:** 202 passing (194 + 8; it split brief test 4 into separate `it`s).
+- **Click-through** at 375 px against the mock:
+  - Today shows `‹ Today ›`, with › disabled
+  - **Yesterday** (`‹`): the URL becomes `#/?date=2026-10-27`, with "Back to today", no menu card, and that day's 640 kcal
+  - a day whose previous day is empty shows no Copy button
+  - after clearing today in the mock, Today offers "Copy yesterday's food (2 items)". Tapping it twice shows `Copying…` and copies **once** (after my fix): 2 rows, 640 kcal.
+  - **Add food on Yesterday:** it goes to `#/add?date=2026-10-27`, titled "Add food · Yesterday". The picker says "Logging to Tue Oct 27", and logging a banana saves it on the 27th and returns to Yesterday (745 kcal).
+  - a future date in the URL (`2099-01-01`) shows Today
+
+## What I changed
+- **Copy:** its `onSuccess` didn't return the invalidation, so the button turned active again before the day reloaded, and a quick second tap could copy twice. It now stays pending until the refetch.
+- **Add food:** it showed "· Today" for `?date=` of today. Now it shows only for past days, as the brief said. I also fixed a line break the import fix had squashed.
+
+## Verdict
+Usable after two small fixes. It's the cleanest run of the last few: the shallow-ternary rule kept the JSX simple.
