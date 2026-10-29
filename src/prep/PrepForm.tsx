@@ -6,8 +6,7 @@ import type { PrepFormInput } from './formValidation'
 import { parsePrepForm, prepFormFrom } from './formValidation'
 import { insertPrep, updatePrep, deletePrep, saveDishFood } from './prepApi'
 import { useProfile } from '../household/useProfile'
-import { emptyDish, isDishBlank, dishFromFood, type DishInput } from './dishFood'
-import { parseDish } from './dishFood'
+import { emptyDish, isDishBlank, dishFromFood, parseDish, type DishInput } from './dishFood'
 import { useDishFoods } from './useDishFoods'
 import type { FoodResult } from '../food/types'
 
@@ -78,7 +77,7 @@ export default function PrepForm({
   // Validate first so each error shows under its own field.
   const save = () => {
     const parsed = parsePrepForm(input)
-    if (!parsed.ok) { setErrors(parsed.errors); return }
+    setErrors(parsed.ok ? {} : parsed.errors)
 
     let dishFood: FoodResult | null = null
     const tempDishErrors: Partial<Record<keyof DishInput, string>> = {}
@@ -94,7 +93,6 @@ export default function PrepForm({
 
     setDishErrors(tempDishErrors)
 
-    // If either failed, stop.
     if (!parsed.ok || Object.keys(tempDishErrors).length > 0) return
 
     saveMutation.mutate({ fields: parsed.fields, dishFood })
@@ -158,7 +156,7 @@ export default function PrepForm({
         {savedDishes.data && savedDishes.data.length > 0 && (
           <div className="mb-3">
             <label htmlFor="same-dish" className="block text-gray-400 text-sm mb-1">Same as a saved dish</label>
-            <select id="same-dish" value={dishSourceId ?? ''}
+            <select id="same-dish" value={savedDishes.data.find(f => f.source_id === dishSourceId)?.id ?? ''}
               onChange={(e) => {
                 const foodId = e.target.value
                 if (!foodId) return
