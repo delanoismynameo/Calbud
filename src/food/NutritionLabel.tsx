@@ -52,7 +52,7 @@ export default function NutritionLabel({ servingText, kcal, rows, servingName, n
   const vitaminRows = sepIdx >= 0 ? rows.slice(sepIdx) : []
 
   return (
-    <div className="bg-white text-black rounded p-3 border-2 border-black mt-4">
+    <div className="bg-white text-black rounded p-3 border-2 border-black">
       {/* Heading */}
       <h2 className="text-3xl font-extrabold leading-none">Nutrition Facts</h2>
       <div className="border-b border-black pb-1" />

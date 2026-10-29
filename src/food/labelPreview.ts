@@ -49,5 +49,5 @@ export function previewLabel(input: PreviewInput, extraInputs: ExtraInputs): { k
 
   const rows = labelRows({ fat_g: fatNum, carbs_g: carbsNum, protein_g: proteinNum, extras })
 
-  return { kcal: kcalValue, servingText, rows }
+  return { kcal: Math.round(kcalValue), servingText, rows }
 }
