@@ -119,3 +119,19 @@ Display only: no state, no hooks. Black on white, like a package:
 2. You have re-read this brief and checked every row of the table and every test's expected value against your code by hand (you cannot run the tests).
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, run **headless** (`dsh --profile headless --patch calbud-local.yml headless --json`) in the default workspace-write sandbox, so it could not run npm. The brief said so and told it not to try. It didn't try. This was the first unattended run.
+- **Wall time:** about **7 min**, 16 steps. It stayed inside the brief's files.
+- **Outcome:** finished, and it reported "nothing unsure".
+
+## Result
+- **Builds:** yes. **Tests:** 309 passing (298 + 11). Every expected value held on the first try, even though it never ran the tests.
+- **Click-through** at 375 px against the mock: Oatmeal, 1 cup (240 g) shows a black-on-white label with Calories 170, Sodium 118 mg 5%, Dietary Fiber 4.1 g 15%, Iron 2.2 mg 12%, and "no data" where the food has none. Switching to 100 g updates it (71 cal). Clearing the amount hides it.
+- **Not tested:** a prep dish's Log button. It uses the same `ServingPicker`, so it gets the same label.
+
+## What I changed
+- **`labelRows`:** it built three hand-copied maps (labels, units, DVs) with one `EXTRAS.find` per key, about 100 lines. I replaced them with one row table and a single `EXTRAS` lookup. The tests are unchanged and pass.
+
+## Verdict
+Usable after a small tidy-up. Headless in the sandbox works: the model writes, and I run the tests and build. The repeated-code habit came back. Next time say "drive the rows from one table".

@@ -133,6 +133,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 32 | `.ics` builder (pure logic, 22 tests) | 27B tuned (High), overnight | Usable as delivered. ~1 h 10 min; it fixed its own missing END:VEVENT |
 | 33 | Activity planner (Plan tab, both people) | 35B (High) | Usable after small fixes (a copied helper instead of the tested one). ~15 min |
 | 34 | Export week (activities to .ics, share or download) | 35B (High) | Usable after small fixes (a hook after an early return again; text-matching for colour). ~8 min |
+| 35 | Nutrition Facts label on the food screen | 35B (High), headless, no npm | Usable after a tidy-up (three copied maps into one table). ~7 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
