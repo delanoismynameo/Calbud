@@ -25,7 +25,8 @@
 - **Task 30 (Copy to other days in the slot editor; Repeat last week on Menu and Plan) is live** (pushed 2026-10-29) (no migration needed).
 - **Task 31 (Send to Keep on the Grocery list) is live (pushed 2026-10-29).** The real share sheet needs a test on a phone.
 - **Tasks 33–34 are live** (deploy run 40911439097, 2026-10-29; no migration needed): 33 the activity planner on the Plan tab, 34 Export week (`.ics`, shared on an iPhone web app, downloaded elsewhere).
-- **Tasks 35–37 (the Nutrition Facts label) are in `main`, not pushed.** 35: a package-style label on the food screen, which prep dishes also use when logged. 36: Today's "Nutrition facts" panel as a label for the day's totals. 37: a live label preview in the Create a food and prep dish forms. No migration needed.
+- **Tasks 35–37 (the Nutrition Facts label) are live** (deploy run 40918771600, 2026-10-29): 35 the label on the food screen (prep dishes too), 36 Today's "Nutrition facts" panel for the day, 37 a live label preview in the Create a food and prep dish forms.
+- **Tasks 38–40 are in `main`, not pushed** (no migration needed): 38 a "new version is ready" bar with Reload (checked hourly and when the app comes back to the screen), plus install instructions on Us; 39 the dashboard logic (7-day average, shared streak within 10% of goal) and a 60-day household query; 40 the "This week" card on Us.
 - **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is live (deploy run 40880794963), with no screen using it yet.**
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All six migrations in `supabase/migrations/` have been applied through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
@@ -33,7 +34,7 @@
 
   | Command | Result |
   |---|---|
-  | `npm test` | 322 passing |
+  | `npm test` | 352 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -82,11 +83,15 @@ Before sending a task to the harness in the web UI:
 | 35 | Nutrition Facts label on the food screen | [35](review/35-nutrition-label.md) |
 | 36 | The day's totals as a label | [36](review/36-day-label.md) |
 | 37 | Live label preview in the food and dish forms | [37](review/37-label-preview.md) |
+| 38 | Update prompt and install instructions | [38](review/38-update-prompt.md) |
+| 39 | Dashboard stats, data and hook | [39](review/39-dashboard-stats.md) |
+| 40 | This week card (Us) | [40](review/40-dashboard-card.md) |
 
 ## Next, in order
 1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
-   - nothing queued; pick the next feature with the user
-2. **On a phone:** import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+   - **recipe builder for prep dishes** (ingredients from search or barcode, e.g. a seasoning packet, summed and divided by servings, with an optional total-pot weight). Proposed 2026-10-29; waiting for the user's go-ahead.
+   - then the rest of game plan items 13 and 15 (offline app shell, settings: timezone, data export, rotate invite code)
+2. **On a phone:** after the next deploy, check the "new version is ready" bar appears and Reload works; import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

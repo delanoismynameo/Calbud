@@ -286,12 +286,12 @@ Status as of 2026-10-29. ✅ = done, 🟡 = partly done, ⬜ = not started. Deta
 
 ### Phase 3: Planning and Export
 9. ✅ Meal prep board + grocery list + Realtime. *(Task 21: the week board with add, edit, delete and Planned/Done. Task 22: the grocery list and Realtime. Task 23: a dish's nutrition saved as a custom food, and "Log" a serving. Task 24, beyond the plan: the shared breakfast/lunch/dinner menu grid and "Today's menu", from the user's spreadsheet. Realtime still needs a two-phone check.)*
-10. ⬜ Activity planner (week grid, both people).
-11. ⬜ `.ics` export with unit tests (check output imports cleanly into Google Calendar and an iPhone).
+10. ✅ Activity planner (week grid, both people). *(Task 33.)*
+11. 🟡 `.ics` export with unit tests (check output imports cleanly into Google Calendar and an iPhone). *(Tasks 32 and 34. A real import still needs a phone test.)*
 
 ### Phase 4: Sharing, Polish
-12. ⬜ Me / Partner / Us toggle and Us dashboard with streak.
-13. ⬜ PWA hardening: install prompt (iOS has none; show "Share → Add to Home Screen" instructions), offline app shell, and a service-worker update prompt so new deploys actually reach installed copies.
+12. ✅ Me / Partner / Us toggle and Us dashboard with streak. *(Me/Both on Plan in task 33; the This week card with averages and a shared streak in tasks 39–40.)*
+13. 🟡 PWA hardening: install prompt (iOS has none; show "Share → Add to Home Screen" instructions), offline app shell, and a service-worker update prompt so new deploys actually reach installed copies. *(Task 38: the update prompt and install text. The offline app shell is still to check.)*
 14. ⬜ *Optional:* an offline write queue for meal logs (IndexedDB) that syncs when connectivity returns. Real work with conflict edge cases; skip unless you log in places with bad signal.
 15. ⬜ Settings: goals, timezone, data export, rotate invite code.
 16. ⬜ Test install and the full flow on both of your actual phones (especially if one is iPhone and one Android).
