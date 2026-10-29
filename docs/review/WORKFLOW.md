@@ -142,6 +142,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 41 | Recipe logic (ingredients summed, servings or cooked weight) | 35B (High), headless, no npm | Usable after a rewrite of recipe.ts (extras not per 100 g, `any` casts); tests mostly right. ~8 min |
 | 42 | FoodFinder out of Add food (refactor) | 35B (High), headless, no npm | Usable after small fixes (search text lost on Cancel; a copied button block). ~2 min |
 | 43 | RecipeBuilder component (ingredients, amounts, yield) | 35B (High), headless, no npm | Usable after 6 type fixes (JSX namespace, a missing import); logic and tests right. ~5 min |
+| 44 | Build from ingredients in Create a food | 35B (High), headless, no npm | Usable after small fixes (1 type error; ingredients lost on a mode switch, a gap in my brief). ~11 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

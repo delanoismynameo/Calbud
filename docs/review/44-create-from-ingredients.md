@@ -84,3 +84,25 @@ Hide the serving name, serving weight, the four number fields, the "Per serving"
 2. You have re-read this brief and checked both tests' expected values against your code by hand.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **11 min**, 25 steps. It stayed inside the brief's files.
+
+## Result
+- **Tests:** 397 passing. **Type check:** 1 error before my fix (`LabelRow` named in an annotation, never imported).
+- **Click-through** at 375 px against the mock, covering tasks 42–44:
+  - **Add food (42):** I typed "oat", picked Oatmeal from Your foods, then pressed Cancel. The search box still reads "oat".
+  - **Building (43–44):** Create a food → **Build from ingredients**, name "Yogurt bowl", **+ Add ingredient** → Greek yogurt (it starts at 1 serving) → Add. Then Banana at 0.5 → Add. The list reads "1 × 1 cup · 89 cal" and "0.5 × 1 medium · 53 cal", with "Total: 141 cal · 209 g as weighed in", and the label preview shows 1 serving (209 g), 141 cal.
+  - **Changing one line:** tapping Banana and changing it to 1 → Save gives "1 × 1 medium · 105 cal".
+  - **Switching modes:** going to "Type the numbers" and back keeps the ingredients (after my fix).
+  - **Saving:** opens the logging screen for "Yogurt bowl", 1 serving = 268 g, 194 cal. The mock's foods table has it with `serving_g` 268 and a `recipe` of 2 ingredients, servings 1.
+- **Not tested:** the barcode camera inside the builder, and a real database. **The migration must be applied first** (see STATUS).
+
+## What I changed
+- **Type error:** removed the `LabelRow` annotation; the type is inferred.
+- **Lost ingredients:** switching to numbers mode unmounts `RecipeBuilder`, and its `initial` is read once. So coming back showed an empty list while `recipe` still held the old ingredients, and the preview and Save used them. `RecipeBuilder` now gets `initial={recipe}`, so it restarts from the kept recipe.
+- **Comments:** tidied two of them.
+
+## Verdict
+Usable after small fixes. The save path and the `<form>` → `div` change were done as briefed. The mode-switch bug came from my brief, which didn't think about remounting.
