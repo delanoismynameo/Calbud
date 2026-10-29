@@ -18,16 +18,17 @@
   - 24: the shared breakfast/lunch/dinner menu, and Today's menu
   - 25: past days on Today, logging to them, and Copy yesterday
   - 26: 11 extra nutrients from USDA and OFF, in a More nutrients panel
-- **Tasks 27–28 are reviewed and committed locally, not pushed** (no migration needed):
+- **Tasks 27–28 are live** (pushed 2026-10-29; no migration needed):
   - 27: extra-nutrient inputs on custom foods and prep dishes
   - 28: "Your foods" in Add food's search
+- **Task 29 ("cal" instead of "kcal", Prep opens on Menu, goals editable on the Us page) is reviewed and committed locally, not pushed.** No migration needed.
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All six migrations in `supabase/migrations/` have been applied through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 224 passing |
+  | `npm test` | 228 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -65,11 +66,11 @@ Before sending a task to the harness:
 | 26 | More nutrients (Nutrition Facts set) | [26](review/26-more-nutrients.md) |
 | 27 | Extra-nutrient inputs on own foods and dishes | [27](review/27-own-food-nutrients.md) |
 | 28 | Search finds household foods | [28](review/28-search-own-foods.md) |
+| 29 | "cal" wording, Menu first, editing goals | [29](review/29-cal-menu-goals.md) |
 
 ## Next, in order
-1. **Push 27–28** when the user says so.
+1. **Push 29** when the user says so.
 2. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
-   - [29](review/29-cal-menu-goals.md): "cal" wording, Menu first on Prep, and editing goals on Us
    - 30: "Copy to other days" in the slot editor, and "Repeat last week" for the menu and prep
    - 31: "Send to Keep" via the phone's share sheet, then offer to clear the list. The user chose this over an in-app shared list, because Google Keep has no personal API.
    - then game plan steps 10 (activities) and 11 (`.ics` export)

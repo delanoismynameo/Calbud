@@ -100,3 +100,27 @@ Render `<GoalsCard />` inside the `{household && (...)}` block, right after the 
 4. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI. This was back to one brief per run.
+- **Wall time:** about **8 min**, 34 steps.
+- **Outcome:** finished.
+  - **No stray files** this time: the rule against files for build output held.
+  - **The grep check** came back empty, and it said so.
+
+## Result
+- **Builds:** yes. **Tests:** 228 passing (224 + 4).
+- **Click-through** at 375 px against the mock:
+  - **Today:** `259 / 2000 cal`, `1741 cal left`, and no "kcal" anywhere on the page
+  - **Prep:** opens on **Menu**, with the tabs in the order Menu · Plan · Grocery list. On Plan, Curry reads `… 520 cal each …`.
+  - **Us:** the card reads "Your daily goals · 2000 cal · 150 g protein · 250 g carbs · 65 g fat"
+  - **Editing goals:** Edit, then `400` calories and `12.5` fat, shows both errors. Changing them to 1800 and 60 saves, and the card and Today (`259 / 1800 cal`) both update. Opening Edit again shows Save enabled (after my fix).
+
+## What I changed
+- **`GoalsCard` layout:** all four labels were in one grid above the inputs, so "Carbs" and "Fat" sat over the wrong boxes. Each label now sits with its own field.
+- **`saving`:** it was never reset after a successful save, so the next Edit showed a disabled "Saving…". Fixed.
+- **Cancel:** there were two (header and footer). I kept the footer one, which is disabled while saving.
+- **`GoalInput`:** now imported as a type.
+
+## Verdict
+Usable after small fixes. A clean, quick one-brief run.

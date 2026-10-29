@@ -127,6 +127,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 26 | More nutrients (11 label nutrients, USDA + OFF, Today panel) | 35B (High) | Usable after a one-character fix (2014 in JSX text). ~10 min |
 | 27 | Extra-nutrient inputs on custom foods and dishes | 35B (High), shared session with 28 | Usable after real fixes: the custom form was left half done, plus a wrong serving scale. ~8 min for both |
 | 28 | Search finds the household's own foods | 35B (High), shared session with 27 | Usable as delivered |
+| 29 | "cal" wording, Menu first, editing goals | 35B (High) | Usable after small fixes (label layout, stuck Saving). ~8 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
