@@ -128,13 +128,24 @@ Model it on `PrepForm` but it is much smaller: fields for name, date (`type="dat
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
 
 ## Run
-_(filled in at review)_
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI. One brief.
+- **Wall time:** about **15 min**, 32 steps. It wrote the logic and its 12 tests first, then the API, the form and the page.
+- **Outcome:** finished. The docs ban held, and it ran tests and the build itself.
 
 ## Result
-_(filled in at review)_
+- **Builds:** yes. **Tests:** 279 passing (267 + 12).
+- **Click-through** at 375 px against the mock (I added an `activities` table to the mock, with Alice's gym, Bob's run and an untimed yoga):
+  - **Both / Me:** Both shows Bob's run with a green dot, "Bob · 07:00 · 45 min" and no buttons. Me hides his row and the dots.
+  - **Tick:** Planned to Done saved `completed: true`, and the row struck through.
+  - **Add:** Swim on Sat at 19:30 for 45 min saved and showed in the list.
+  - **Edit and error:** the form opens filled in. Saving a row that had been deleted elsewhere showed "That activity could not be changed." and left Save usable.
+  - **Delete:** the two-step confirm worked.
+  - **Not tried:** live updates between two phones.
 
 ## What I changed
-_(filled in at review)_
+- **`Plan.tsx`:** it carried its own copy of `activityDetails`, so the tested one was unused. It now imports it, and uses `visibleActivities` too.
+- **Partner rows:** "Done" now sits on the right, and the partner's name is in the details line, as the brief said.
+- **Dots:** shown only in Both mode.
 
 ## Verdict
-_(filled in at review)_
+Usable after small fixes. Lesson: when a brief names a tested function, add "import it, don't write another copy in the page".

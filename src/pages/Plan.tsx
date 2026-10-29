@@ -4,7 +4,7 @@ import { queryClient } from '../lib/queryClient'
 import { useLocalDate } from '../lib/useLocalDate'
 import { weekStart, weekDays, weekLabel, dayLabel, addDays } from '../prep/week'
 import type { Activity } from '../activities/types'
-import { sortDay, visibleActivities } from '../activities/activities'
+import { sortDay, visibleActivities, activityDetails } from '../activities/activities'
 import { updateActivity } from '../activities/activitiesApi'
 import { useActivityWeek } from '../activities/useActivityWeek'
 import { useActivityRealtime } from '../activities/useActivityRealtime'
@@ -45,12 +45,7 @@ export default function Plan() {
   const nextWeek = () => setStart(addDays(start, 7))
   const thisWeek = () => setStart(weekStarts)
 
-  const visible = (data ?? []).filter(a => {
-    if (visibility === 'mine' && profile.profile) {
-      return a.user_id === profile.profile.id
-    }
-    return true
-  })
+  const visible = profile.profile ? visibleActivities(data ?? [], visibility, profile.profile.id) : (data ?? [])
 
   const showToggle = profile.partner != null
 
@@ -133,7 +128,7 @@ export default function Plan() {
                   return (
                     <div key={a.id} className="px-3 py-2 flex items-center gap-2">
                       {/* Dot */}
-                      {showToggle && (
+                      {showToggle && visibility === 'both' && (
                         <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: ownerColor }} title={ownerName} />
                       )}
 
@@ -145,18 +140,15 @@ export default function Plan() {
                           <p className="text-xs text-gray-400 mt-0.5">{activityDetails(a)}</p>
                         </button>
                       ) : (
-                        <div className="flex-1 text-left">
-                          {isPartner && (
-                            <span className="text-xs text-gray-400 mr-1">{ownerName}</span>
-                          )}
-                          <p className="font-medium">{a.title}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {activityDetails(a)}
-                            {a.completed && isPartner ? (
-                              <span className="ml-1 text-green-500 text-xs">Done</span>
-                            ) : null}
-                          </p>
-                        </div>
+                        <>
+                          <div className="flex-1 text-left">
+                            <p className="font-medium">{a.title}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {[visibility === 'both' ? ownerName : '', activityDetails(a)].filter(Boolean).join(' · ')}
+                            </p>
+                          </div>
+                          {a.completed && <span className="text-green-500 text-xs">Done</span>}
+                        </>
                       )}
 
                       {/* My toggle */}
@@ -191,30 +183,4 @@ function ToggleStatus({ activityId, current }: { activityId: string; current: bo
       {mutation.isError ? 'Try again' : current ? 'Done' : 'Planned'}
     </button>
   )
-}
-
-function activityDetails(a: Activity): string {
-  const parts: string[] = []
-
-  if (a.start_time != null) {
-    parts.push(a.start_time.slice(0, 5))
-  }
-
-  if (a.duration_min != null) {
-    const hours = Math.floor(a.duration_min / 60)
-    const mins = a.duration_min % 60
-    if (hours > 0 && mins > 0) {
-      parts.push(`${hours} h ${mins} min`)
-    } else if (hours > 0) {
-      parts.push(hours === 1 ? '1 h' : `${hours} h`)
-    } else if (mins > 0) {
-      parts.push(`${mins} min`)
-    }
-  }
-
-  if (a.kcal_burned != null) {
-    parts.push(`${a.kcal_burned} cal burned`)
-  }
-
-  return parts.join(' · ')
 }
