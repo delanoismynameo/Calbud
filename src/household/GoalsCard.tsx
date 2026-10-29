@@ -2,7 +2,14 @@ import { useState } from 'react'
 import { useProfile } from './useProfile'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
-import { parseGoals, GoalInput } from './goals'
+import { parseGoals, type GoalInput } from './goals'
+
+const FIELDS: { key: keyof GoalInput; id: string; label: string }[] = [
+  { key: 'calories', id: 'goal-calories', label: 'Calories' },
+  { key: 'protein', id: 'goal-protein', label: 'Protein (g)' },
+  { key: 'carbs', id: 'goal-carbs', label: 'Carbs (g)' },
+  { key: 'fat', id: 'goal-fat', label: 'Fat (g)' },
+]
 
 export default function GoalsCard() {
   const { profile, refresh } = useProfile()
@@ -64,6 +71,7 @@ export default function GoalsCard() {
         return
       }
       await refresh()
+      setSaving(false)
       setEditing(false)
     } catch (err: any) {
       setSaveError(err.message ?? 'An unexpected error occurred.')
@@ -89,63 +97,17 @@ export default function GoalsCard() {
 
   return (
     <div className="bg-slate-800 rounded-lg p-4 text-left space-y-3">
-      <div className="flex justify-between items-center">
-        <span className="font-semibold text-sm">Your daily goals</span>
-        <button onClick={() => setEditing(false)} className="text-sm text-gray-400 hover:text-gray-300">
-          Cancel
-        </button>
-      </div>
+      <p className="font-semibold text-sm">Your daily goals</p>
       <div className="grid grid-cols-2 gap-2">
-        <label htmlFor="goal-calories" className="block text-xs text-gray-400">Calories</label>
-        <label htmlFor="goal-protein" className="block text-xs text-gray-400">Protein (g)</label>
-        <label htmlFor="goal-carbs" className="block text-xs text-gray-400">Carbs (g)</label>
-        <label htmlFor="goal-fat" className="block text-xs text-gray-400">Fat (g)</label>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <input
-            id="goal-calories"
-            type="text"
-            inputMode="numeric"
-            value={input.calories}
-            onChange={(e) => updateField('calories', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500"
-          />
-          {errors.calories && <p className="text-red-400 text-xs">{errors.calories}</p>}
-        </div>
-        <div>
-          <input
-            id="goal-protein"
-            type="text"
-            inputMode="numeric"
-            value={input.protein}
-            onChange={(e) => updateField('protein', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500"
-          />
-          {errors.protein && <p className="text-red-400 text-xs">{errors.protein}</p>}
-        </div>
-        <div>
-          <input
-            id="goal-carbs"
-            type="text"
-            inputMode="numeric"
-            value={input.carbs}
-            onChange={(e) => updateField('carbs', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500"
-          />
-          {errors.carbs && <p className="text-red-400 text-xs">{errors.carbs}</p>}
-        </div>
-        <div>
-          <input
-            id="goal-fat"
-            type="text"
-            inputMode="numeric"
-            value={input.fat}
-            onChange={(e) => updateField('fat', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500"
-          />
-          {errors.fat && <p className="text-red-400 text-xs">{errors.fat}</p>}
-        </div>
+        {FIELDS.map(({ key, id, label }) => (
+          <div key={key}>
+            <label htmlFor={id} className="block text-xs text-gray-400 mb-1">{label}</label>
+            <input id={id} type="text" inputMode="numeric" value={input[key]}
+              onChange={(e) => updateField(key, e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" />
+            {errors[key] && <p className="text-red-400 text-xs mt-1">{errors[key]}</p>}
+          </div>
+        ))}
       </div>
       {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
       <div className="flex gap-3">
@@ -158,6 +120,7 @@ export default function GoalsCard() {
         </button>
         <button
           onClick={() => setEditing(false)}
+          disabled={saving}
           className="flex-1 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold"
         >
           Cancel
