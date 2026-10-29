@@ -24,7 +24,7 @@
 - **Task 29 ("cal" instead of "kcal", Prep opens on Menu, goals editable on the Us page) is live** (pushed 2026-10-29; no migration needed).
 - **Task 30 (Copy to other days in the slot editor; Repeat last week on Menu and Plan) is live** (pushed 2026-10-29) (no migration needed).
 - **Task 31 (Send to Keep on the Grocery list) is live (pushed 2026-10-29).** The real share sheet needs a test on a phone.
-- **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is in `main`, not pushed.**
+- **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is live (deploy run 40880794963), with no screen using it yet.**
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All six migrations in `supabase/migrations/` have been applied through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
