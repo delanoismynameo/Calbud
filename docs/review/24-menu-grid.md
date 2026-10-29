@@ -196,3 +196,29 @@ Style it like `PrepForm`: the same container, input and button classes.
 3. You have re-read this brief, and checked each numbered section and every test's expected value against your code.
 
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, Full access, web UI.
+- **Wall time:** about **14 min**, 83 steps. About 6 of those minutes went on a JSX ternary chain in `Prep.tsx` that wouldn't compile. It rewrote the block twice.
+- **Outcome:** finished. Its reply said it was "unsure about nothing", but the review found three problems.
+  - **Pasted lines:** the test line (194) and the build lines were real.
+  - **No test edits.**
+
+## Result
+- **Builds:** yes. **Tests:** 194 passing (188 + 6).
+- **Click-through** at 375 px against the mock:
+  - the Menu tab shows seven rows with Breakfast, Lunch and Dinner columns. Today's row is blue, dish slots are blue, and the long Saturday lunch wraps.
+  - tapping Tue dinner opens the editor with the week's three dishes. Picking Curry fills the text, and saving shows Curry in the cell.
+  - saving an empty slot shows "Type something or pick a dish." under the field (after my fix). Typing "Leftovers" saves it.
+  - Clear removes a slot, and the cell shows `+` again
+  - Plan shows `6 servings · 3 in menu · 520 kcal each` for Curry
+  - Today shows "Today's menu" with `—`, Leftovers, and Curry with a Log button. Log opens the picker set to **Dinner**, and logging adds 520 kcal (259 → 779).
+- **Realtime for `menu_slots`:** not verified. The mock has no WebSocket.
+
+## What I changed
+- **`MenuGrid`:** each day was wrapped in a `<div>`, so a whole day sat in one grid cell. The day is now a `Fragment`, so each day is a row of four cells.
+- **`Prep.tsx`:** the JSX rewrite dropped the Loading and error states for Plan and Grocery list. They're back; the menu keeps its own.
+- **`SlotEditor`:** the label was checked inside the mutation, so the error showed as a save failure. It's now checked before saving and shown under the field. I also dropped a `<label htmlFor>` that pointed at nothing.
+
+## Verdict
+Usable after fixes. The layout bug only showed up in the browser, not in tests or the build. The JSX trouble on a three-way view switch is the same kind of slip as task 22. Future briefs say to keep ternaries shallow and to move big blocks into small components.
