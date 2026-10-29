@@ -106,7 +106,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
         <div className="space-y-3">
           {ingredients.map((ing, i) => (
             <button key={i} type="button" onClick={() => { setEditing({ food: ing.food, index: i }); setAmountText(String(ing.amount)); setUnit(ing.unit); setStep('amount') }}
-              className="w-full bg-slate-900 rounded p-3 text-left hover:bg-slate-700">
+              className="w-full bg-slate-900 border border-slate-700 rounded p-3 text-left hover:bg-slate-700">
               <span className="font-semibold">{ing.food.name}</span>
               <p className="text-gray-400 text-sm">{ingredientLine(ing)}</p>
             </button>

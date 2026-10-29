@@ -19,6 +19,9 @@ import { cleanRecipe, recipeError, recipeFood } from '../food/recipe'
 import { builtLabel } from '../food/builtLabel'
 import type { Recipe } from '../food/types'
 
+const toggle = (on: boolean) =>
+  `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
+
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
 export default function PrepForm({
@@ -102,9 +105,7 @@ export default function PrepForm({
     if (dishMode === 'ingredients') {
       let dishFood: FoodResult | null = null
 
-      if (!recipe || recipe.ingredients.length === 0) {
-        dishFood = null
-      } else {
+      if (recipe && recipe.ingredients.length > 0) {
         const err = recipeError(recipe)
         if (err !== null) {
           setRecipeErr(err)
@@ -112,6 +113,7 @@ export default function PrepForm({
         }
         dishFood = recipeFood(recipe, input.title.trim(), dishSourceId ?? crypto.randomUUID())
       }
+      if (!parsed.ok) return
 
       saveMutation.mutate({ fields: parsed.fields, dishFood })
       return
@@ -155,16 +157,10 @@ export default function PrepForm({
 
   const dishPreview = previewLabel({ ...dish, servingLabel: '' }, dishExtras)
 
-  // toggle helper (same pattern as CustomFoodForm toggles)
-  const toggle = (on: boolean) =>
-    `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
-
-  // ingredients label preview (same pattern as CustomFoodForm's built recipe preview)
-  let builtLabelResult: { servingText: string; kcal: number; rows: any[] } | null = null
-  if (recipe && recipe.ingredients.length > 0 && recipeError(recipe) === null) {
-    const built = recipeFood(recipe, input.title, 'preview')
-    builtLabelResult = builtLabel(built)
-  }
+  // The ingredients-mode label preview, when the recipe can be saved.
+  const builtLabelResult = recipe && recipe.ingredients.length > 0 && recipeError(recipe) === null
+    ? builtLabel(recipeFood(recipe, input.title, 'preview'))
+    : null
 
   return (
     <div className="bg-slate-900 rounded p-3 space-y-4">
@@ -282,7 +278,19 @@ export default function PrepForm({
               {dishErrors.fat && <p className="text-red-400 text-xs mt-1">{dishErrors.fat}</p>}
             </div>
           </div>
+        )}
 
+        {dishMode === 'numbers' && (
+          <>
+            <ExtrasFields values={dishExtras} errors={dishExtraErrors} onChange={(key, value) => { setDishExtras({ ...dishExtras, [key]: value }); if (dishExtraErrors[key]) setDishExtraErrors({ ...dishExtraErrors, [key]: undefined }) }} />
+
+            {dishPreview && (
+              <div className="mt-3">
+                <p className="text-gray-400 text-sm mb-1">Label preview</p>
+                <NutritionLabel servingText={dishPreview.servingText} kcal={dishPreview.kcal} rows={dishPreview.rows} />
+              </div>
+            )}
+          </>
         )}
 
         {dishMode === 'ingredients' && (
