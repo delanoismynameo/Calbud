@@ -138,6 +138,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 37 | Live label preview in the food and dish forms | 35B (High), headless, no npm | Usable after a one-line fix (kcal not rounded; the test caught it). ~7 min |
 | 38 | Update prompt and install instructions | 35B (High), headless, no npm | Usable after a one-word fix (missed the 'iPad' check). ~4 min |
 | 39 | Dashboard stats (weekly average, shared streak), data and hook | 35B (High), headless, no npm | Usable after small fixes (one test not as briefed; rounding per row). ~3 min |
+| 40 | This week card on the Us page | 35B (High), headless, no npm | Usable after a component rewrite (hooks after early returns, third time). ~2 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
@@ -175,3 +176,4 @@ These come from the review notes and override the earlier guesses above where th
 - **Sandbox:** the default workspace-write sandbox lets the model write files but blocks npm, npx and node (EPERM). Setting `DSH_PERMISSION_MODE=danger-full-access` would lift the block, but Claude's auto-mode classifier refuses to start a full-access agent. So the brief says "you cannot run npm; don't work around it", and Claude runs `tsc`, the tests and the build afterwards.
 - **Overlay:** `calbud-local.yml` now has the 35B at a 16K reply budget with a `compaction-basic` block, like the web profile.
 - **Results (35–37):** 7–10 min each. Every run stayed in scope, and each needed one small fix. The model can't see type errors or test failures, so always run `npx tsc -b` and `npm test` first.
+- **Hooks after an early return** (tasks 30, 34 and 40) survive even a bold rule. Give the component's first lines as code in the brief: the hook calls, then the guard.

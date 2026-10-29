@@ -70,3 +70,21 @@ export default function WeekCard()
 2. You have re-read this brief and checked every row of the table against your code by hand.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **2 min**, 10 steps. It stayed inside the brief's files. Its final reply was cut off mid-sentence, but the `Us.tsx` edit was in place.
+
+## Result
+- **Type check:** clean. **Tests:** 352 passing (344 + 8). **Build:** clean.
+- **Click-through** at 375 px against the mock, after my fix:
+  - **Today and the average:** "This week" shows alice at 259 / 2000 cal with a 7-day average of 450 cal (259 today and 640 yesterday), and Bob at 900 / 2000, average 900.
+  - **Streak:** the line reads "No streak yet. Both finish a day within 10% of your goals to start one."
+- **Not tested here:** a real streak above 0. The mock can't add the partner's logs. The streak logic is covered by task 39's tests.
+
+## What I changed
+- **Hook order:** `WeekCard` called `useLocalDate`, `useHouseholdKcal` and a second `useProfile` *after* `if (!profile) return null` and after the loading and error returns. React would crash once the profile or the data loaded. The brief said "hooks first, all of them", in bold. I rewrote it with the three hooks at the top, one card wrapper, and a single body for loading, error or data.
+- **People list:** it copied each profile's fields into a new object. It now uses the profiles directly.
+
+## Verdict
+Usable after a rewrite of one component. The hook-after-return mistake came back for the third time (tasks 30, 34, 40), even with a bold rule. Next time, put the first lines of the component in the brief as code (the three hook calls, then the guard), so it starts from the right shape.
