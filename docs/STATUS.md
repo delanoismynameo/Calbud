@@ -27,11 +27,11 @@
 - **Tasks 33–34 are live** (deploy run 40911439097, 2026-10-29; no migration needed): 33 the activity planner on the Plan tab, 34 Export week (`.ics`, shared on an iPhone web app, downloaded elsewhere).
 - **Tasks 35–37 (the Nutrition Facts label) are live** (deploy run 40918771600, 2026-10-29): 35 the label on the food screen (prep dishes too), 36 Today's "Nutrition facts" panel for the day, 37 a live label preview in the Create a food and prep dish forms.
 - **Tasks 38–40 are live** (deploy run 40925785018, 2026-10-29): 38 the "new version is ready" bar and install instructions, 39–40 the Us "This week" card (7-day averages, a shared streak within 10% of goal).
-- **Tasks 41–45 (build a food from ingredients) are in `main`, not pushed. They need migration `20261029000003_recipe.sql` (adds `foods.recipe`, nullable jsonb) applied in the SQL Editor *before* pushing.** Without it, saving a built food fails. Ordinary foods still save, because only built foods send the column.
+- **Tasks 41–45 (build a food from ingredients) are live** (deploy run 40933227423, 2026-10-29). Migration `20261029000003_recipe.sql` (adds `foods.recipe`, nullable jsonb) was applied first; the column was checked through the REST API.
   - Create a food and the prep dish form get **Type the numbers / Build from ingredients**. Ingredients come from search, favorites, recents, Your foods or a barcode scan, each with an amount in servings or grams. The dish is divided into servings or by **the cooked weight of the whole dish**, and a label preview shows as you go.
   - A built prep dish reopens with its ingredients, so one line can be changed; it updates the same saved food. 41 is the logic, 42 moved Add food's finder into `FoodFinder`, 43 the `RecipeBuilder`, 44 Create a food, 45 the prep dish.
 - **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is live (deploy run 40880794963), with no screen using it yet.**
-- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. The first six migrations in `supabase/migrations/` have been applied (the seventh, `20261029000003_recipe.sql`, is **not yet**) through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
+- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All seven migrations in `supabase/migrations/` have been applied through the SQL Editor (the last four on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
@@ -97,9 +97,9 @@ Before sending a task to the harness in the web UI:
 
 ## Next, in order
 1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
-   - **Before pushing 41–45:** apply `supabase/migrations/20261029000003_recipe.sql` in the SQL Editor.
+   - nothing queued; the game plan's remaining items are 13 (offline app shell) and 15 (settings: timezone, data export, rotate invite code)
    - then the rest of game plan items 13 and 15 (offline app shell, settings: timezone, data export, rotate invite code)
-2. **On a phone:** after the next deploy, check the "new version is ready" bar appears and Reload works; import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+2. **On a phone:** build a food from ingredients with the barcode camera; check the "new version is ready" bar appears and Reload works; import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.
