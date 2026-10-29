@@ -16,7 +16,7 @@
 - **Task 23 (a prep session's nutrition per serving, saved as a custom food, and a Log button on Prep) is committed locally, not pushed.** Its migration is applied.
 - **Task 24 (the shared weekly menu: a breakfast/lunch/dinner grid on Prep and "Today's menu" on Today) is reviewed and committed locally, not pushed.** Its migration is applied.
 - **Task 25 (past days on Today, logging to them, Copy yesterday) is reviewed and committed locally, not pushed.**
-- **Task 26 (more nutrients: the Nutrition Facts label set) is being briefed.** Its migration `20261029000002_extras.sql` is **not applied** yet.
+- **Task 26 (more nutrients: the Nutrition Facts label set) is briefed ([26](review/26-more-nutrients.md)), not yet run.** Its migration `20261029000002_extras.sql` is **not applied** yet.
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All five migrations in `supabase/migrations/` have been applied through the SQL Editor (the last two, `prep_food` and `menu`, on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**

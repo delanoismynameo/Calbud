@@ -49,6 +49,7 @@ await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '202610270000
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000001_join_switch.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000002_prep_food.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261029000001_menu.sql'), 'utf8'));
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261029000002_extras.sql'), 'utf8'));
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:
@@ -331,6 +332,28 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
      cSlots.rows?.length === 0 && cSlotIns.error !== undefined && delPrep.error === undefined
        && kept.length === 1 && kept[0].label === 'Leftovers' && kept[0].prep_id === null,
      `Carol saw ${cSlots.rows?.length}; insert: ${cSlotIns.error ?? 'succeeded'}; prep delete: ${delPrep.error ?? 'ok'}; slots ${JSON.stringify(kept)}`);
+
+  // Migration 20261029000002: extra nutrients as jsonb objects.
+  const xFood = await as(ALICE,
+    `insert into foods (household_id, source, source_id, name, kcal_100g, protein_100g, carbs_100g, fat_100g, extra_100g)
+     values ($1, 'custom', 'extra-1', 'Salty Soup', 50, 2, 6, 1, '{"sodium_mg": 400, "iron_mg": 1.2}') returning extra_100g`,
+    [aliceHouseholdId]);
+  const xLog = await as(ALICE,
+    `insert into meal_logs (user_id, logged_on, meal_type, name, quantity_g, kcal, protein_g, carbs_g, fat_g, extra)
+     values ($1, '2026-10-29', 'lunch', 'Salty Soup', 300, 150, 6, 18, 3, '{"sodium_mg": 1200}') returning extra`,
+    [ALICE]);
+  const xDefault = await as(ALICE,
+    `insert into meal_logs (user_id, logged_on, meal_type, name, quantity_g, kcal, protein_g, carbs_g, fat_g)
+     values ($1, '2026-10-29', 'snack', 'Plain', 10, 10, 1, 1, 1) returning extra`,
+    [ALICE]);
+  const xBad = await as(ALICE,
+    `insert into meal_logs (user_id, logged_on, meal_type, name, quantity_g, kcal, protein_g, carbs_g, fat_g, extra)
+     values ($1, '2026-10-29', 'snack', 'Bad', 10, 10, 1, 1, 1, '[1, 2]')`,
+    [ALICE]);
+  ok('foods and logs keep extra nutrients as an object, {} by default',
+     xFood.rows?.[0]?.extra_100g?.iron_mg === 1.2 && xLog.rows?.[0]?.extra?.sodium_mg === 1200
+       && JSON.stringify(xDefault.rows?.[0]?.extra) === '{}' && xBad.error !== undefined,
+     `food: ${xFood.error ?? JSON.stringify(xFood.rows)}; log: ${xLog.error ?? JSON.stringify(xLog.rows)}; default: ${xDefault.error ?? JSON.stringify(xDefault.rows)}; array: ${xBad.error ?? 'accepted'}`);
 
   const cFd = await as(CAROL, 'select id from foods');
   const cFdIns = await as(CAROL,

@@ -39,6 +39,9 @@ if (process.argv.includes('--with-logs')) {
   }
   const [oat, yog, pasta, burger] = [food('usda', '173904', 'Oatmeal, cooked', null, 240, '1 cup', 71, 2.5, 12, 1.5), food('off', '0123456789012', 'Greek yogurt, plain, nonfat', 'Fage', 150, '1 cup', 59, 10.2, 3.6, 0.4), food('usda', '168927', 'Pasta, cooked', null, null, null, 157, 5.8, 30.6, 0.9), food('usda', '999', 'Bob burger', null, null, null, 300, 17, 20, 17)]
   mealLogs[0].food_id = oat; mealLogs[1].food_id = yog; mealLogs[2].food_id = burger; mealLogs[3].food_id = pasta
+  // Extra nutrients (task 26): oatmeal reports some; yogurt reports none, so today's totals have one item missing.
+  foods.find((f) => f.id === oat).extra_100g = { fiber_g: 1.7, sodium_mg: 49, iron_mg: 0.9, potassium_mg: 70 }
+  mealLogs[0].extra = { fiber_g: 4.1, sodium_mg: 117.6, iron_mg: 2.2, potassium_mg: 168 }
   log(ME, day(1), 'breakfast', 'Oatmeal, cooked', 240, 170, 6, 28.8, 3.6, '2026-10-27T12:00:00Z'); mealLogs[4].food_id = oat
   // Favorites: yogurt (also recent) and a never-logged banana.
   foods.find((f) => f.id === yog).is_favorite = true
