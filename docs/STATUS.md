@@ -68,7 +68,11 @@ Before sending a task to the harness:
 
 ## Next, in order
 1. **Push 27–28** when the user says so.
-2. **Next pair, by the game plan:** step 10 (activity planner), then step 11 (`.ics` export of the week). The export includes activities, so the planner comes first.
+2. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
+   - [29](review/29-cal-menu-goals.md): "cal" wording, Menu first on Prep, and editing goals on Us
+   - 30: "Copy to other days" in the slot editor, and "Repeat last week" for the menu and prep
+   - 31: "Send to Keep" via the phone's share sheet, then offer to clear the list. The user chose this over an in-app shared list, because Google Keep has no personal API.
+   - then game plan steps 10 (activities) and 11 (`.ics` export)
 3. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
