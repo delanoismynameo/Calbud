@@ -52,7 +52,7 @@ export default function EditMealLog({ log, onClose }: {
         />
       </div>
       {!isValid && <p className="text-red-400 text-sm">Enter an amount between 0 and 5000 g.</p>}
-      {scaled && isValid && <p className="text-gray-400">{scaled.kcal} kcal</p>}
+      {scaled && isValid && <p className="text-gray-400">{scaled.kcal} cal</p>}
 
       <div>
         <span className="block text-gray-400 text-sm mb-1">Meal</span>

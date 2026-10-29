@@ -97,13 +97,13 @@ export default function Today() {
           ) : total && (
             <div className="bg-slate-800 rounded-lg p-4 space-y-3">
               <p className="text-center text-3xl font-bold text-white">
-                {total.kcal} / {goals.kcal} kcal
+                {total.kcal} / {goals.kcal} cal
               </p>
               {(() => {
                 const remaining = goals.kcal - total.kcal
                 return (
                   <p className={`text-center text-lg ${remaining >= 0 ? 'text-gray-400' : 'text-amber-500'}`}>
-                    {remaining >= 0 ? `${remaining} kcal left` : `${Math.abs(remaining)} kcal over`}
+                    {remaining >= 0 ? `${remaining} cal left` : `${Math.abs(remaining)} cal over`}
                   </p>
                 )
               })()}

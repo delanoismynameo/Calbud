@@ -3,6 +3,7 @@ import { useProfile } from '../household/useProfile'
 import { supabase } from '../lib/supabase'
 import CopyCode from '../household/CopyCode'
 import SwitchHousehold from '../household/SwitchHousehold'
+import GoalsCard from '../household/GoalsCard'
 
 export default function Us() {
   const { session } = useAuth()
@@ -37,6 +38,9 @@ export default function Us() {
                     <p className="text-gray-400 text-xs">Waiting…</p>
                   )}
                 </div>
+              </div>
+              <div className="max-w-sm mx-auto">
+                <GoalsCard />
               </div>
 
               {!partner && (

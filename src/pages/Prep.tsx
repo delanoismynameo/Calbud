@@ -28,7 +28,7 @@ export default function Prep() {
   const profile = useProfile()
   usePrepRealtime(profile.profile?.household_id)
   const menu = useMenuWeek(start)
-  const [view, setView] = useState<'plan' | 'menu' | 'grocery'>('plan')
+  const [view, setView] = useState<'plan' | 'menu' | 'grocery'>('menu')
   const [slotEditing, setSlotEditing] = useState<{ date: string; meal: MenuMeal } | null>(null)
 
   if (editing) {
@@ -68,15 +68,14 @@ export default function Prep() {
         )}
       </div>
 
-      {/* Plan / Menu / Grocery list switch */}
       <div className="flex mx-3 my-2 rounded overflow-hidden">
-        <button onClick={() => setView('plan')} aria-pressed={view === 'plan'}
-          className={`flex-1 py-2 text-sm font-medium ${view === 'plan' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
-          Plan
-        </button>
         <button onClick={() => setView('menu')} aria-pressed={view === 'menu'}
           className={`flex-1 py-2 text-sm font-medium ${view === 'menu' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
           Menu
+        </button>
+        <button onClick={() => setView('plan')} aria-pressed={view === 'plan'}
+          className={`flex-1 py-2 text-sm font-medium ${view === 'plan' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+          Plan
         </button>
         <button onClick={() => setView('grocery')} aria-pressed={view === 'grocery'}
           className={`flex-1 py-2 text-sm font-medium ${view === 'grocery' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
@@ -167,7 +166,7 @@ export default function Prep() {
 
 function sessionDetails(s: MealPrep, menuSlots: MenuSlot[]): string {
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
-  const kcal = (s.foods != null && kcalPerServing(s.foods) != null) ? `${kcalPerServing(s.foods)} kcal each` : null
+  const kcal = (s.foods != null && kcalPerServing(s.foods) != null) ? `${kcalPerServing(s.foods)} cal each` : null
   const count = menuCount(menuSlots, s.id)
   return [
     s.start_time ? s.start_time.slice(0, 5) : null,

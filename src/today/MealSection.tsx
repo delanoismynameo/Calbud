@@ -21,7 +21,7 @@ export default function MealSection({ meal, logs }: {
       <div className="flex justify-between items-baseline">
         <h2 className="text-lg font-semibold capitalize">{MEAL_LABELS[meal]}</h2>
         <span className="text-gray-400 text-sm">
-          {sumLogs(logs).kcal} kcal
+          {sumLogs(logs).kcal} cal
         </span>
       </div>
 
@@ -41,7 +41,7 @@ export default function MealSection({ meal, logs }: {
                 <p className="text-white truncate">{log.name}</p>
                 <p className="text-gray-400 text-sm">{log.quantity_g} g</p>
               </div>
-              <span className="text-white font-medium whitespace-nowrap">{Math.round(log.kcal)} kcal</span>
+              <span className="text-white font-medium whitespace-nowrap">{Math.round(log.kcal)} cal</span>
             </button>
           )
         )
