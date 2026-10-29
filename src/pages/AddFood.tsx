@@ -70,11 +70,12 @@ export default function AddFood() {
     <div className="space-y-3">
       <div className="flex items-center gap-4">
         <Link to={home} className="text-blue-400 hover:text-blue-300 font-semibold py-2">&larr; Back</Link>
-        <h1 className="text-lg font-semibold">Add food{day && <span className="text-gray-500 text-sm ml-2"> · {dayTitle(day, today)}</span>}</h1>
+        <h1 className="text-lg font-semibold">Add food{day && day !== today && <span className="text-gray-500 text-sm ml-2"> · {dayTitle(day, today)}</span>}</h1>
       </div>
 
       {selected ? (
-        <ServingPicker food={selected} onLogged={() => navigate(home)} loggedOn={day ?? undefined} onCancel={() => setSelected(null)} />      ) : creating ? (
+        <ServingPicker food={selected} onLogged={() => navigate(home)} loggedOn={day ?? undefined} onCancel={() => setSelected(null)} />
+      ) : creating ? (
         <CustomFoodForm onSaved={(food) => { setCreating(false); setSelected(food) }} onCancel={() => setCreating(false)} />
       ) : scanning ? (
         <div className="space-y-3">

@@ -48,9 +48,8 @@ export default function Today() {
     mutationFn: async () => {
       await insertMealLogs(copyRows(prevLogs.data ?? [], date))
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meal-logs'] })
-    },
+    // Stay pending until the day reloads, so the button can't copy twice.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['meal-logs'] }),
   })
 
   if (logging) {
