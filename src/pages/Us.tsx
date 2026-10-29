@@ -7,14 +7,22 @@ import GoalsCard from '../household/GoalsCard'
 import YouCard from '../household/YouCard'
 import DataCard from '../household/DataCard'
 import WeekCard from '../dashboard/WeekCard'
+import { useCanInstall } from '../pwa/installPromptInstance'
 import { installHint, installText } from '../pwa/install'
+import { installPrompt } from '../pwa/installPromptInstance'
 
 export default function Us() {
   const { session } = useAuth()
   const { profile, household, partner } = useProfile()
 
+  const canInstall = useCanInstall()
+
   const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as unknown as { standalone?: boolean }).standalone === true
   const hint = installHint(navigator.userAgent, navigator.maxTouchPoints, standalone)
+
+  const installBtn = canInstall ? (
+    <button type="button" className="mt-3 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold" onClick={() => { void installPrompt.prompt() }}>Install app</button>
+  ) : null
 
   return (
     <div className="text-center">
@@ -25,6 +33,7 @@ export default function Us() {
           <button
             onClick={() => supabase.auth.signOut()}
             className="mt-2 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded">Sign out</button>
+          {installBtn}
           {hint !== null && (
             <p className="mt-3 text-xs text-gray-400 max-w-sm mx-auto">{installText(hint)}</p>
           )}
