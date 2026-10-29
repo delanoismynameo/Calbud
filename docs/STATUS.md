@@ -21,7 +21,7 @@
 - **Tasks 27–28 are live** (pushed 2026-10-29; no migration needed):
   - 27: extra-nutrient inputs on custom foods and prep dishes
   - 28: "Your foods" in Add food's search
-- **Task 29 ("cal" instead of "kcal", Prep opens on Menu, goals editable on the Us page) is reviewed and committed locally, not pushed.** No migration needed.
+- **Task 29 ("cal" instead of "kcal", Prep opens on Menu, goals editable on the Us page) is live** (pushed 2026-10-29; no migration needed).
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All six migrations in `supabase/migrations/` have been applied through the SQL Editor (the last three on 2026-10-29). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
@@ -69,8 +69,7 @@ Before sending a task to the harness:
 | 29 | "cal" wording, Menu first, editing goals | [29](review/29-cal-menu-goals.md) |
 
 ## Next, in order
-1. **Push 29** when the user says so.
-2. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
+1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
    - 30: "Copy to other days" in the slot editor, and "Repeat last week" for the menu and prep
    - 31: "Send to Keep" via the phone's share sheet, then offer to clear the list. The user chose this over an in-app shared list, because Google Keep has no personal API. Design agreed with the user:
      - `navigator.share({ text })` with the list as plain lines
@@ -78,7 +77,7 @@ Before sending a task to the harness:
      - never delete prep ingredients: the list is built from them
      - without `navigator.share` (desktop), copy to the clipboard and ask the same question
    - then game plan steps 10 (activities) and 11 (`.ics` export)
-3. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+2. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.
