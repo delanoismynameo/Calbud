@@ -1,47 +1,23 @@
 import { supabase } from '../lib/supabase'
 
-export async function allRows(
-  table: string,
-  order: string,
-  column?: string,
-  value?: string,
-): Promise<Record<string, unknown>[]> {
-  let query: any = supabase.from(table).select('*')
+const PAGE = 1000 // the most rows the API returns per request
 
-  if (column) {
-    query = query.eq(column as never, value as never)
-  }
-
-  const orderedQuery = query.order(order, { ascending: true })
-
-  let allResults: Record<string, unknown>[] = []
-
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await orderedQuery.range(from, from + 999)
-
+// Every row of `table`, optionally only where `column` equals `value`, ordered by `order`; read a page at a time.
+export async function allRows(table: string, order: string, column?: string, value?: string): Promise<Record<string, unknown>[]> {
+  const rows: Record<string, unknown>[] = []
+  for (let from = 0; ; from += PAGE) {
+    let query = supabase.from(table).select('*')
+    if (column) query = query.eq(column, value)
+    const { data, error } = await query.order(order, { ascending: true }).range(from, from + PAGE - 1)
     if (error) throw new Error(error.message)
-
-    const page = ((data ?? []) as unknown[])
-    for (const row of page) {
-      allResults.push(row as Record<string, unknown>)
-    }
-
-    if (page.length < 1000) break
+    rows.push(...((data ?? []) as Record<string, unknown>[]))
+    if (!data || data.length < PAGE) return rows
   }
-
-  return allResults
 }
 
 export async function fetchAllData(userId: string): Promise<Record<string, unknown>> {
-  const { data: profileData, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-
-  if (profileError) throw new Error(profileError.message)
-
-  const rows = ((profileData ?? []) as any[])
-  const profile = rows[0] ?? null
+  const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+  if (error) throw new Error(error.message)
 
   return {
     exported_at: new Date().toISOString(),

@@ -16,6 +16,15 @@ export default function DataCard() {
 
   if (!session) return null
 
+  // Shares on an installed iPhone app (downloads are unreliable there), downloads everywhere else.
+  const deliver = (file: File) => {
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true
+    const preferShare = isIosStandalone(navigator.userAgent, navigator.maxTouchPoints, standalone)
+    return deliverIcs(file, preferShare, navigator as unknown as ShareNav, downloadFile, 'Calbud data')
+  }
+
   const exportCsv = async () => {
     setMessage(null)
     setFailed(false)
@@ -24,11 +33,7 @@ export default function DataCard() {
       const logs = await allRows('meal_logs', 'logged_on', 'user_id', session.user.id) as unknown as MealLog[]
       const file = new File([mealLogsCsv(logs)], dataFileName('csv', today), { type: 'text/csv' })
 
-      const standalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (navigator as unknown as { standalone?: boolean }).standalone === true
-      const preferShare = isIosStandalone(navigator.userAgent, navigator.maxTouchPoints, standalone)
-      const result = await deliverIcs(file, preferShare, navigator as unknown as ShareNav, downloadFile, 'Calbud data')
+      const result = await deliver(file)
 
       if (result !== 'cancelled') {
         setMessage(`Downloaded ${logs.length} ${logs.length === 1 ? 'entry' : 'entries'}.`)
@@ -46,15 +51,10 @@ export default function DataCard() {
     setFailed(false)
     setBusy('json')
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = await fetchAllData(session.user.id)
       const file = new File([JSON.stringify(data, null, 2)], dataFileName('json', today), { type: 'application/json' })
 
-      const standalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (navigator as unknown as { standalone?: boolean }).standalone === true
-      const preferShare = isIosStandalone(navigator.userAgent, navigator.maxTouchPoints, standalone)
-      const result = await deliverIcs(file, preferShare, navigator as unknown as ShareNav, downloadFile, 'Calbud data')
+      const result = await deliver(file)
 
       if (result !== 'cancelled') {
         setMessage('Downloaded everything.')

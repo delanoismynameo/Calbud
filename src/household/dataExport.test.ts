@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { MealLog } from '../../today/types'
+import type { MealLog } from '../today/types'
 import { csvCell, mealLogsCsv, dataFileName } from './dataExport'
 
 function log(overrides: Partial<MealLog> = {}): MealLog {
