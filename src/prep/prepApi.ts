@@ -7,8 +7,7 @@ import { foodRow } from '../food/rows'
 export async function insertPreps(householdId: string, userId: string, rows: (PrepFields & { food_id: string | null })[]): Promise<void> {
   if (rows.length === 0) return
   const data = rows.map(r => ({ ...r, household_id: householdId, created_by: userId, status: 'planned' as const }))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await supabase.from('meal_prep').insert(data as any).select('id')
+  const { error } = await supabase.from('meal_prep').insert(data).select('id')
 
   if (error) throw new Error(error.message)
 }

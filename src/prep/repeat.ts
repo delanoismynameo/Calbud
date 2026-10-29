@@ -1,6 +1,5 @@
 import { addDays } from './week'
-import type { MealPrep } from './types'
-import type { PrepFields } from './types'
+import type { MealPrep, PrepFields } from './types'
 
 // Last week's sessions moved forward 7 days, as PrepFields plus food_id. Skip any session whose
 // title AND new scheduled_date already exist in `thisWeek`. Status is not part of the result.

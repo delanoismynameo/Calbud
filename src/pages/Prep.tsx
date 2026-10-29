@@ -13,7 +13,6 @@ import PrepForm from '../prep/PrepForm'
 import MenuGrid from '../menu/MenuGrid'
 import SlotEditor from '../menu/SlotEditor'
 import { useProfile } from '../household/useProfile'
-import { useAuth } from '../auth/AuthProvider'
 import RepeatButton from '../prep/RepeatButton'
 import { usePrepRealtime } from '../prep/usePrepRealtime'
 import GroceryList from '../prep/GroceryList'
@@ -32,7 +31,6 @@ export default function Prep() {
   const menu = useMenuWeek(start)
   const [view, setView] = useState<'plan' | 'menu' | 'grocery'>('menu')
   const [slotEditing, setSlotEditing] = useState<{ date: string; meal: MenuMeal } | null>(null)
-  const { session } = useAuth()
 
   if (editing) {
     return <PrepForm date={editing.date} prep={editing.prep} onClose={() => setEditing(null)} />

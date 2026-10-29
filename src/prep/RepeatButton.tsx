@@ -13,29 +13,29 @@ export default function RepeatButton({ kind, start }: { kind: 'menu' | 'prep'; s
   const { profile } = useProfile()
   const { session } = useAuth()
   const [message, setMessage] = useState<string | null>(null)
-
-  if (!profile?.household_id) return null
+  const householdId = profile?.household_id ?? null
 
   const repeatMutation = useMutation({
     mutationFn: async () => {
+      if (!householdId) throw new Error('Join or create a household first.')
       const last = addDays(start, -7)
       if (kind === 'menu') {
         const [lastWeek, thisWeek] = await Promise.all([
-          fetchMenuWeek(profile.household_id!, last),
-          fetchMenuWeek(profile.household_id!, start),
+          fetchMenuWeek(householdId, last),
+          fetchMenuWeek(householdId, start),
         ])
         const rows = repeatMenuRows(lastWeek, thisWeek)
-        if (rows.length === 0) return null as never
-        await saveSlots(profile.household_id!, rows)
+        if (rows.length === 0) return 0
+        await saveSlots(householdId, rows)
         return rows.length
       }
       const [lastWeek, thisWeek] = await Promise.all([
-        fetchPrepWeek(profile.household_id!, last),
-        fetchPrepWeek(profile.household_id!, start),
+        fetchPrepWeek(householdId, last),
+        fetchPrepWeek(householdId, start),
       ])
       const rows = repeatPrepRows(lastWeek, thisWeek)
-      if (rows.length === 0) return null as never
-      await insertPreps(profile.household_id!, session!.user.id, rows)
+      if (rows.length === 0) return 0
+      await insertPreps(householdId, session!.user.id, rows)
       return rows.length
     },
     onSuccess: async (count) => {
@@ -53,7 +53,10 @@ export default function RepeatButton({ kind, start }: { kind: 'menu' | 'prep'; s
     },
   })
 
+  if (!householdId) return null
+
   const handleClick = () => {
+    setMessage(null)
     repeatMutation.mutate()
   }
 
