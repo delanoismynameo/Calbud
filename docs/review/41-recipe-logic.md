@@ -99,3 +99,24 @@ And `bowl = [{ food: yogurt, amount: 1, unit: 'serving' }, { food: mandarin, amo
 2. You have re-read this brief and checked every test's expected value against your code by hand.
 
 Reply with: the files created, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **8 min**, 9 steps. It stayed inside the brief's files.
+- **Outcome:** finished. It flagged two doubts of its own: test 8's `missing` values, and not running `cleanExtras` in `cleanRecipe`. The second was a real gap.
+
+## Result
+- **Before my fixes:** 2 type errors (`RecipeYield` not imported, a possibly-undefined `extras100g`) and 3 failing tests, all in `recipeFood`.
+- **After:** type check clean, 29 recipe tests passing.
+
+## What I changed
+I rewrote `recipe.ts` against the brief. The tests were mostly right.
+- **`recipeFood` extras:** it stored the dish's *total* extras as `extras100g`, so sodium read 56 instead of 20.14 per 100 g. Each extra is now divided per 100 g like the macros.
+- **`recipeError`:** it checked the typed `amount`, not `ingredientGrams`. So 600 servings of a 35 g packet (21 kg) would have passed.
+- **Type workarounds:** `recipe: undefined as any`, and `return false as any` inside `cleanRecipe`, which returned `false` instead of `null`. Both are gone.
+- **`cleanRecipe`:** it now passes each stored ingredient's extras through `cleanExtras`, as briefed, and is split into small `cleanYield` and `cleanIngredient` helpers.
+- **`recipeTotals`:** it no longer crashes when an ingredient has no `extras100g`.
+- **Tests:** added the brief's missing check that bad amounts are reported before a bad yield.
+
+## Verdict
+Usable after a rewrite of the main file. Every expected value in the brief was right; the code just didn't reach them. With no test runner, the 35B guesses at the hard parts and reports doubts instead of finishing them. For logic this dense, the 27B (which can't run tests either) or a brief with smaller steps may do better.
