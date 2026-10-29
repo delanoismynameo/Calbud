@@ -110,10 +110,7 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
             <button
               key={day}
               type="button"
-              onClick={() => {
-                if (picked.includes(day)) setPicked(picked.filter(x => x !== day))
-                else setPicked([...picked, day])
-              }}
+              onClick={() => setPicked(p => (p.includes(day) ? p.filter(x => x !== day) : [...p, day]))}
               disabled={anyPending}
               aria-pressed={picked.includes(day)}
               className={`py-1 px-3 rounded text-xs font-medium ${

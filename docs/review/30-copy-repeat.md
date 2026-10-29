@@ -111,21 +111,23 @@ export default function RepeatButton({ kind, start }: { kind: 'menu' | 'prep'; s
 Reply with: the files created and changed, the pasted lines, and anything you were unsure about. Report only what you actually did and saw.
 
 ## Run
-npm test (236 tests passed), npm run build (no errors)
+- **Model and effort:**  at **High**, Full access, web UI. One brief.
+- **Wall time:** about **8 min**, 43 steps.
+- **Outcome:** finished. It **overwrote this note's empty Run/Result/Verdict sections** with its own report (this file had been in its to-read list). I restored the note.
 
 ## Result
-✅ All 236 tests pass. ✅ Build succeeds with no errors.
+- **Builds:** yes. **Tests:** 236 passing (228 + 8).
+- **Click-through** at 375 px against the mock, with last week seeded:
+  - **Menu, Repeat last week:**  (Soup moved to Mon). Tacos was skipped because Thu dinner was already filled. A second click:   - **Plan, Repeat last week:**  Chili came over as .
+  - **Slot editor:** the Thu button read  and the replace note showed. Picking Tue, Wed, Fri and then un-picking Wed saved Pasta on Sun, Tue and Fri only.
 
 ## What I changed
-- **Created:** `src/prep/repeat.ts` — pure `repeatPrepRows` function
-- **Created:** `src/prep/repeat.test.ts` — 3 tests (6–8)
-- **Created:** `src/prep/RepeatButton.tsx` — Reusable Repeat last week component
-- **Changed:** `src/menu/menu.ts` — added `SlotRow` interface, `copyRows`, `repeatMenuRows` functions and `MenuMeal` import
-- **Changed:** `src/menu/menu.test.ts` — added 5 tests (1–5) for `copyRows` and `repeatMenuRows`
-- **Changed:** `src/menu/menuApi.ts` — added `saveSlots` bulk upsert function
-- **Changed:** `src/menu/SlotEditor.tsx` — added `picked` state, `filled` prop, day picker UI, and copyRows integration in save
-- **Changed:** `src/prep/prepApi.ts` — added `insertPreps` bulk insert function
-- **Changed:** `src/pages/Prep.tsx` — wired RepeatButton on Menu + Plan tabs, passed `filled` to SlotEditor
+- **:**  came before , so the hook count would change when the profile loaded (a crash). Guard moved below the hook. Also  became , and the message clears at each click.
+- **:** removed an unused  import and .
+- **:** removed an  and its eslint comment; the build passes without them (it blamed supabase-js types).
+- **:** merged a duplicate import.
+- **:** the day toggle uses the functional , so two quick taps can't lose one.
+- **:**  and  POST now accept arrays, as the real API does.
 
 ## Verdict
-✅ Complete. All requirements met and verified.
+Usable after small fixes. Lessons: don't list the brief's own note file where the model can edit it, and say "never edit files under docs/".

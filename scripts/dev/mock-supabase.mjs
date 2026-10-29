@@ -163,11 +163,14 @@ http.createServer((req, res) => {
       const mine = profiles[ME].household_id
       const fs = filters(url)
       if (req.method === 'POST') {
-        const row = JSON.parse(body)
-        if (!mine || row.household_id !== mine) return pgErr(res, 'new row violates row-level security policy for table "meal_prep"', 403)
-        const saved = { id: randomUUID(), recipe_url: null, start_time: null, duration_min: 60, status: 'planned', servings: 1, ingredients: [], notes: null, food_id: null, created_at: new Date().toISOString(), ...row }
-        mealPrep.push(saved)
-        return single ? send(res, 201, { id: saved.id }) : send(res, 201, [{ id: saved.id }])
+        const savedRows = []
+        for (const row of [].concat(JSON.parse(body))) {
+          if (!mine || row.household_id !== mine) return pgErr(res, 'new row violates row-level security policy for table "meal_prep"', 403)
+          const saved = { id: randomUUID(), recipe_url: null, start_time: null, duration_min: 60, status: 'planned', servings: 1, ingredients: [], notes: null, food_id: null, created_at: new Date().toISOString(), ...row }
+          mealPrep.push(saved)
+          savedRows.push({ id: saved.id })
+        }
+        return single ? send(res, 201, savedRows[0]) : send(res, 201, savedRows)
       }
       const hit = mealPrep.filter((r) => mine && r.household_id === mine && match(r, fs))
       if (req.method === 'GET') {
@@ -189,12 +192,15 @@ http.createServer((req, res) => {
       const mine = profiles[ME].household_id
       const fs = filters(url).filter((f) => f.k !== 'on_conflict')
       if (req.method === 'POST') {
-        const row = JSON.parse(body)
-        if (!mine || row.household_id !== mine) return pgErr(res, 'new row violates row-level security policy for table "menu_slots"', 403)
-        if (!['breakfast', 'lunch', 'dinner'].includes(row.meal) || !String(row.label ?? '').trim()) return pgErr(res, 'new row for relation "menu_slots" violates check constraint')
-        const existing = menuSlots.find((s) => s.household_id === mine && s.slot_date === row.slot_date && s.meal === row.meal)
-        const saved = existing ? Object.assign(existing, { prep_id: null, ...row }) : (menuSlots.push({ id: randomUUID(), prep_id: null, ...row }), menuSlots[menuSlots.length - 1])
-        return single ? send(res, 201, { id: saved.id }) : send(res, 201, [{ id: saved.id }])
+        const savedRows = []
+        for (const row of [].concat(JSON.parse(body))) {
+          if (!mine || row.household_id !== mine) return pgErr(res, 'new row violates row-level security policy for table "menu_slots"', 403)
+          if (!['breakfast', 'lunch', 'dinner'].includes(row.meal) || !String(row.label ?? '').trim()) return pgErr(res, 'new row for relation "menu_slots" violates check constraint')
+          const existing = menuSlots.find((s) => s.household_id === mine && s.slot_date === row.slot_date && s.meal === row.meal)
+          const saved = existing ? Object.assign(existing, { prep_id: null, ...row }) : (menuSlots.push({ id: randomUUID(), prep_id: null, ...row }), menuSlots[menuSlots.length - 1])
+          savedRows.push({ id: saved.id })
+        }
+        return single ? send(res, 201, savedRows[0]) : send(res, 201, savedRows)
       }
       const hit = menuSlots.filter((r) => mine && r.household_id === mine && match(r, fs))
       if (req.method === 'GET') {

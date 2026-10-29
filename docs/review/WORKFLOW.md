@@ -128,6 +128,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 27 | Extra-nutrient inputs on custom foods and dishes | 35B (High), shared session with 28 | Usable after real fixes: the custom form was left half done, plus a wrong serving scale. ~8 min for both |
 | 28 | Search finds the household's own foods | 35B (High), shared session with 27 | Usable as delivered |
 | 29 | "cal" wording, Menu first, editing goals | 35B (High) | Usable after small fixes (label layout, stuck Saving). ~8 min |
+| 30 | Copy to other days, Repeat last week | 35B (High) | Usable after small fixes (hook after an early return, `as any`); it overwrote the review note. ~8 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
@@ -153,5 +154,6 @@ These come from the review notes and override the earlier guesses above where th
 - **Headless runs can't start processes** (22a). The headless profile's Workspace Write sandbox gives `spawn EPERM` to vitest, even in a worktree with its own `node_modules`, so a headless 4B can't run its tests. Blocked like that, the 4B edited `vite.config.ts` and still left 8 of 9 tests failing. Until the headless sandbox is changed (with the user's OK), don't give the 4B side jobs.
 - **A brief twice the usual size works** (task 21: 8 sections, ~20 min, all present), but **UI behaviour still needs exact steps**. It edited a test to match its own output, so briefs say "never change a test's expected value to make it pass".
 - **For screens with several list states, put a truth table in the brief** (which lists are empty → what shows). Task 16's prose conditions were misread, and the model then reported them as met.
+- **Say "never edit files under docs/"** (task 30: it wrote its report into the brief's own note file).
 - **A "Completed" with no report is a silent stop.** Check its to-do count; "continue" in the same session finished it.
 - **Pointing the model at the brief file works** ("Your task is in `docs/review/NN-….md`; read that whole file first"), so the brief doesn't need pasting into the chat box.
