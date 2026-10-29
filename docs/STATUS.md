@@ -28,6 +28,7 @@
 - **Tasks 35–37 (the Nutrition Facts label) are live** (deploy run 40918771600, 2026-10-29): 35 the label on the food screen (prep dishes too), 36 Today's "Nutrition facts" panel for the day, 37 a live label preview in the Create a food and prep dish forms.
 - **Tasks 38–40 are live** (deploy run 40925785018, 2026-10-29): 38 the "new version is ready" bar and install instructions, 39–40 the Us "This week" card (7-day averages, a shared streak within 10% of goal).
 - **Tasks 41–45 (build a food from ingredients) are live** (deploy run 40933227423, 2026-10-29). Migration `20261029000003_recipe.sql` (adds `foods.recipe`, nullable jsonb) was applied first; the column was checked through the REST API.
+- **Tasks 46–48 are in `main`, not pushed** (no migration needed): 46 a **You** card on Us (name, colour, time zone, with "use this phone's time zone"); 47 **Your data** on Us (food log as CSV, everything as JSON); 48 an offline banner. That completes game plan items 13 and 15.
   - Create a food and the prep dish form get **Type the numbers / Build from ingredients**. Ingredients come from search, favorites, recents, Your foods or a barcode scan, each with an amount in servings or grams. The dish is divided into servings or by **the cooked weight of the whole dish**, and a label preview shows as you go.
   - A built prep dish reopens with its ingredients, so one line can be changed; it updates the same saved food. 41 is the logic, 42 moved Add food's finder into `FoodFinder`, 43 the `RecipeBuilder`, 44 Create a food, 45 the prep dish.
 - **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is live (deploy run 40880794963), with no screen using it yet.**
@@ -37,7 +38,7 @@
 
   | Command | Result |
   |---|---|
-  | `npm test` | 397 passing |
+  | `npm test` | 408 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -94,10 +95,13 @@ Before sending a task to the harness in the web UI:
 | 43 | RecipeBuilder component | [43](review/43-recipe-builder.md) |
 | 44 | Build from ingredients in Create a food | [44](review/44-create-from-ingredients.md) |
 | 45 | Build a prep dish from ingredients | [45](review/45-dish-from-ingredients.md) |
+| 46 | You card (name, colour, time zone) | [46](review/46-you-card.md) |
+| 47 | Download your data | [47](review/47-data-export.md) |
+| 48 | Offline banner | [48](review/48-offline-banner.md) |
 
 ## Next, in order
 1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
-   - nothing queued; the game plan's remaining items are 13 (offline app shell) and 15 (settings: timezone, data export, rotate invite code)
+   - the game plan's build items are done; left are 14 (optional offline write queue) and 16 (testing on both phones)
    - then the rest of game plan items 13 and 15 (offline app shell, settings: timezone, data export, rotate invite code)
 2. **On a phone:** build a food from ingredients with the barcode camera; check the "new version is ready" bar appears and Reload works; import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 

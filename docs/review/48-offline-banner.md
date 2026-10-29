@@ -43,3 +43,20 @@ export default function OfflineBanner()
 2. You have re-read this brief and checked each part against your code.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **1.5 min**, 6 steps.
+
+## Result
+- **Type check:** clean. **Tests:** 408 passing. It matched the brief exactly.
+- **Click-through** at 375 px against the mock:
+  - **Banner:** with `navigator.onLine` false and an `offline` event, the amber banner shows under the header. After `online`, it's gone.
+  - **Offline app shell** (game plan item 13): with the preview server **stopped**, reloading opened the app from the service worker's cache, showing the Us page with data from the mock.
+- **Not tested:** a real phone in airplane mode.
+
+## What I changed
+Nothing.
+
+## Verdict
+Usable as delivered.

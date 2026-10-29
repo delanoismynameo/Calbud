@@ -120,3 +120,23 @@ export default function DataCard() {
 2. You have re-read this brief and checked every test's expected value against your code by hand.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **7.5 min**, 25 steps. It stayed inside the brief's files.
+
+## Result
+- **Tests:** 408 passing (402 + 6). **Type check:** 1 error before my fix (the test imported `'../../today/types'`).
+- **Click-through** at 375 px against the mock, catching the files the page builds:
+  - **Food log (CSV):** `calbud-food-log-2026-10-29.csv` with alice's 4 entries only (Bob's isn't hers), oldest first, names with commas quoted. The page says "Downloaded 4 entries.".
+  - **Everything (JSON):** `calbud-data-2026-10-29.json` with `exported_at`, `profile`, `meal_logs` (4), `activities`, `foods` (6), `meal_prep` and `menu_slots`. The page says "Downloaded everything.".
+- **Not tested:** more than 1000 rows (the mock ignores paging), and the iPhone share sheet.
+
+## What I changed
+- **Test import path:** fixed.
+- **`allRows`:** it built one query, typed `any`, and awaited `.range()` on that same object for each page. It now builds each page's query fresh, with no `any`, and names the 1000-row page size.
+- **`fetchAllData`:** reads the profile with `.maybeSingle()`.
+- **`DataCard`:** the share-or-download step was copied into both handlers, so it's now one `deliver` function. Also dropped a pointless eslint comment.
+
+## Verdict
+Usable after small fixes.

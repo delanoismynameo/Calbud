@@ -98,3 +98,21 @@ export default function YouCard() {
 2. You have re-read this brief and checked every test's expected value against your code by hand.
 
 Reply with: the files created and changed, and anything you were unsure about. Report only what you actually did.
+
+## Run
+- **Model and effort:** `qwen3.6:35b-a3b-128k` at **High**, headless in the workspace-write sandbox (no npm).
+- **Wall time:** about **3.5 min**, 10 steps. It stayed inside the brief's files.
+
+## Result
+- **Type check:** clean. **Tests:** 402 passing (397 + 5).
+- **Click-through** at 375 px against the mock:
+  - **Read view:** "alice", "Time zone: America / New York", and the amber "This phone is set to America / Denver." line.
+  - **Saving:** I changed the name to "Alice B", picked the green colour, and chose Europe / London from 418 zones. Saving shows them, read back from the mock.
+  - **Error path:** a blank name gives "Enter a name (up to 40 characters).".
+  - **Phone's time zone:** "Use this phone's time zone (America / Denver)" sets the select. After saving, the amber line is gone.
+
+## What I changed
+Nothing. Giving the component's first lines as code in the brief worked: the hooks came first this time.
+
+## Verdict
+Usable as delivered.

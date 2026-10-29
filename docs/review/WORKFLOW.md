@@ -144,6 +144,9 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 43 | RecipeBuilder component (ingredients, amounts, yield) | 35B (High), headless, no npm | Usable after 6 type fixes (JSX namespace, a missing import); logic and tests right. ~5 min |
 | 44 | Build from ingredients in Create a food | 35B (High), headless, no npm | Usable after small fixes (1 type error; ingredients lost on a mode switch, a gap in my brief). ~11 min |
 | 45 | Build a prep dish from ingredients; reopen keeps them | 35B (High), headless, no npm | Usable after fixes (dropped numbers-mode nutrients it was told to keep; 1 type error). ~7 min |
+| 46 | You card (name, colour, time zone) | 35B (High), headless, no npm | Usable as delivered; the component's first lines given as code kept the hooks in order. ~3.5 min |
+| 47 | Download your data (CSV food log, JSON everything) | 35B (High), headless, no npm | Usable after small fixes (a wrong import path; a reused query with `any`; a copied deliver step). ~7.5 min |
+| 48 | Offline banner | 35B (High), headless, no npm | Usable as delivered. ~1.5 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

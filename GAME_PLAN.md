@@ -291,9 +291,9 @@ Status as of 2026-10-29. ✅ = done, 🟡 = partly done, ⬜ = not started. Deta
 
 ### Phase 4: Sharing, Polish
 12. ✅ Me / Partner / Us toggle and Us dashboard with streak. *(Me/Both on Plan in task 33; the This week card with averages and a shared streak in tasks 39–40.)*
-13. 🟡 PWA hardening: install prompt (iOS has none; show "Share → Add to Home Screen" instructions), offline app shell, and a service-worker update prompt so new deploys actually reach installed copies. *(Task 38: the update prompt and install text. The offline app shell is still to check.)*
+13. ✅ PWA hardening: install prompt (iOS has none; show "Share → Add to Home Screen" instructions), offline app shell, and a service-worker update prompt so new deploys actually reach installed copies. *(Task 38: the update prompt and install text. Task 48: an offline banner; the cached app shell opens with no server.)*
 14. ⬜ *Optional:* an offline write queue for meal logs (IndexedDB) that syncs when connectivity returns. Real work with conflict edge cases; skip unless you log in places with bad signal.
-15. ⬜ Settings: goals, timezone, data export, rotate invite code.
+15. ✅ Settings: goals, timezone, data export, rotate invite code. *(Goals in task 29; name, colour and time zone in task 46; data export in task 47. The invite code already changes after every join and is only shown until the partner joins, so no rotate button.)*
 16. ⬜ Test install and the full flow on both of your actual phones (especially if one is iPhone and one Android).
 
 *Timeline is flexible; a solid MVP is Phases 1–2 plus the `.ics` export.*
