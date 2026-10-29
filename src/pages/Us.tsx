@@ -34,7 +34,7 @@ export default function Us() {
             onClick={() => supabase.auth.signOut()}
             className="mt-2 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded">Sign out</button>
           {installBtn}
-          {hint !== null && (
+          {!canInstall && hint !== null && (
             <p className="mt-3 text-xs text-gray-400 max-w-sm mx-auto">{installText(hint)}</p>
           )}
 

@@ -9,11 +9,11 @@ function fakeEvent(outcome: 'accepted' | 'dismissed') {
 }
 
 describe('createInstallPrompt', () => {
-  it('before any event, canInstall() is false and await prompt() is unavailable', () => {
+  it('before any event, canInstall() is false and await prompt() is unavailable', async () => {
     const target = new EventTarget()
     const inst = createInstallPrompt(target)
     expect(inst.canInstall()).toBe(false)
-    expect(inst.prompt()).resolves.toBe('unavailable')
+    expect(await inst.prompt()).toBe('unavailable')
   })
 
   it("after dispatching event: e.defaultPrevented is true, canInstall() is true, listener called once", () => {
