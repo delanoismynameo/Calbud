@@ -140,6 +140,7 @@ describe('recipeError yield.totalG', () => {
   it('ingredient amount:0 → Check the ingredient amounts.', () => {
     const badIng: Ingredient[] = [{ food: chicken, amount: 0, unit: 'g' }]
     expect(recipeError({ ingredients: badIng, yield: { kind: 'servings' as const, servings: 1 } })).toBe('Check the ingredient amounts.')
+    expect(recipeError({ ingredients: badIng, yield: { kind: 'weight' as const, totalG: 0 } })).toBe('Check the ingredient amounts.')
   })
 })
 
