@@ -11,8 +11,7 @@ import { useDishFoods } from './useDishFoods'
 import type { FoodResult } from '../food/types'
 import ExtrasFields from '../food/ExtrasFields'
 import type { ExtraInputs, ExtraKey } from '../food/extras'
-import { extrasPerServing, parseExtraInputs } from '../food/extras'
-import { cleanExtras } from '../food/extras'
+import { cleanExtras, extrasPerServing, parseExtraInputs } from '../food/extras'
 
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
@@ -183,11 +182,7 @@ export default function PrepForm({
                 if (food) {
                   setDish(dishFromFood(food))
                   setDishSourceId(food.source_id)
-                  if (prep?.foods && prep.foods.serving_g != null && food.extra_100g != null) {
-                    setDishExtras(extrasPerServing(cleanExtras(food.extra_100g), Number(prep.foods.serving_g)))
-                  } else {
-                    setDishExtras({})
-                  }
+                  setDishExtras(food.serving_g != null ? extrasPerServing(cleanExtras(food.extra_100g), Number(food.serving_g)) : {})
                   setDishExtraErrors({})
                   if (!input.title.trim()) setInput({ ...input, title: food.name })
                 }

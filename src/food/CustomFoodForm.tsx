@@ -33,8 +33,8 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     }
   }
 
-  const changeExtra = (key: ExtraKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setExtraInputs({ ...extraInputs, [key]: e.target.value })
+  const changeExtra = (key: ExtraKey, value: string) => {
+    setExtraInputs({ ...extraInputs, [key]: value })
     if (extraErrors[key]) {
       setExtraErrors({ ...extraErrors, [key]: undefined })
     }
@@ -43,18 +43,20 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaveError('')
+    // Check both parts first, so every error shows at once.
     const result = parseCustomFood(input, crypto.randomUUID())
-    if (!result.ok) {
-      setErrors(result.errors)
-      return
-    }
+    const extras = result.ok ? parseExtraInputs(extraInputs, result.food.servingG!) : null
+    setErrors(result.ok ? {} : result.errors)
+    setExtraErrors(extras && !extras.ok ? extras.errors : {})
+    if (!result.ok || !extras?.ok) return
+    const food = { ...result.food, extras100g: extras.extras100g }
     if (!householdId) { setSaveError('Join or create a household first.'); return }
     setSaving(true)
     // Supabase reports failures in `error`; it doesn't throw.
-    const { error } = await supabase.from('foods').insert(foodRow(result.food, householdId))
+    const { error } = await supabase.from('foods').insert(foodRow(food, householdId))
     setSaving(false)
     if (error) { setSaveError(error.message); return }
-    onSaved(result.food)
+    onSaved(food)
   }
 
   const fieldClass = 'w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500'
@@ -112,6 +114,8 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
       </div>
 
       <p className="text-gray-500 text-xs">Per serving. An estimate is fine.</p>
+
+      <ExtrasFields values={extraInputs} errors={extraErrors} onChange={changeExtra} />
 
       {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
 

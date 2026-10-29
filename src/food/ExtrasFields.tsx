@@ -11,16 +11,16 @@ export default function ExtrasFields({
   errors: Partial<Record<ExtraKey, string>>
   onChange: (key: ExtraKey, value: string) => void
 }) {
-  const [open, setOpen] = useState(() =>
-    EXTRAS.some((info) => {
-      const v = values[info.key]
-      return v !== undefined && v.trim() !== ''
-    })
-  )
+  const hasValues = EXTRAS.some((info) => (values[info.key] ?? '').trim() !== '')
+  const [open, setOpen] = useState(hasValues)
 
+  // Cleared errors stay as undefined keys, so count only real messages.
+  const hasErrors = Object.values(errors).some(Boolean)
+
+  // Open when errors appear, or when values arrive later (picking a saved dish).
   useEffect(() => {
-    if (Object.keys(errors).length > 0) setOpen(true)
-  }, [errors])
+    if (hasErrors || hasValues) setOpen(true)
+  }, [hasErrors, hasValues])
 
   return (
     <div>
@@ -33,7 +33,7 @@ export default function ExtrasFields({
         More nutrients (optional) {open ? '▴' : '▾'}
       </button>
 
-      {Object.keys(errors).length > 0 && !open && (
+      {hasErrors && !open && (
         <p className="text-red-400 text-xs mb-1">Check the nutrients below.</p>
       )}
 
