@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import CopyCode from '../household/CopyCode'
 import SwitchHousehold from '../household/SwitchHousehold'
 import GoalsCard from '../household/GoalsCard'
+import YouCard from '../household/YouCard'
 import WeekCard from '../dashboard/WeekCard'
 import { installHint, installText } from '../pwa/install'
 
@@ -48,6 +49,7 @@ export default function Us() {
                 </div>
               </div>
               <div className="max-w-sm mx-auto"><WeekCard /></div>
+              <div className="max-w-sm mx-auto"><YouCard /></div>
               <div className="max-w-sm mx-auto">
                 <GoalsCard />
               </div>
