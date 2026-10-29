@@ -1,9 +1,14 @@
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { useState } from 'react'
 import { useLocalDate } from '../lib/useLocalDate'
 import { useMealLogs } from '../today/useMealLogs'
 import { useProfile } from '../household/useProfile'
 import { sumLogs, groupByMeal } from '../today/totals'
+import { addDays, dayLabel } from '../prep/week'
+import { validDayParam, dayTitle, copyRows } from '../today/day'
+import { insertMealLogs } from '../today/mealLogApi'
+import { useMutation } from '@tanstack/react-query'
+import { queryClient } from '../lib/queryClient'
 import MacroBar from '../today/MacroBar'
 import MealSection from '../today/MealSection'
 import TodayMenu from '../menu/TodayMenu'
@@ -12,7 +17,11 @@ import type { FoodResult } from '../food/types'
 import type { MenuMeal } from '../menu/types'
 
 export default function Today() {
-  const date = useLocalDate()
+  const today = useLocalDate()
+  const [params, setParams] = useSearchParams()
+  const date = validDayParam(params.get('date'), today) ?? today
+  const isToday = date === today
+
   const logs = useMealLogs(date)
   const { profile } = useProfile()
 
@@ -28,14 +37,46 @@ export default function Today() {
 
   const [logging, setLogging] = useState<{ food: FoodResult; meal: MenuMeal } | null>(null)
 
-  if (logging) return <ServingPicker food={logging.food} meal={logging.meal} onLogged={() => setLogging(null)} onCancel={() => setLogging(null)} />
+  const goTo = (d: string) => {
+    setParams(d === today ? {} : { date: d })
+  }
+
+  const prev = addDays(date, -1)
+  const prevLogs = useMealLogs(prev)
+
+  const copyPrevMutation = useMutation({
+    mutationFn: async () => {
+      await insertMealLogs(copyRows(prevLogs.data ?? [], date))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['meal-logs'] })
+    },
+  })
+
+  if (logging) {
+    const loggedOn = isToday ? undefined : date
+    return <ServingPicker food={logging.food} meal={logging.meal} onLogged={() => setLogging(null)} onCancel={() => setLogging(null)} loggedOn={loggedOn} />
+  }
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <button type="button" aria-label="Previous day" onClick={() => goTo(addDays(date, -1))}
+          className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-semibold">‹</button>
+        <h1 className="text-lg font-semibold">{dayTitle(date, today)}</h1>
+        <button type="button" aria-label="Next day" onClick={() => goTo(addDays(date, 1))} disabled={isToday}
+          className={`w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-semibold ${isToday ? 'opacity-30 disabled:cursor-not-allowed' : ''}`}>›</button>
+      </div>
+
+      {!isToday && (
+        <button type="button" onClick={() => goTo(today)}
+          className="text-sm text-blue-400 underline">Back to today</button>
+      )}
+
       {logs.isError ? (
         <>
           <div className="bg-slate-800 rounded-lg p-6 text-center space-y-3">
-            <p className="text-red-400 font-semibold">Couldn't load today's food.</p>
+            <p className="text-red-400 font-semibold">Couldn't load {isToday ? "today's" : "this day's"} food.</p>
             <p className="text-gray-500 text-sm">{logs.error.message}</p>
             <button
               type="button"
@@ -45,7 +86,7 @@ export default function Today() {
               Try again
             </button>
           </div>
-          <Link to="/add" className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg text-center">
+          <Link to={isToday ? '/add' : `/add?date=${date}`} className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg text-center">
             Add food
           </Link>
         </>
@@ -75,11 +116,25 @@ export default function Today() {
             </div>
           )}
 
-          <Link to="/add" className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg text-center">
+          <Link to={isToday ? '/add' : `/add?date=${date}`} className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg text-center">
             Add food
           </Link>
 
-          <TodayMenu date={date} onLog={(food, meal) => setLogging({ food, meal })} />
+          {logs.data && logs.data.length === 0 && prevLogs.data && prevLogs.data.length > 0 && (
+            <button type="button" onClick={() => copyPrevMutation.mutate()} disabled={copyPrevMutation.isPending}
+              className={`w-full py-2 rounded border border-dashed border-slate-600 ${copyPrevMutation.isPending ? 'text-gray-500' : 'text-gray-300 hover:bg-slate-800'}`}>
+              {copyPrevMutation.isPending
+                ? 'Copying…'
+                : `Copy ${dayTitle(prev, today).toLowerCase() === 'yesterday' ? 'yesterday' : dayLabel(prev)}'s food (${prevLogs.data.length} item${prevLogs.data.length === 1 ? '' : 's'})`
+              }
+            </button>
+          )}
+
+          {copyPrevMutation.isError && (
+            <p className="text-red-400 text-sm text-center">{copyPrevMutation.error.message}</p>
+          )}
+
+          {isToday && <TodayMenu date={date} onLog={(food, meal) => setLogging({ food, meal })} />}
 
           {groups.map((g) => (
             <MealSection key={g.meal} meal={g.meal} logs={g.logs} />

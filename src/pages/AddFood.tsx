@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { useFoodSearch } from '../food/useFoodSearch'
 import ServingPicker from '../food/ServingPicker'
 import type { FoodResult } from '../food/types'
@@ -10,9 +10,15 @@ import CustomFoodForm from '../food/CustomFoodForm'
 import BarcodeScanner from '../food/BarcodeScanner'
 import { normalizeBarcode } from '../food/barcode'
 import { lookupBarcode } from '../food/off'
+import { validDayParam, dayTitle } from '../today/day'
+import { useLocalDate } from '../lib/useLocalDate'
 
 export default function AddFood() {
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const today = useLocalDate()
+  const day = validDayParam(params.get('date'), today)
+  const home = day ? `/?date=${day}` : '/'
   const [query, setQuery] = useState('')
   // Keep the picked food itself, not its list position: the list can refresh underneath.
   const [selected, setSelected] = useState<FoodResult | null>(null)
@@ -63,13 +69,12 @@ export default function AddFood() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-4">
-        <Link to="/" className="text-blue-400 hover:text-blue-300 font-semibold py-2">&larr; Back</Link>
-        <h1 className="text-lg font-semibold">Add food</h1>
+        <Link to={home} className="text-blue-400 hover:text-blue-300 font-semibold py-2">&larr; Back</Link>
+        <h1 className="text-lg font-semibold">Add food{day && <span className="text-gray-500 text-sm ml-2"> · {dayTitle(day, today)}</span>}</h1>
       </div>
 
       {selected ? (
-        <ServingPicker food={selected} onLogged={() => navigate('/')} onCancel={() => setSelected(null)} />
-      ) : creating ? (
+        <ServingPicker food={selected} onLogged={() => navigate(home)} loggedOn={day ?? undefined} onCancel={() => setSelected(null)} />      ) : creating ? (
         <CustomFoodForm onSaved={(food) => { setCreating(false); setSelected(food) }} onCancel={() => setCreating(false)} />
       ) : scanning ? (
         <div className="space-y-3">

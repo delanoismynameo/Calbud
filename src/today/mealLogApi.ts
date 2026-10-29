@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import type { MealLog } from './types'
+import type { MealLogInsert } from './day'
 
 export async function fetchMealLogs(userId: string, date: string): Promise<MealLog[]> {
   const { data, error } = await supabase
@@ -36,4 +37,10 @@ export async function deleteMealLog(id: string): Promise<void> {
 
   if (error) throw new Error(error.message)
   if (!data || data.length === 0) throw new Error('That entry could not be deleted.')
+}
+
+export async function insertMealLogs(rows: MealLogInsert[]): Promise<void> {
+  if (rows.length === 0) return
+  const { error } = await supabase.from('meal_logs').insert(rows)
+  if (error) throw new Error(error.message)
 }

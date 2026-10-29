@@ -5,6 +5,7 @@ import { foodKey, setFavorite } from './favorites'
 import { useFavoriteFoods } from './useFavoriteFoods'
 import { scaleNutrition } from './nutrition'
 import { defaultMealType, localDateString } from '../lib/dates'
+import { dayLabel } from '../prep/week'
 import { logFood } from './logFood'
 import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../household/useProfile'
@@ -15,11 +16,12 @@ const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 const toggle = (on: boolean) =>
   `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
 
-export default function ServingPicker({ food, onLogged, onCancel, meal }: {
+export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn }: {
   food: FoodResult
   onLogged: () => void
   onCancel: () => void
   meal?: MealType
+  loggedOn?: string
 }) {
   const servingG = food.servingG
   const [unit, setUnit] = useState<'g' | 'serving'>(servingG != null ? 'serving' : 'g')
@@ -46,7 +48,7 @@ export default function ServingPicker({ food, onLogged, onCancel, meal }: {
   const mutation = useMutation({
     mutationFn: () => logFood({
       food, grams, mealType,
-      loggedOn: localDateString(), // read at the moment Log is pressed
+      loggedOn: loggedOn ?? localDateString(), // read at the moment Log is pressed
       userId: session!.user.id,
       householdId: profile!.household_id!,
     }),
@@ -70,6 +72,9 @@ export default function ServingPicker({ food, onLogged, onCancel, meal }: {
         <div>
           <p className="font-semibold">{food.name}</p>
           {food.brand && <p className="text-gray-400 text-sm">{food.brand}</p>}
+          {loggedOn != null && loggedOn !== localDateString() && (
+            <p className="text-gray-500 text-sm">Logging to {dayLabel(loggedOn)}</p>
+          )}
         </div>
         <button type="button"
           aria-pressed={isFav}
