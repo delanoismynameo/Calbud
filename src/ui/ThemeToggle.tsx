@@ -7,7 +7,7 @@ const OPTIONS: { label: string; value: ThemePref }[] = [
   { label: 'Dark', value: 'dark' },
 ]
 
-export default function ThemeToggle(): JSX.Element {
+export default function ThemeToggle() {
   const [pref, setPref] = useTheme()
 
   return (
