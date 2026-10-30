@@ -39,31 +39,31 @@ export default function EditMealLog({ log, onClose }: {
   const anyPending = saveMutation.isPending || deleteMutation.isPending
 
   return (
-    <div className="bg-slate-900 rounded p-3 space-y-3">
+    <div className="bg-card rounded-3xl shadow-card p-4 border border-line">
       <div>
-        <label htmlFor={`edit-grams-${log.id}`} className="block text-gray-400 text-sm mb-1">Grams</label>
+        <label htmlFor={`edit-grams-${log.id}`} className="block text-muted text-sm mb-1">Grams</label>
         <input
           id={`edit-grams-${log.id}`}
           type="text"
           inputMode="decimal"
           value={grams}
           onChange={(e) => setGrams(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white text-lg focus:outline-none focus:border-blue-500"
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral"
         />
       </div>
-      {!isValid && <p className="text-red-400 text-sm">Enter an amount between 0 and 5000 g.</p>}
-      {scaled && isValid && <p className="text-gray-400">{scaled.kcal} cal</p>}
+      {!isValid && <p className="text-danger text-sm">Enter an amount between 0 and 5000 g.</p>}
+      {scaled && isValid && <p className="text-muted">{scaled.kcal} cal</p>}
 
       <div>
-        <span className="block text-gray-400 text-sm mb-1">Meal</span>
+        <span className="block text-muted text-sm mb-1">Meal</span>
         <div className="grid grid-cols-4 gap-2">
           {MEALS.map((m) => (
             <button
               key={m} type="button"
               aria-pressed={mealType === m}
               onClick={() => setMealType(m)}
-              className={`py-3 rounded text-sm font-semibold text-white ${
-                mealType === m ? 'bg-blue-600' : 'bg-slate-800 hover:bg-slate-700'
+              className={`py-3 rounded-2xl text-sm font-semibold ${
+                mealType === m ? 'text-white bg-coral-deep hover:bg-coral-deeper' : 'text-ink bg-card hover:bg-coral-light border border-line'
               }`}
             >
               {m.charAt(0).toUpperCase() + m.slice(1)}
@@ -75,25 +75,25 @@ export default function EditMealLog({ log, onClose }: {
       <div className="flex gap-3">
         <button
           type="button" onClick={() => saveMutation.mutate()} disabled={!isValid || anyPending}
-          className="py-3 rounded font-semibold text-white flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed"
+          className="py-3 rounded-2xl font-bold text-white flex-1 bg-coral-deep hover:bg-coral-deeper opacity-50 cursor-not-allowed"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save'}
         </button>
         <button
           type="button" onClick={() => deleteStep === 0 ? setDeleteStep(1) : deleteMutation.mutate()} disabled={anyPending}
-          className="py-3 rounded font-semibold text-white flex-1 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-600 disabled:cursor-not-allowed"
+          className="py-3 rounded-2xl font-semibold flex-1 text-danger border border-line hover:bg-coral-light disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {deleteMutation.isPending ? 'Deleting…' : deleteStep === 1 ? 'Tap again to delete' : 'Delete'}
         </button>
         <button
-          type="button" onClick={onClose} disabled={anyPending} className="py-3 rounded bg-slate-700 text-white font-semibold px-4 hover:bg-slate-600"
+          type="button" onClick={onClose} disabled={anyPending} className="py-3 rounded-2xl bg-card border border-line text-ink font-semibold px-4 hover:bg-coral-light disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>
       </div>
 
-      {saveMutation.isError && <p className="text-red-400 text-sm">{saveMutation.error.message}</p>}
-      {deleteMutation.isError && <p className="text-red-400 text-sm">{deleteMutation.error.message}</p>}
+      {saveMutation.isError && <p className="text-danger text-sm">{saveMutation.error.message}</p>}
+      {deleteMutation.isError && <p className="text-danger text-sm">{deleteMutation.error.message}</p>}
     </div>
   )
 }

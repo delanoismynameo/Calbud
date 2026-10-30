@@ -17,25 +17,25 @@ export default function TodayMenu({ date, onLog }: {
   if (todays.length === 0) return null
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 space-y-2">
+    <div className="bg-cream p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-white">Today's menu</p>
-        <Link to="/prep" className="text-sm text-blue-400">Edit</Link>
+        <p className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">Today's menu</p>
+        <Link to="/prep" className="text-sm text-link underline">Edit</Link>
       </div>
 
       {MENU_MEALS.map(meal => {
         const slot = slotAt(data, date, meal)
         return (
-          <div key={meal} className="flex items-center gap-2">
-            <div className="w-20 text-xs text-gray-500">{mealLabel(meal)}</div>
-            <div className="flex-1 text-sm text-white">
-              {slot ? slot.label : <span className="text-gray-500">—</span>}
+          <div key={meal} className="bg-card rounded-3xl shadow-card p-4 flex items-center justify-between gap-3">
+            <div className="w-20 text-xs text-muted">{mealLabel(meal)}</div>
+            <div className="flex-1 text-sm text-ink">
+              {slot ? slot.label : <span className="text-muted">—</span>}
             </div>
             {slot?.meal_prep?.foods && (
               <button
                 onClick={() => onLog(foodResultFromRow(slot.meal_prep!.foods!), meal)}
                 aria-label={'Log ' + slot.label + ' for ' + mealLabel(meal)}
-                className="px-2 py-1 text-xs font-semibold rounded bg-blue-600 text-white"
+                className="bg-coral-light text-link rounded-2xl font-semibold px-4 py-2"
               >
                 Log
               </button>

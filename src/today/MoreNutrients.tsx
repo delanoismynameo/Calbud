@@ -26,11 +26,11 @@ export default function MoreNutrients({ logs }: { logs: MealLog[] }) {
   return (
     <div>
       <button type="button" onClick={toggle} aria-expanded={open}
-        className="w-full text-left text-sm text-blue-400">
+        className="w-full text-left text-sm text-link font-semibold">
         Nutrition facts {open ? '▴' : '▾'}
       </button>
       {open && (
-        <div className="mt-2"><NutritionLabel servingName="Logged" servingText={foodCount(logs.length)} kcal={day.kcal} rows={day.rows} note="Foods logged before nutrients were added have no data." /></div>
+        <div className="mt-2 bg-card rounded-3xl shadow-card p-4"><NutritionLabel servingName="Logged" servingText={foodCount(logs.length)} kcal={day.kcal} rows={day.rows} note="Foods logged before nutrients were added have no data." /></div>
       )}
     </div>
   )
