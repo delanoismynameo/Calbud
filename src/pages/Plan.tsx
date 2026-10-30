@@ -105,7 +105,7 @@ export default function Plan() {
                 <div className="px-3 py-2 flex items-center justify-between border-b border-line">
                   <h2 className="text-sm font-medium text-muted flex items-center gap-1">
                     {dayLabel(day)}
-                    {day === today && <span className="text-xs text-link ml-1">Â· Today</span>}
+                    {day === today && <span className="text-xs text-link ml-1">· Today</span>}
                   </h2>
                   <button onClick={() => setEditing({ date: day })} aria-label={`Add activity on ${dayLabel(day)}`}
                     className="text-xs text-link font-semibold hover:text-coral-deeper">+ Add</button>
@@ -145,7 +145,7 @@ export default function Plan() {
                            <div className="flex-1 text-left">
                              <p className="font-medium">{a.title}</p>
                              <p className="text-xs text-muted mt-0.5">
-                              {[visibility === 'both' ? ownerName : '', activityDetails(a)].filter(Boolean).join(' Â· ')}
+                              {[visibility === 'both' ? ownerName : '', activityDetails(a)].filter(Boolean).join(' · ')}
                             </p>
                           </div>
                           {a.completed && <span className="text-muted text-xs">Done</span>}
