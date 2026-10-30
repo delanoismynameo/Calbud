@@ -16,6 +16,7 @@ import { useProfile } from '../household/useProfile'
 import RepeatButton from '../prep/RepeatButton'
 import { usePrepRealtime } from '../prep/usePrepRealtime'
 import GroceryList from '../prep/GroceryList'
+import RecipeList from '../prep/RecipeList'
 import ServingPicker from '../food/ServingPicker'
 import { foodResultFromRow } from '../food/recents'
 import { kcalPerServing } from '../prep/dishFood'
@@ -29,7 +30,7 @@ export default function Prep() {
   const profile = useProfile()
   usePrepRealtime(profile.profile?.household_id)
   const menu = useMenuWeek(start)
-  const [view, setView] = useState<'plan' | 'menu' | 'grocery'>('menu')
+  const [view, setView] = useState<'plan' | 'menu' | 'grocery' | 'recipes'>('menu')
   const [slotEditing, setSlotEditing] = useState<{ date: string; meal: MenuMeal } | null>(null)
 
   if (editing) {
@@ -83,17 +84,21 @@ export default function Prep() {
           className={`flex-1 py-2 text-sm font-medium ${view === 'grocery' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : ''}`}>
           Grocery list
         </button>
+        <button onClick={() => setView('recipes')} aria-pressed={view === 'recipes'}
+          className={`flex-1 py-2 text-sm font-medium ${view === 'recipes' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : ''}`}>
+          Recipes
+        </button>
       </div>
 
       {/* Loading / Error, for the menu or for the prep sessions */}
-      {(view === 'menu' ? menu.isLoading : isLoading) && <p className="px-3 py-8 text-center text-muted">Loading…</p>}
+      {view !== 'recipes' && ((view === 'menu' ? menu.isLoading : isLoading)) && <p className="px-3 py-8 text-center text-muted">Loading…</p>}
       {view === 'menu' && menu.error && !menu.isLoading && (
         <div className="px-3 py-6 text-center space-y-2">
           <p className="text-danger">{menu.error.message}</p>
           <button onClick={() => menu.refetch()} className="text-sm text-link underline">Try again</button>
         </div>
       )}
-      {view !== 'menu' && error && !isLoading && (
+      {view !== 'menu' && view !== 'recipes' && error && !isLoading && (
         <div className="px-3 py-6 text-center space-y-2">
           <p className="text-danger">{error.message}</p>
           <button onClick={() => refetch()} className="text-sm text-link underline">Try again</button>
@@ -101,7 +106,7 @@ export default function Prep() {
       )}
 
       {/* Week data */}
-      {view === 'menu' ? (
+      {view === 'recipes' ? <RecipeList /> : view === 'menu' ? (
         menu.data && !menu.isLoading && !menu.error && (
           <>
             <MenuGrid days={weekDays(start)} today={today} slots={menu.data} onPick={(date, meal) => setSlotEditing({ date, meal })} />

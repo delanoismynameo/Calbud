@@ -72,3 +72,14 @@ export async function saveDishFood(food: FoodResult, householdId: string): Promi
   if (!data?.id) throw new Error('Upsert returned no id')
   return data.id
 }
+
+export async function fetchAllPreps(householdId: string): Promise<MealPrep[]> {
+  const { data, error } = await supabase
+    .from('meal_prep')
+    .select('*, foods(*)')
+    .eq('household_id', householdId)
+    .order('scheduled_date', { ascending: false })
+    .limit(500)
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
