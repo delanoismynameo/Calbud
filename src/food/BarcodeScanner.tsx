@@ -1,10 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { BrowserMultiFormatOneDReader, type IScannerControls } from '@zxing/browser'
+import { BarcodeFormat, DecodeHintType } from '@zxing/library'
 
 interface BarcodeScannerProps {
   onCode: (code: string) => void
   onCancel: () => void
 }
+
+const HINTS = new Map<DecodeHintType, unknown>([
+  [DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.UPC_A, BarcodeFormat.EAN_8, BarcodeFormat.UPC_E]],
+])
 
 export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -20,11 +25,12 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
     let controls: IScannerControls | undefined
 
     const startCamera = async () => {
-      // 1D barcodes only (EAN, UPC): faster than also looking for QR codes.
-      const reader = new BrowserMultiFormatOneDReader()
+      // Limited to grocery barcodes for speed.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const reader = new BrowserMultiFormatOneDReader(HINTS as Map<DecodeHintType, any>, { delayBetweenScanAttempts: 80, delayBetweenScanSuccess: 300 })
       try {
         controls = await reader.decodeFromConstraints(
-          { video: { facingMode: 'environment' } },
+          { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
           video,
           (result, _err, ctl) => {
             if (result) {
@@ -62,13 +68,20 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
         <p className="text-warn text-sm">{cameraError}</p>
       ) : (
         <>
-        <p className="text-muted text-xs">Point the camera at the barcode.</p>
-          <video
-            ref={videoRef}
-            className="w-full rounded-lg bg-black aspect-[4/3] object-cover"
-            muted
-            playsInline
-          />
+          <p className="text-muted text-xs">Line the barcode up inside the box.</p>
+          <div className="relative overflow-hidden rounded-2xl">
+            <video
+              ref={videoRef}
+              className="w-full bg-black aspect-[4/3] object-cover"
+              muted
+              playsInline
+            />
+            <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="relative h-1/3 w-4/5 rounded-xl border-2 border-white/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]">
+                <div className="absolute inset-x-2 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-coral animate-pulse" />
+              </div>
+            </div>
+          </div>
         </>
       )}
 

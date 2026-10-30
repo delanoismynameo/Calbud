@@ -1,22 +1,24 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { queryClient } from '../lib/queryClient'
-import type { MenuMeal, MenuSlot } from './types'
+import { MENU_MEALS, type MenuMeal, type MenuSlot } from './types'
 import type { MealPrep } from '../prep/types'
 import { dayLabel, weekDays, weekStart } from '../prep/week'
 import { mealLabel, parseSlotLabel, copyRows } from './menu'
 import { saveSlot, clearSlot, saveSlots } from './menuApi'
 import { useProfile } from '../household/useProfile'
 
-export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }: {
+export default function SlotEditor({ date, meal, slot, dishes, filled, takenMeals, onClose }: {
   date: string
   meal: MenuMeal
   slot?: MenuSlot
   dishes: MealPrep[]
   filled: string[]
+  takenMeals?: MenuMeal[]
   onClose: () => void
 }) {
   const [text, setText] = useState(slot?.label ?? '')
+  const [mealPick, setMealPick] = useState<MenuMeal>(meal)
   const [prepId, setPrepId] = useState<string | null>(slot?.prep_id ?? null)
   const [picked, setPicked] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -25,10 +27,11 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
   const saveMutation = useMutation({
     mutationFn: async (label: string) => {
       if (!profile?.household_id) throw new Error('Join or create a household first.')
-      await saveSlot(profile.household_id, date, meal, label, prepId)
+      await saveSlot(profile.household_id, date, mealPick, label, prepId)
       if (picked.length > 0) {
-        await saveSlots(profile.household_id, copyRows(date, meal, label, prepId, picked))
+        await saveSlots(profile.household_id, copyRows(date, mealPick, label, prepId, picked))
       }
+      if (slot && mealPick !== meal) await clearSlot(slot.id)
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['menu'] })
@@ -64,7 +67,32 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
 
   return (
     <div className="bg-card rounded-3xl shadow-card p-4 space-y-4">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">{dayLabel(date)} · {mealLabel(meal)}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">{dayLabel(date)} · {mealLabel(mealPick)}</h2>
+
+      {slot && (
+        <div>
+          <p className="text-xs font-semibold uppercase text-muted mb-1">Meal</p>
+          <div className="flex flex-wrap gap-2">
+            {MENU_MEALS.map(m => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMealPick(m)}
+                disabled={anyPending}
+                aria-pressed={mealPick === m}
+                className={`py-1 px-4 rounded-full text-xs font-semibold transition-colors ${
+                  mealPick === m ? 'bg-coral-deep text-white' : 'bg-coral-light text-link hover:bg-coral-deeper'
+                }`}
+              >
+                {mealLabel(m)}
+              </button>
+            ))}
+          </div>
+          {mealPick !== meal && takenMeals?.includes(mealPick) && (
+            <p className="text-muted text-xs mt-1">{mealLabel(mealPick)} already has a meal. Saving replaces it.</p>
+          )}
+        </div>
+      )}
 
       {dishes.length > 0 && (
         <div>

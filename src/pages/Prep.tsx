@@ -40,7 +40,7 @@ export default function Prep() {
 
   if (slotEditing) {
     const filled = (menu.data ?? []).filter(s => s.meal === slotEditing.meal).map(s => s.slot_date)
-    return <SlotEditor date={slotEditing.date} meal={slotEditing.meal} slot={slotAt(menu.data ?? [], slotEditing.date, slotEditing.meal)} dishes={data ?? []} filled={filled} onClose={() => setSlotEditing(null)} />
+    return <SlotEditor date={slotEditing.date} meal={slotEditing.meal} slot={slotAt(menu.data ?? [], slotEditing.date, slotEditing.meal)} dishes={data ?? []} filled={filled} takenMeals={(menu.data ?? []).filter(s => s.slot_date === slotEditing.date).map(s => s.meal)} onClose={() => setSlotEditing(null)} />
   }
 
   const weekStarts = weekStart(today)
