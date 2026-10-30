@@ -10,6 +10,7 @@ import WeekCard from '../dashboard/WeekCard'
 import { useCanInstall } from '../pwa/installPromptInstance'
 import { installHint, installText } from '../pwa/install'
 import { installPrompt } from '../pwa/installPromptInstance'
+import ThemeToggle from '../ui/ThemeToggle'
 
 export default function Us() {
   const { session } = useAuth()
@@ -21,40 +22,44 @@ export default function Us() {
   const hint = installHint(navigator.userAgent, navigator.maxTouchPoints, standalone)
 
   const installBtn = canInstall ? (
-    <button type="button" className="mt-3 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold" onClick={() => { void installPrompt.prompt() }}>Install app</button>
+    <button type="button" className="mt-3 px-4 py-2 rounded-2xl bg-coral-deep hover:bg-coral-deeper text-white font-bold" onClick={() => { void installPrompt.prompt() }}>Install app</button>
   ) : null
 
   return (
-    <div className="text-center">
-      <h1 className="text-2xl font-bold mb-4">Us</h1>
+    <div className="text-center space-y-5">
+      <h1 className="text-2xl font-extrabold text-ink mb-4">Us</h1>
       {session && (
         <>
-          <p className="text-white">Signed in as <span className="text-gray-400">{session.user.email}</span></p>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="mt-2 px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded">Sign out</button>
+          <div className="bg-card rounded-3xl shadow-card p-5 text-center">
+            <p className="text-ink mb-2">Signed in as <span className="text-muted">{session.user.email}</span></p>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="px-6 py-2 bg-coral-light text-link rounded-2xl font-semibold hover:bg-coral-light/70">Sign out</button>
           {installBtn}
           {!canInstall && hint !== null && (
-            <p className="mt-3 text-xs text-gray-400 max-w-sm mx-auto">{installText(hint)}</p>
+            <p className="mt-3 text-xs text-muted max-w-sm mx-auto">{installText(hint)}</p>
           )}
+        </div>
 
-          {household && (
+        <ThemeToggle />
+
+        {household && (
             <div className="mt-6 space-y-4">
-              <p className="text-lg font-semibold">{household.name}</p>
+              <p className="text-lg font-extrabold text-ink">{household.name}</p>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-800 rounded-lg p-3 text-center">
+                <div className="bg-card rounded-3xl shadow-card p-3 text-center">
                   <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: profile?.color ?? '#6366f1' }} />
                   <p className="text-sm font-semibold">{profile?.display_name}</p>
                 </div>
-                <div className="bg-slate-800 rounded-lg p-3 text-center">
+                <div className="bg-card rounded-3xl shadow-card p-3 text-center">
                   {partner ? (
                     <>
                       <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: partner.color }} />
                       <p className="text-sm font-semibold">{partner.display_name}</p>
                     </>
                   ) : (
-                    <p className="text-gray-400 text-xs">Waiting…</p>
+                    <p className="text-muted text-xs">Waiting…</p>
                   )}
                 </div>
               </div>
@@ -67,7 +72,7 @@ export default function Us() {
 
               {!partner && (
                 <div className="max-w-sm mx-auto space-y-2">
-                  <p className="text-sm text-gray-400">Waiting for your partner to join. Share this code:</p>
+                  <p className="text-sm text-muted">Waiting for your partner to join. Share this code:</p>
                   <CopyCode code={household.invite_code} />
                   <div className="pt-4">
                     <SwitchHousehold />

@@ -58,80 +58,80 @@ export default function ActivityForm({ activity, date, onClose }: { activity?: A
   const headingText = activity ? 'Edit activity' : 'New activity'
 
   return (
-    <div className="bg-slate-900 rounded p-3 space-y-4">
-      <h2 className="text-sm font-semibold text-gray-400 px-1">{headingText}</h2>
+    <div className="bg-cream rounded-3xl shadow-card p-5 space-y-4">
+      <h2 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">{headingText}</h2>
 
       {/* Name */}
       <div>
-        <label htmlFor="activity-title" className="block text-gray-400 text-sm mb-1">Name</label>
+        <label htmlFor="activity-title" className="block text-muted text-sm mb-1">Name</label>
         <input id="activity-title" type="text" value={input.title} onChange={changeField('title')} placeholder="What are you doing?"
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-        {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title}</p>}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+        {errors.title && <p className="text-danger text-xs mt-1">{errors.title}</p>}
       </div>
 
       {/* Date */}
       <div>
-        <label htmlFor="activity-date" className="block text-gray-400 text-sm mb-1">Date</label>
+        <label htmlFor="activity-date" className="block text-muted text-sm mb-1">Date</label>
         <input id="activity-date" type="date" value={input.date} onChange={(e) => { setInput({ ...input, date: e.target.value }); if (errors.date) setErrors({ ...errors, date: undefined }) }}
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-        {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+        {errors.date && <p className="text-danger text-xs mt-1">{errors.date}</p>}
       </div>
 
       {/* Start time */}
       <div>
-        <label htmlFor="activity-time" className="block text-gray-400 text-sm mb-1">Start time</label>
+        <label htmlFor="activity-time" className="block text-muted text-sm mb-1">Start time</label>
         <input id="activity-time" type="time" value={input.startTime} onChange={changeField('startTime')}
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-        <p className="text-gray-600 text-xs mt-1">Optional</p>
-        {errors.startTime && <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+        <p className="text-muted text-xs mt-1">Optional</p>
+        {errors.startTime && <p className="text-danger text-xs mt-1">{errors.startTime}</p>}
       </div>
 
       {/* Length & Calories side by side */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="activity-minutes" className="block text-gray-400 text-sm mb-1">Length (min)</label>
+          <label htmlFor="activity-minutes" className="block text-muted text-sm mb-1">Length (min)</label>
           <input id="activity-minutes" type="text" inputMode="numeric" value={input.duration} onChange={changeField('duration')} placeholder="60"
-            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-          {errors.duration && <p className="text-red-400 text-xs mt-1">{errors.duration}</p>}
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+          {errors.duration && <p className="text-danger text-xs mt-1">{errors.duration}</p>}
         </div>
         <div>
-          <label htmlFor="activity-kcal" className="block text-gray-400 text-sm mb-1">Calories</label>
+          <label htmlFor="activity-kcal" className="block text-muted text-sm mb-1">Calories</label>
           <input id="activity-kcal" type="text" inputMode="numeric" value={input.kcal} onChange={changeField('kcal')} placeholder="Optional"
-            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-          {errors.kcal && <p className="text-red-400 text-xs mt-1">{errors.kcal}</p>}
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+          {errors.kcal && <p className="text-danger text-xs mt-1">{errors.kcal}</p>}
         </div>
       </div>
 
       {/* Notes */}
       <div>
-        <label htmlFor="activity-notes" className="block text-gray-400 text-sm mb-1">Notes</label>
+        <label htmlFor="activity-notes" className="block text-muted text-sm mb-1">Notes</label>
         <textarea id="activity-notes" rows={3} value={input.notes} onChange={changeField('notes')} placeholder="Optional notes"
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
       </div>
 
-      {saveMutation.isError && <p className="text-red-400 text-sm px-1">{saveMutation.error.message}</p>}
-      {deleteMutation.isError && <p className="text-red-400 text-sm px-1">{deleteMutation.error.message}</p>}
+      {saveMutation.isError && <p className="text-danger text-sm px-1">{saveMutation.error.message}</p>}
+      {deleteMutation.isError && <p className="text-danger text-sm px-1">{deleteMutation.error.message}</p>}
 
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={save} disabled={anyPending}
-          className="py-3 rounded font-semibold text-white flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-center">
+          className="bg-coral-deep hover:bg-coral-deeper text-white rounded-2xl font-bold py-3 flex-1 text-center disabled:bg-coral-light/50 disabled:text-muted disabled:cursor-not-allowed">
           {saveMutation.isPending ? 'Saving…' : 'Save'}
         </button>
 
         {activity && (
           <button type="button" onClick={() => deleteStep === 0 ? setDeleteStep(1) : deleteMutation.mutate()} disabled={anyPending}
-            className={`py-3 rounded font-semibold text-white flex-1 transition-colors ${
+            className={`font-bold flex-1 transition-colors py-3 rounded-2xl ${
               deleteMutation.isPending
-                ? 'bg-slate-600 cursor-not-allowed'
+                ? 'text-muted cursor-not-allowed bg-transparent'
                 : deleteStep === 1
-                  ? 'bg-red-500 hover:bg-red-600'
-                  : 'bg-slate-700 hover:bg-slate-600'
+                  ? 'bg-coral-deep hover:bg-coral-deeper text-white'
+                  : 'text-danger'
             }`}>
             {deleteMutation.isPending ? 'Deleting…' : deleteStep === 1 ? 'Tap again to delete' : 'Delete'}
           </button>)}
 
         <button type="button" onClick={onClose} disabled={anyPending}
-          className="py-3 rounded bg-slate-700 text-white font-semibold px-4 hover:bg-slate-600">
+          className="bg-coral-light text-link rounded-2xl font-semibold py-3 px-4 hover:bg-coral-deeper">
           Cancel
         </button>
       </div>

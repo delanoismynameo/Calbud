@@ -58,15 +58,15 @@ export default function ExportButton({
         type="button"
         disabled={items.length === 0}
         onClick={handleClick}
-        className="text-sm text-blue-400 underline disabled:opacity-40"
+        className="bg-coral-light text-link rounded-2xl font-semibold py-2 px-4 text-xs inline-block disabled:opacity-40 hover:bg-coral-deeper"
       >
         Export week
       </button>
-      <p className="text-xs text-gray-500 mt-1">
+      <p className="text-xs text-muted mt-1">
         Import the file into a Calbud calendar. In Google Calendar: Settings, then Import &amp; export, then Import.
       </p>
       {message && (
-        <p className={`text-xs mt-1 ${failed ? 'text-red-400' : 'text-green-400'}`}>
+        <p className={`text-xs mt-1 ${failed ? 'text-danger' : 'text-muted'}`}>
           {message}
         </p>
       )}
