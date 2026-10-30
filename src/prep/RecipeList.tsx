@@ -1,13 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAllPreps } from './useAllPreps'
 import { recipesFrom } from './recipes'
 import { dayLabel } from './week'
 import { formatGroceryItem } from './grocery'
+import type { GroceryItem } from './grocery'
+import { loadExtras, mergeExtras, saveExtras } from './extras'
 
-export default function RecipeList() {
+export default function RecipeList({ weekStart }: { weekStart: string }) {
   const { data, isLoading, error, refetch } = useAllPreps()
   const [search, setSearch] = useState('')
   const [openKey, setOpenKey] = useState<string | null>(null)
+  const [addedKey, setAddedKey] = useState<string | null>(null)
+  const prevOpenRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (openKey !== prevOpenRef.current) {
+      setAddedKey(null)
+      prevOpenRef.current = openKey
+    }
+  }, [openKey])
 
   const recipes = data ? recipesFrom(data) : []
 
@@ -79,6 +90,19 @@ export default function RecipeList() {
                       </ul>
                     ) : (
                       <p className="text-muted">No ingredients saved.</p>
+                    )}
+
+                    {r.ingredients.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveExtras(weekStart, mergeExtras(loadExtras(weekStart), r.ingredients as GroceryItem[]))
+                          setAddedKey(r.key)
+                        }}
+                        disabled={addedKey === r.key}
+                        className={`mt-1 bg-coral-light text-link rounded-2xl font-semibold px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}>
+                        {addedKey === r.key ? "Added to this week's list" : 'Add to grocery list'}
+                      </button>
                     )}
 
                     {r.notes && <p className="text-muted">{r.notes}</p>}

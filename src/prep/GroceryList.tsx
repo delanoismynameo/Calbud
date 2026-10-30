@@ -1,18 +1,26 @@
 import { useState, useEffect, useCallback } from 'react'
 import { groceryList, formatGroceryItem, groceryKey } from './grocery'
+import type { GroceryItem } from './grocery'
 import type { MealPrep } from './types'
 import { sendText, groceryText, type SendNav } from './sendList'
+import { loadExtras, mergeExtras, removeExtra, saveExtras } from './extras'
+import { parseIngredients } from './ingredients'
 
 export default function GroceryList({ sessions, weekStart }: { sessions: MealPrep[]; weekStart: string }) {
-  const items = groceryList(sessions.filter(s => s.status === 'planned').map(s => s.ingredients))
+  const plannedLists = sessions.filter(s => s.status === 'planned').map(s => s.ingredients)
+  const items = groceryList(plannedLists)
+  const [extras, setExtras] = useState<GroceryItem[]>(() => loadExtras(weekStart))
+  const allItems = groceryList([...plannedLists, extras])
   const [ticked, setTicked] = useState<Set<string>>(() => loadTicks(weekStart))
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'asking'>('idle')
   const [how, setHow] = useState<'shared' | 'copied'>('shared')
   const [sendError, setSendError] = useState<string | null>(null)
+  const [inputText, setInputText] = useState('')
 
   useEffect(() => {
     // Re-read from storage when weekStart changes
     setTicked(loadTicks(weekStart))
+    setExtras(loadExtras(weekStart))
     setSendState('idle')
     setSendError(null)
   }, [weekStart])
@@ -49,7 +57,29 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
         From {plannedCount} planned session{plannedCount === 1 ? '' : 's'}
       </p>
 
-      {items.length === 0 ? (
+      <form onSubmit={e => {
+        e.preventDefault()
+        const parsed = parseIngredients(inputText)
+        if (parsed.length === 0) return
+        const next = mergeExtras(extras, [...parsed])
+        setExtras(next)
+        saveExtras(weekStart, next)
+        setInputText('')
+      }}>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            aria-label="Add item"
+            placeholder="Add an item, e.g. 2 lb chicken"
+            value={inputText}
+            onChange={e => setInputText(e.target.value)}
+            className="bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral flex-1"
+          />
+          <button type="submit" className="px-5 bg-coral-deep hover:bg-coral-deeper text-white rounded-2xl font-bold py-3">Add</button>
+        </div>
+      </form>
+
+      {(items.length === 0 && extras.length === 0) ? (
         <p className="px-3 py-6 text-center text-muted">No ingredients in this week&apos;s planned sessions.</p>
       ) : (
         <>
@@ -73,14 +103,44 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
             })}
           </div>
 
-          {(groceryText(items, ticked) !== '') && (
+          {extras.length > 0 && (
+            <>
+              <p className="text-[13px] font-bold uppercase tracking-[1.5px] text-section mt-4 mb-2">Added by hand</p>
+              <div className="bg-card rounded-3xl shadow-card space-y-1 pb-2 mb-3">
+                {extras.map(item => {
+                  const key = groceryKey(item)
+                  const isTicked = ticked.has(key)
+                  return (
+                    <label
+                      key={key}
+                      className={`flex items-center gap-3 px-2 py-2 rounded-2xl cursor-pointer min-h-[44px] ${isTicked ? 'text-muted line-through' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={isTicked}
+                        onChange={() => toggle(key)}
+                        className="accent-coral-deep w-5 h-5 shrink-0"
+                      />
+                      <span className="text-sm flex-1">{formatGroceryItem(item)}</span>
+                      <button type="button" aria-label={'Remove ' + item.name} onClick={() => {
+                        const next = removeExtra(extras, key)
+                        setExtras(next)
+                        saveExtras(weekStart, next)
+                      }} className="text-muted px-2 py-1">✕</button>
+                    </label>
+                  )
+                })}
+              </div>
+            </>
+          )}
+
+          {(groceryText(allItems, ticked) !== '') && (
             <button
               type="button"
               onClick={async () => {
                 setSendError(null)
                 setSendState('sending')
                 try {
-                  const result = await sendText(groceryText(items, ticked), navigator as unknown as SendNav)
+                  const result = await sendText(groceryText(allItems, ticked), navigator as unknown as SendNav)
                   if (result === 'cancelled') {
                     setSendState('idle')
                   } else {
@@ -104,7 +164,7 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
               <p className="text-xs text-muted">This ticks every item on this phone. Your prep sessions stay as they are.</p>
               <div className="flex gap-2">
                 <button onClick={() => {
-                  const keys = new Set(items.map(item => groceryKey(item)))
+                  const keys = new Set(allItems.map(item => groceryKey(item)))
                   setTicked(keys)
                   saveTicks(weekStart, keys)
                   setSendState('idle')

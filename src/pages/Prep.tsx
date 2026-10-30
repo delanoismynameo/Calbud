@@ -106,7 +106,7 @@ export default function Prep() {
       )}
 
       {/* Week data */}
-      {view === 'recipes' ? <RecipeList /> : view === 'menu' ? (
+      {view === 'recipes' ? <RecipeList weekStart={start} /> : view === 'menu' ? (
         menu.data && !menu.isLoading && !menu.error && (
           <>
             <MenuGrid days={weekDays(start)} today={today} slots={menu.data} onPick={(date, meal) => setSlotEditing({ date, meal })} />
