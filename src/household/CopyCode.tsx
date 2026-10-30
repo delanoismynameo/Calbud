@@ -18,13 +18,13 @@ export default function CopyCode({ code, large = false }: { code: string; large?
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <input readOnly value={code} onFocus={(e) => e.target.select()} aria-label="Invite code"
-          className={`flex-1 min-w-0 font-mono text-center bg-slate-900 rounded p-3 ${large ? 'text-2xl tracking-widest' : 'text-base'}`} />
+          className={`flex-1 min-w-0 font-mono text-center bg-coral-light text-ink rounded-2xl px-3 py-2 ${large ? 'text-2xl tracking-widest' : 'text-base'}`} />
         <button type="button" onClick={copy}
-          className="px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm">
+          className="px-4 py-3 bg-card hover:bg-coral-light rounded-2xl text-link font-semibold text-sm">
           {status === 'copied' ? 'Copied' : 'Copy'}
         </button>
       </div>
-      {status === 'failed' && <p className="text-red-400 text-sm">Copy failed. Select the code instead.</p>}
+      {status === 'failed' && <p className="text-danger text-sm">Copy failed. Select the code instead.</p>}
     </div>
   )
 }

@@ -14,9 +14,9 @@ export default function WeekCard() {
   const people = partner ? [profile, partner] : [profile]
   let body
   if (kcal.isPending) {
-    body = <p className="text-gray-400 text-sm">Loading…</p>
+    body = <p className="text-muted text-sm">Loading…</p>
   } else if (kcal.isError) {
-    body = <p className="text-red-400 text-sm">{kcal.error.message}</p>
+    body = <p className="text-danger text-sm">{kcal.error.message}</p>
   } else {
     const data = kcal.data
     const week = lastWeek(today)
@@ -29,10 +29,10 @@ export default function WeekCard() {
             <div key={p.id}>
               <p>
                 <span className="w-3 h-3 rounded-full inline-block mr-2" style={{ backgroundColor: p.color }} />
-                <span className="font-semibold">{p.display_name}</span>
+                <span className="font-semibold text-ink">{p.display_name}</span>
               </p>
-              <p className="text-sm">Today: {data[p.id]?.[today] ?? 0} / {p.goal_calories} cal</p>
-              <p className="text-sm text-gray-400">{avg !== null ? `7-day average: ${avg} cal` : 'No food logged this week'}</p>
+              <p className="text-sm text-ink">Today: {data[p.id]?.[today] ?? 0} / {p.goal_calories} cal</p>
+              <p className="text-sm text-muted">{avg !== null ? `7-day average: ${avg} cal` : 'No food logged this week'}</p>
             </div>
           )
         })}
@@ -42,8 +42,8 @@ export default function WeekCard() {
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 text-left space-y-3">
-      <h2 className="text-sm font-semibold text-gray-400">This week</h2>
+    <div className="bg-card rounded-3xl shadow-card p-5">
+      <h2 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">This week</h2>
       {body}
     </div>
   )

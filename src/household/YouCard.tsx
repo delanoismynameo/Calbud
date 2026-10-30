@@ -61,38 +61,38 @@ export default function YouCard() {
 
   if (!editing) {
     return (
-      <div className="bg-slate-800 rounded-lg p-4 text-left space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-sm">You</span>
-          <button onClick={openEdit} className="text-sm text-blue-400 hover:text-blue-300">
+      <div className="bg-card rounded-3xl shadow-card p-5">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">You</span>
+          <button onClick={openEdit} className="text-sm text-link underline font-semibold">
             Edit
           </button>
         </div>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-ink mb-2">
           <span className="w-3 h-3 rounded-full inline-block mr-2" style={{ backgroundColor: profile.color }} />
           {profile.display_name}
         </p>
-        <p className="text-sm text-gray-400">Time zone: {zoneLabel(profile.timezone)}</p>
+        <p className="text-sm text-muted">Time zone: {zoneLabel(profile.timezone)}</p>
         {deviceZone !== profile.timezone && (
-          <p className="text-xs text-amber-400">This phone is set to {zoneLabel(deviceZone)}.</p>
+          <p className="text-xs text-warn">This phone is set to {zoneLabel(deviceZone)}.</p>
         )}
       </div>
     )
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 text-left space-y-3">
-      <p className="font-semibold text-sm">You</p>
+    <div className="bg-card rounded-3xl shadow-card p-5">
+      <p className="text-[13px] font-bold uppercase tracking-[1.5px] text-section mb-2">You</p>
       <div className="space-y-2">
         <div>
-          <label htmlFor="you-name" className="block text-xs text-gray-400 mb-1">Name</label>
+          <label htmlFor="you-name" className="block text-sm text-muted mb-1">Name</label>
           <input id="you-name" type="text" value={input.name}
             onChange={(e) => setInput((prev) => ({ ...prev, name: e.target.value }))}
-            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" />
-          {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+          {errors.name && <p className="text-danger text-xs mt-1">{errors.name}</p>}
         </div>
         <div>
-          <p className="block text-xs text-gray-400 mb-1">Colour</p>
+          <p className="block text-sm text-muted mb-1">Colour</p>
           <div className="flex gap-2">
             {COLORS.map((c) => (
               <button key={c} type="button"
@@ -100,37 +100,37 @@ export default function YouCard() {
                 style={{ backgroundColor: c }}
                 aria-label={`Colour ${c}`}
                 aria-pressed={input.color === c}
-                className={`w-8 h-8 rounded-full ${input.color === c ? 'ring-2 ring-white' : ''}`} />
+                className={`w-8 h-8 rounded-full ${input.color === c ? 'ring-2 ring-offset-2 ring-coral' : ''}`} />
             ))}
           </div>
-          {errors.color && <p className="text-red-400 text-xs mt-1">{errors.color}</p>}
+          {errors.color && <p className="text-danger text-xs mt-1">{errors.color}</p>}
         </div>
         <div>
-          <label htmlFor="you-timezone" className="block text-xs text-gray-400 mb-1">Time zone</label>
+          <label htmlFor="you-timezone" className="block text-sm text-muted mb-1">Time zone</label>
           <select id="you-timezone" value={input.timezone}
             onChange={(e) => setInput((prev) => ({ ...prev, timezone: e.target.value }))}
-            className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500">
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral">
             {zones.map((z) => (
               <option key={z} value={z}>{zoneLabel(z)}</option>
             ))}
           </select>
           {deviceZone !== input.timezone && zones.includes(deviceZone) && (
             <button type="button" onClick={() => setInput((prev) => ({ ...prev, timezone: deviceZone }))}
-              className="text-sm text-blue-400 underline mt-1">
+              className="text-sm text-link underline mt-1 font-semibold">
               Use this phone&apos;s time zone ({zoneLabel(deviceZone)})
             </button>
           )}
-          {errors.timezone && <p className="text-red-400 text-xs mt-1">{errors.timezone}</p>}
+          {errors.timezone && <p className="text-danger text-xs mt-1">{errors.timezone}</p>}
         </div>
       </div>
-      {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
+      {saveError && <p className="text-danger text-sm">{saveError}</p>}
       <div className="flex gap-3">
         <button onClick={save} disabled={saving}
-          className="flex-1 py-2 rounded bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold">
+          className="flex-1 py-3 rounded-2xl bg-coral-deep hover:bg-coral-deeper disabled:cursor-not-allowed disabled:opacity-50 text-white font-bold">
           {saving ? 'Saving\u2026' : 'Save'}
         </button>
         <button onClick={() => setEditing(false)} disabled={saving}
-          className="flex-1 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold">
+          className="flex-1 py-3 rounded-2xl bg-coral-light text-link font-semibold hover:bg-coral-deeper">
           Cancel
         </button>
       </div>

@@ -81,47 +81,45 @@ export default function GoalsCard() {
 
   if (!editing) {
     return (
-      <div className="bg-slate-800 rounded-lg p-4 text-left space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-sm">Your daily goals</span>
-          <button onClick={openEdit} className="text-sm text-blue-400 hover:text-blue-300">
+      <div className="bg-card rounded-3xl shadow-card p-5">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">Your daily goals</span>
+          <button onClick={openEdit} className="text-sm text-link underline font-semibold">
             Edit
           </button>
         </div>
-        <p className="text-sm text-gray-300">
-          {profile.goal_calories} cal · {profile.goal_protein_g} g protein · {profile.goal_carbs_g} g carbs · {profile.goal_fat_g} g fat
-        </p>
+        <p className="text-sm text-ink">{profile.goal_calories} cal · {profile.goal_protein_g} g protein · {profile.goal_carbs_g} g carbs · {profile.goal_fat_g} g fat</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 text-left space-y-3">
-      <p className="font-semibold text-sm">Your daily goals</p>
+    <div className="bg-card rounded-3xl shadow-card p-5">
+      <p className="text-[13px] font-bold uppercase tracking-[1.5px] text-section mb-2">Your daily goals</p>
       <div className="grid grid-cols-2 gap-2">
         {FIELDS.map(({ key, id, label }) => (
           <div key={key}>
-            <label htmlFor={id} className="block text-xs text-gray-400 mb-1">{label}</label>
+            <label htmlFor={id} className="block text-sm text-muted mb-1">{label}</label>
             <input id={id} type="text" inputMode="numeric" value={input[key]}
               onChange={(e) => updateField(key, e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500" />
-            {errors[key] && <p className="text-red-400 text-xs mt-1">{errors[key]}</p>}
+              className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+            {errors[key] && <p className="text-danger text-xs mt-1">{errors[key]}</p>}
           </div>
         ))}
       </div>
-      {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
+      {saveError && <p className="text-danger text-sm">{saveError}</p>}
       <div className="flex gap-3">
         <button
           onClick={save}
           disabled={saving}
-          className="flex-1 py-2 rounded bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white font-semibold"
+          className="flex-1 py-3 rounded-2xl bg-coral-deep hover:bg-coral-deeper disabled:cursor-not-allowed disabled:opacity-50 text-white font-bold"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
         <button
           onClick={() => setEditing(false)}
           disabled={saving}
-          className="flex-1 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold"
+          className="flex-1 py-3 rounded-2xl bg-coral-light text-link font-semibold hover:bg-coral-deeper"
         >
           Cancel
         </button>

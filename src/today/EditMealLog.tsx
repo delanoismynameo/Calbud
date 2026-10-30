@@ -75,7 +75,7 @@ export default function EditMealLog({ log, onClose }: {
       <div className="flex gap-3">
         <button
           type="button" onClick={() => saveMutation.mutate()} disabled={!isValid || anyPending}
-          className="py-3 rounded-2xl font-bold text-white flex-1 bg-coral-deep hover:bg-coral-deeper opacity-50 cursor-not-allowed"
+          className="py-3 rounded-2xl font-bold text-white flex-1 bg-coral-deep hover:bg-coral-deeper disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save'}
         </button>

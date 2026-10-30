@@ -68,15 +68,15 @@ export default function DataCard() {
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 text-left space-y-3">
-      <p className="text-sm font-semibold text-gray-400">Your data</p>
-      <p className="text-xs text-gray-500">Download what you&apos;ve logged. The food log opens in a spreadsheet; the full file has everything.</p>
+    <div className="bg-card rounded-3xl shadow-card p-5">
+      <p className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">Your data</p>
+      <p className="text-xs text-muted mb-4">Download what you&apos;ve logged. The food log opens in a spreadsheet; the full file has everything.</p>
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           disabled={busy !== null}
           onClick={exportCsv}
-          className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800 disabled:opacity-50"
+          className="py-3 rounded-2xl border border-line bg-card hover:bg-coral-light font-semibold text-ink disabled:opacity-50"
         >
           {busy === 'csv' ? 'Preparing…' : 'Food log (CSV)'}
         </button>
@@ -84,13 +84,13 @@ export default function DataCard() {
           type="button"
           disabled={busy !== null}
           onClick={exportJson}
-          className="py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800 disabled:opacity-50"
+          className="py-3 rounded-2xl border border-line bg-card hover:bg-coral-light font-semibold text-ink disabled:opacity-50"
         >
           {busy === 'json' ? 'Preparing…' : 'Everything (JSON)'}
         </button>
       </div>
       {message && (
-        <p className={`text-xs ${failed ? 'text-red-400' : 'text-green-400'}`}>{message}</p>
+        <p className={`text-xs mt-2 ${failed ? 'text-danger' : 'text-link'}`}>{message}</p>
       )}
     </div>
   )
