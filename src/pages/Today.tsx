@@ -9,10 +9,12 @@ import { validDayParam, dayTitle, copyRows } from '../today/day'
 import { insertMealLogs } from '../today/mealLogApi'
 import { useMutation } from '@tanstack/react-query'
 import { queryClient } from '../lib/queryClient'
-import MacroBar from '../today/MacroBar'
-import MoreNutrients from '../today/MoreNutrients'
-import MealSection from '../today/MealSection'
 import TodayMenu from '../menu/TodayMenu'
+import MoreNutrients from '../today/MoreNutrients'
+import MacroPills from '../today/MacroPills'
+import MealSection from '../today/MealSection'
+import KcalRing from '../today/KcalRing'
+import DayStrip from '../today/DayStrip'
 import ServingPicker from '../food/ServingPicker'
 import type { FoodResult } from '../food/types'
 import type { MenuMeal } from '../menu/types'
@@ -59,71 +61,55 @@ export default function Today() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <button type="button" aria-label="Previous day" onClick={() => goTo(addDays(date, -1))}
-          className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-semibold">‹</button>
-        <h1 className="text-lg font-semibold">{dayTitle(date, today)}</h1>
-        <button type="button" aria-label="Next day" onClick={() => goTo(addDays(date, 1))} disabled={isToday}
-          className={`w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white font-semibold ${isToday ? 'opacity-30 disabled:cursor-not-allowed' : ''}`}>›</button>
+        <h1 className="rounded-full bg-coral-light px-4 py-2 text-sm font-semibold text-link">{dayTitle(date, today)}</h1>
+        {!isToday && (
+          <button type="button" onClick={() => goTo(today)}
+            className="text-sm font-semibold text-link underline">Back to today</button>
+        )}
       </div>
-
-      {!isToday && (
-        <button type="button" onClick={() => goTo(today)}
-          className="text-sm text-blue-400 underline">Back to today</button>
-      )}
 
       {logs.isError ? (
         <>
-          <div className="bg-slate-800 rounded-lg p-6 text-center space-y-3">
-            <p className="text-red-400 font-semibold">Couldn't load {isToday ? "today's" : "this day's"} food.</p>
-            <p className="text-gray-500 text-sm">{logs.error.message}</p>
+          <div className="bg-card rounded-3xl shadow-card p-6 text-center space-y-3">
+            <p className="text-danger font-semibold">Couldn't load {isToday ? "today's" : "this day's"} food.</p>
+            <p className="text-muted text-sm">{logs.error.message}</p>
             <button
               type="button"
               onClick={() => logs.refetch()}
-              className="py-3 px-6 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700"
-            >
+              className="bg-coral-deep hover:bg-coral-deeper text-white rounded-2xl font-bold py-3 px-6">
               Try again
             </button>
           </div>
-          <Link to={isToday ? '/add' : `/add?date=${date}`} className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg text-center">
-            Add food
-          </Link>
+          <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 mx-auto flex max-w-md justify-end px-5">
+            <Link to={isToday ? '/add' : `/add?date=${date}`} aria-label="Add food"
+              className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-coral to-orange-300 text-3xl font-bold text-white shadow-[0_10px_24px_rgba(251,146,60,0.4)]">
+              +
+            </Link>
+          </div>
         </>
       ) : (
         <>
           {logs.isPending ? (
-            <p className="text-gray-400 text-center py-8">Loading…</p>
+            <p className="text-muted text-center py-8">Loading…</p>
           ) : total && (
-            <div className="bg-slate-800 rounded-lg p-4 space-y-3">
-              <p className="text-center text-3xl font-bold text-white">
-                {total.kcal} / {goals.kcal} cal
-              </p>
-              {(() => {
-                const remaining = goals.kcal - total.kcal
-                return (
-                  <p className={`text-center text-lg ${remaining >= 0 ? 'text-gray-400' : 'text-amber-500'}`}>
-                    {remaining >= 0 ? `${remaining} cal left` : `${Math.abs(remaining)} cal over`}
-                  </p>
-                )
-              })()}
-
-              <div className="space-y-3">
-                <MacroBar label="Protein" value={total.protein_g} goal={goals.protein_g} unit="g" />
-                <MacroBar label="Carbs" value={total.carbs_g} goal={goals.carbs_g} unit="g" />
-                <MacroBar label="Fat" value={total.fat_g} goal={goals.fat_g} unit="g" />
-              </div>
-              {logs.data && logs.data.length > 0 && <MoreNutrients logs={logs.data} />}
+            <div className="mx-auto w-fit space-y-5">
+              <KcalRing consumed={total.kcal} goal={goals.kcal} />
+              <DayStrip selected={date} today={today} onPick={goTo} />
             </div>
           )}
 
-          <Link to={isToday ? '/add' : `/add?date=${date}`} className="block w-full py-3 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold text-lg text-center">
-            Add food
-          </Link>
+          <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 mx-auto flex max-w-md justify-end px-5">
+            <Link to={isToday ? '/add' : `/add?date=${date}`} aria-label="Add food"
+              className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-coral to-orange-300 text-3xl font-bold text-white shadow-[0_10px_24px_rgba(251,146,60,0.4)]">
+              +
+            </Link>
+          </div>
 
           {logs.data && logs.data.length === 0 && prevLogs.data && prevLogs.data.length > 0 && (
             <button type="button" onClick={() => copyPrevMutation.mutate()} disabled={copyPrevMutation.isPending}
-              className={`w-full py-2 rounded border border-dashed border-slate-600 ${copyPrevMutation.isPending ? 'text-gray-500' : 'text-gray-300 hover:bg-slate-800'}`}>
+              className={`w-full py-3 rounded-2xl border-2 border-dashed border-line ${copyPrevMutation.isPending ? 'text-muted' : 'text-link font-semibold hover:bg-coral-light'}`}>
               {copyPrevMutation.isPending
                 ? 'Copying…'
                 : `Copy ${dayTitle(prev, today).toLowerCase() === 'yesterday' ? 'yesterday' : dayLabel(prev)}'s food (${prevLogs.data.length} item${prevLogs.data.length === 1 ? '' : 's'})`
@@ -132,14 +118,20 @@ export default function Today() {
           )}
 
           {copyPrevMutation.isError && (
-            <p className="text-red-400 text-sm text-center">{copyPrevMutation.error.message}</p>
+            <p className="text-danger text-sm text-center">{copyPrevMutation.error.message}</p>
           )}
 
           {isToday && <TodayMenu date={date} onLog={(food, meal) => setLogging({ food, meal })} />}
 
-          {groups.map((g) => (
-            <MealSection key={g.meal} meal={g.meal} logs={g.logs} />
-          ))}
+          {groups.map((g) =>
+            g.meal === 'snack' && g.logs.length === 0 ? null : (
+              <MealSection key={g.meal} meal={g.meal} logs={g.logs} emptyAddHref={isToday ? '/add' : `/add?date=${date}`} />
+            )
+          )}
+
+          <MacroPills protein={{ value: total?.protein_g ?? 0, goal: goals.protein_g }} carbs={{ value: total?.carbs_g ?? 0, goal: goals.carbs_g }} fat={{ value: total?.fat_g ?? 0, goal: goals.fat_g }} />
+
+          {logs.data && logs.data.length > 0 && <MoreNutrients logs={logs.data} />}
         </>
       )}
     </div>
