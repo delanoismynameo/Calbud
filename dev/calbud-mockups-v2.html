@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calbud Mockup - Warm Coral & Green Circle</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --phone-bg: #fffaf5;
+      --text-main: #3d2c2c;
+      --text-muted: #7a6b6b;
+      --coral-light: #ffedd5;
+      --coral-mid: #fed7aa;
+      --coral-accent: #fb923c;
+      --green-ring: #10b981;
+      --green-track: #d1fae5;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px;
+    }
+    .phone {
+      width: 375px;
+      height: 812px;
+      background: var(--phone-bg);
+      border-radius: 36px;
+      box-shadow: 0 24px 60px rgba(61, 44, 44, 0.12), 0 0 0 2px #f5e6d8;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 90px;
+    }
+    /* Header */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 24px 0 24px;
+    }
+    .app-name { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); }
+    .date-pill {
+      background: var(--coral-light);
+      color: #c2410c;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    /* Ring Section */
+    .ring-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: -20px;
+    }
+    .ring-container {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: var(--coral-light);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.04), 0 8px 16px rgba(253, 146, 60, 0.15);
+    }
+    .kcal-center {
+      text-align: center;
+      z-index: 2;
+    }
+    .kcal-number {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      color: var(--text-main);
+      line-height: 1;
+    }
+    .kcal-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    /* Date Scroller */
+    .date-scroller {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+    .day-pick {
+      width: 38px;
+      height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 12px;
+    }
+    .day-name { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; }
+    .day-num { font-size: 16px; font-weight: 700; }
+    .day-pick.active { background: var(--coral-light); }
+    /* Meal List */
+    .meal-section { padding: 0 24px; }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #d97706;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+    .meal-card {
+      background: white;
+      border-radius: 20px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .meal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: #fff7ed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+    }
+    .meal-info { flex: 1; }
+    .meal-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; color: var(--text-main); }
+    .meal-detail { font-size: 13px; color: var(--text-muted); }
+    .meal-kcal {
+      font-weight: 800;
+      font-size: 15px;
+      background: var(--coral-light);
+      color: #c2410c;
+      padding: 6px 10px;
+      border-radius: 12px;
+    }
+    .empty-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 72px;
+      background: transparent;
+      border: 2px dashed #f0e4d8;
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-weight: 600;
+      gap: 10px;
+    }
+    /* Macros */
+    .macros-section { padding: 24px; display: flex; justify-content: space-between; margin-top: 8px; }
+    .macro-pill {
+      width: 90px; height: 96px;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .macro-val { font-size: 16px; font-weight: 800; color: var(--text-main); }
+    .macro-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+    /* Floating Scan Btn */
+    .scan-fab {
+      position: absolute;
+      bottom: 100px;
+      right: 24px;
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #fb923c, #fdba74);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(251, 146, 60, 0.4);
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Bottom Nav */
+    .bottom-nav {
+      height: 72px;
+      background: white;
+      border-radius: 32px 32px 0 0;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.03);
+      display: flex; justify-content: space-around; align-items: center;
+      position: relative;
+    }
+    .nav-pill {
+      width: 64px; height: 64px;
+      position: absolute; top: -24px; left: calc(50% - 32px);
+      background: var(--coral-light);
+      border-radius: 50%;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .nav-item { font-size: 11px; color: #a8a29e; font-weight: 500; text-align: center; }
+    .nav-item.active { color: var(--coral-accent); font-weight: 700; }
+    
+    /* Hide scrollbar */
+    ::-webkit-scrollbar { display: none; }
+    .scroll-area { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Overlay for preview labeling */
+    .preview-label { text-align: center; margin-top: 32px; font-weight: 700; font-size: 14px; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <div class="phone">
+      <!-- Header -->
+      <div class="top-bar">
+        <div class="app-name">Calbud</div>
+        <div class="date-pill">Oct 29 · Wed</div>
+      </div>
+
+      <!-- Progress Ring -->
+      <div class="ring-section">
+        <svg width="160" height="160" viewBox="0 0 160 160" style="position:absolute; top: -8px;">
+          <circle cx="80" cy="80" r="72" fill="none" stroke="#fde8d0" stroke-width="14"/>
+          <path d="M80 8 A72 72 0 1 1 9 80" fill="none" stroke="#10b981" stroke-width="10" stroke-linecap="round" stroke-dasharray="452.39" stroke-dashoffset="150"/>
+        </svg>
+        <div class="kcal-center">
+          <div class="kcal-number">1,135</div>
+          <div class="kcal-label">Cals Left</div>
+        </div>
+      </div>
+
+      <!-- Date Scroller -->
+      <div class="date-scroller">
+        <div class="day-pick"><span class="day-name">Mon</span><span class="day-num">27</span></div>
+        <div class="day-pick"><span class="day-name">Tue</span><span class="day-num">28</span></div>
+        <div class="day-pick active"><span class="day-name" style="color:#c2410c;">Wed</span><span class="day-num" style="color:#c2410c;">29</span></div>
+        <div class="day-pick"><span class="day-name">Thu</span><span class="day-num">30</span></div>
+        <div class="day-pick"><span class="day-name">Fri</span><span class="day-num">31</span></div>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="scroll-area">
+        
+        <!-- Breakfast -->
+        <div class="meal-section" style="margin-top: 8px;">
+          <div class="section-title">Breakfast</div>
+          <div class="meal-card">
+            <div class="meal-icon">🥞</div>
+            <div class="meal-info">
+              <div class="meal-name">Pancakes & Eggs</div>
+              <div class="meal-detail">2 eggs, 3 small pancakes</div>
+            </div>
+            <div class="meal-kcal">580</div>
+          </div>
+        </div>
+
+        <!-- Lunch -->
+        <div class="meal-section">
+          <div class="section-title">Lunch</div>
+          <div class="meal-card">
+            <div class="meal-icon">🥗</div>
+            <div class="meal-info">
+              <div class="meal-name">Grilled Chicken Bowl</div>
+              <div class="meal-detail">Quinoa, avocado, kale, lemon dressing</div>
+            </div>
+            <div class="meal-kcal">720</div>
+          </div>
+        </div>
+
+        <!-- Dinner -->
+        <div class="meal-section">
+          <div class="section-title">Dinner</div>
+          <div class="empty-row">
+            <span>+ Add Food</span>
+          </div>
+        </div>
+
+        <!-- Macros Row -->
+        <div class="macros-section">
+           <div class="macro-pill" style="background:#fff1f2;">
+             <span class="macro-val" style="color:#be123c;">🥩 72g</span>
+             <span class="macro-label">Protein</span>
+           </div>
+           <div class="macro-pill" style="background:#fefce8;">
+             <span class="macro-val" style="color:#854d0e;">🍞 94g</span>
+             <span class="macro-label">Carbs</span>
+           </div>
+           <div class="macro-pill" style="background:#f0fdf4;">
+             <span class="macro-val" style="color:#166534;">🥑 56g</span>
+             <span class="macro-label">Fat</span>
+           </div>
+        </div>
+
+      </div>
+
+      <!-- Floating Scan Button -->
+      <div class="scan-fab">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h18"/></svg>
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="bottom-nav">
+        <div class="nav-pill"></div>
+        <div class="nav-item">Menu</div>
+        <div class="nav-item active">Today</div>
+        <div class="nav-item">Prep</div>
+        <div class="nav-item">Plan</div>
+      </div>
+    </div>
+
+    <div class="preview-label">D · Fresh Coral & Green Circle</div>
+  </div>
+
+</body>
+</html>

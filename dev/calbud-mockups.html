@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calbud UI Concepts</title>
+<style>
+  :root { --bg: #f4f5f7; --surface-light: #ffffff; --text-main: #1a1a2e; --text-muted: #8d93a1; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text-main); padding: 40px; margin: 0; display: flex; gap: 48px; align-items: flex-start; justify-content: center; min-height: 100vh; }
+  
+    /* Concept A: Minimal Air */
+  .con-a { background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); }
+  .con-a .top-bar { background: rgba(255,255,255,0.7); backdrop-filter: blur(16px); border-radius: 0 0 24px 24px; padding: 16px 20px; gap: 8px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .con-a .card { background: #ffffff; border-radius: 20px; padding: 16px; margin: 12px; border: 1px solid #f0f2f5; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+   .con-a .card.meal-item { width: auto; margin: 6px 0; padding: 12px 14px; }
+  .con-a .ring { stroke: #34d399; filter: drop-shadow(0 4px 12px rgba(52,211,153,0.4)); }
+  
+  /* Concept B: Deep Focus */
+  .con-b { background: #0f1117; color: #ffffff; }
+  .con-b .top-bar { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .con-b .active-tab { color: #d9f437; font-weight: 700; border-bottom: 2px solid #d9f437; padding: 10px 0; }
+  .con-b .card { background: #181b25; border-radius: 16px; padding: 16px; margin: 12px; border: 1px solid #2a2e3b; }
+  .con-b .ring { stroke: #d9f437; filter: drop-shadow(0 0 8px rgba(217,244,55,0.5)); }
+  .con-b .big-kcal { font-size: 42px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(to right, #d9f437, #a3e635); -webkit-background-clip: text; color: transparent; }
+  
+  /* Concept C: Soft Coral */
+  .con-c { background: #fdfcfb; color: #3d2c2c; }
+  .con-c .top-bar { padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .con-c .card { background: transparent; border-radius: 16px; padding: 0; margin: 8px 0; display: flex; gap: 12px; align-items: center; }
+  .con-c .ring { stroke: #fb923c; filter: drop-shadow(0 4px 6px rgba(251,146,60,0.4)); }
+  .con-c .meal-pill { background: #ffedd5; color: #ea580c; padding: 6px 14px; border-radius: 20px; font-weight: 600; margin-right: auto; }
+  
+  /* Shared Layout Fixes */
+  .phone { width: 360px; height: 740px; font-family: system-ui, -apple-system, sans-serif; overflow: hidden; position: relative; border-radius: 36px; box-shadow: 0 24px 80px rgba(0,0,0,0.16); flex-direction: column; display: flex; }
+  
+  /* Scrollable Content Area */
+  .scroll-content { flex: 1; overflow-y: auto; padding-bottom: 80px; margin-top: 12px; }
+
+  /* Shared UI Elements */
+  .header-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; display: flex; gap: 8px; align-items: center; }
+  .sub-header { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600; padding-left: 4px; }
+  .macro-row { display: flex; gap: 8px; padding: 8px 4px; justify-content: center; margin-bottom: 4px; }
+  .macro-pill { height: 7px; width: 100%; border-radius: 4px; background: #e2e8f0; overflow: hidden; display: flex; gap: 2px; }
+  .con-b .macro-pill { background: #2a2e3b; }
+  .macro-fill { height: 100%; border-radius: 4px; }
+  
+  .meal-item { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+  .con-b .meal-item { border-bottom-color: #2a2e3b; color: #d1d5db; font-size: 14px; }
+  .meal-title { font-weight: 600; display: block; margin-bottom: 2px; }
+  .meal-subtitle { font-size: 12px; opacity: 0.7; display: block; }
+  .meal-kcal { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .con-b .meal-kcal { color: #ffffff; font-size: 15px; }
+
+  .scan-btn { position: absolute; bottom: 80px; right: 24px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px rgba(0,0,0,0.2); z-index: 10; }
+  .con-a .scan-btn { background: #10b981; color: white; border-radius: 18px; }
+  .con-b .scan-btn { background: linear-gradient(135deg, #a3e635, #d9f437); color: black; }
+  .con-c .scan-btn { background: linear-gradient(135deg, #fb923c, #fdba74); color: white; border-radius: 18px; }
+
+  .nav-bar { position: absolute; bottom: 0; width: 100%; height: 64px; padding-top: 8px; display: flex; justify-content: space-around; align-items: center; font-size: 11px; font-weight: 500; opacity: 0.7; background: transparent; }
+  .con-a .nav-bar, .con-c .nav-bar { color: var(--text-muted); }
+  .con-b .nav-bar { color: #64748b; }
+
+  /* Concept A & C Nav dots */
+  .dash { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; margin: 0 2px; transition: transform 0.2s; }
+  .active .dash { width: 24px; background: #10b981; border-radius: 4px; }
+  
+  /* Labels */
+  .concept-label { text-align: center; margin-top: 24px; font-weight: 700; font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: #64748b; }
+
+  /* Fallback warning */
+  .prompt-overlay { position:absolute; top:0;left:0;width:100%;height:100%;display:none;background:#fff;z-index:-1;} 
+</style>
+</head>
+<body>
+
+<!-- Concept A -->
+<div>
+  <div class="phone con-a">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div style="background: #e2e8f0; width:36px; height:36px; border-radius:50%; overflow:hidden;"><img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23cbd5e1'/><circle cx='40' cy='35' r='16' fill='%2394a3b8'/><path d='M20 90 Q40 50 60 90' fill='%23cbd5e1'/></svg>" style="width:100%;height:100%;"></div>
+      <h1 class="header-title">Today</h1>
+      <div style="background:#f1f5f9; padding:8px 14px; border-radius:12px; font-size:13px; color:#64748b;">Oct 29</div>
+    </div>
+    
+    <!-- Macro Rings -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; overflow-y:auto; padding-bottom:90px;">
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle cx="65" cy="65" r="50" fill="none" stroke="#f0fdf4" stroke-width="12"/>
+        <path d="M65 15 A50 50 0 1 1 15 65" fill="none" class="ring" stroke-width="8" stroke-linecap="round"/>
+        <text x="65" y="58" font-size="24" font-weight="700" text-anchor="middle">1,135</text>
+        <text x="65" y="76" font-size="12" fill="#94a3b8" text-anchor="middle">remaining</text>
+      </svg>
+      <!-- Meal List -->
+      <div style="width:100%; padding:0 16px; box-sizing:border-box;">
+        <div class="sub-header">Breakfast</div>
+        <div class="card meal-item">
+           <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='100%25' height='100%25' rx='4' fill='%23fef3c7'/><text x='50%25' y='60%25' dominant-baseline='middle' text-anchor='middle' font-size='16'>🍳</text></svg>" style="width:40px; height:40px; border-radius:8px; margin-right:10px;">
+           <span class="meal-title">Scrambled Eggs & Toast<span class="meal-subtitle">2 eggs, 1 slice</span></span>
+           <span class="meal-kcal" style="margin-left:auto;">420</span>
+        </div>
+        <div class="card meal-item">
+           <span class="meal-title">Morning Coffee<span class="meal-subtitle">Black, 8oz</span></span>
+           <span class="meal-kcal" style="margin-left:auto;">5</span>
+        </div>
+
+        <div class="sub-header" style="margin-top:12px">Lunch</div>
+        <div class="card meal-item">
+           <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='100%25' height='100%25' rx='4' fill='%23dbeafe'/><text x='50%25' y='60%25' dominant-baseline='middle' text-anchor='middle' font-size='16'>🥗</text></svg>" style="width:40px; height:40px; border-radius:8px; margin-right:10px;">
+           <span class="meal-title">Grilled Chicken Salad<span class="meal-subtitle">Full meal, dressing on side</span></span>
+           <span class="meal-kcal" style="margin-left:auto;">540</span>
+        </div>
+
+        <!-- Macro Bars -->
+        <div style="margin-top: 24px; padding: 10px 4px;">
+          <div class="sub-header">Nutrition Goals</div>
+          <svg width="100%" height="40" viewBox="0 0 300 40">
+             <!-- Protein -->
+             <rect x="0" y="6" width="280" height="7" rx="3.5" fill="#e2e8f0"/>
+             <rect x="0" y="6" width="120" height="7" rx="3.5" fill="#8b5cf6"/>
+             
+             <!-- Carbs -->
+             <rect x="0" y="18" width="280" height="7" rx="3.5" fill="#e2e8f0"/>
+             <rect x="0" y="18" width="80" height="7" rx="3.5" fill="#06b6d4"/>
+
+             <!-- Fat -->
+             <rect x="0" y="30" width="280" height="7" rx="3.5" fill="#e2e8f0"/>
+             <rect x="0" y="30" width="160" height="7" rx="3.5" fill="#f9a8d4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan Button -->
+    <div class="scan-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+
+    <!-- Navigation -->
+    <div class="nav-bar">
+      <div style="display:flex; gap:6px; align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="15" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/></svg> Menu</div>
+      <div class="active"><svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Today</div>
+      <div><svg width="18" height="18" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 9h6v6H9z" fill="none" stroke="currentColor" stroke-width="2"/></svg> Prep</div>
+      <div><svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 16V8m-4 4l4-4 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Plan</div>
+    </div>
+  </div>
+  <div class="concept-label">A · Minimal Air</div>
+</div>
+
+<!-- Concept B -->
+<div>
+  <div class="phone con-b">
+      <div class="top-bar" style="flex-direction:column; align-items:flex-start; gap:0;">
+        <span style="font-size:13px; color:#64748b; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Tuesday, Oct 29</span>
+        <div class="big-kcal">1,280</div>
+        <span style="font-size:13px; color:#a1a1aa;">/ 2,100 consumed</span>
+      </div>
+
+      <div style="display:flex; height:40px; gap:0; margin-top:16px; border-bottom:1px solid #2a2e3b;">
+        <div class="active-tab" style="background:linear-gradient(180deg, rgba(217,244,55,0.1), transparent);">Today</div>
+        <div style="padding: 10px 20px; color:#64748b;">Week</div>
+        <div style="padding: 10px 20px; color:#64748b;">Dashboard</div>
+      </div>
+
+      <!-- Meal Sections -->
+      <div style="flex:1; overflow-y:auto; padding-bottom:90px;">
+        <div class="sub-header" style="color:#a3e635; font-size:11px;">BREAKFAST</div>
+        <svg width="100%" height="80" viewBox="0 0 375 80">
+          <rect x="12" y="4" width="351" height="72" rx="16" fill="#181b25" stroke="#2a2e3b"/>
+          <circle cx="42" cy="40" r="16" fill="#fef9c3"/>
+          <text x="42" y="44" text-anchor="middle" font-size="14">🍳</text>
+          <rect x="70" y="28" width="80" height="10" rx="5" fill="#d1d5db"/>
+          <rect x="70" y="46" width="50" height="8" rx="4" fill="#4b5563"/>
+          <text x="340" y="46" text-anchor="end" font-size="16" font-weight="700" fill="#ffffff">+420</text>
+        </svg>
+
+        <div class="sub-header" style="color:#d9f437; margin-top:8px;">LUNCH</div>
+        <svg width="100%" height="80" viewBox="0 0 375 80">
+          <rect x="12" y="4" width="351" height="72" rx="16" fill="#181b25" stroke="#2a2e3b"/>
+          <circle cx="42" cy="40" r="16" fill="#dbeafe"/>
+          <text x="42" y="44" text-anchor="middle" font-size="14">🥗</text>
+          <rect x="70" y="28" width="110" height="10" rx="5" fill="#d1d5db"/>
+          <rect x="70" y="46" width="70" height="8" rx="4" fill="#4b5563"/>
+          <text x="340" y="46" text-anchor="end" font-size="16" font-weight="700" fill="#ffffff">+540</text>
+        </svg>
+
+         <!-- Big Progress Bar -->
+         <div style="margin-top:24px;">
+            <div class="sub-header">Today's Totals</div>
+             <svg width="100%" height="120" viewBox="0 0 375 120">
+
+                 <rect x="12" y="8" width="351" height="104" rx="20" fill="#181b25" stroke="#2a2e3b"/>
+                
+                <!-- Donut Chart -->
+                <circle cx="140" cy="60" r="34" fill="none" stroke="#264a33" stroke-width="12"/>
+                <path d="M140 26 A34 34 0 1 1 106 60" fill="none" stroke="#d9f437" stroke-width="12" stroke-linecap="round"/>
+                
+                <!-- Stats -->
+                <rect x="210" y="25" width="30" height="6" rx="3" fill="#a1a1aa"/>
+                <text x="250" y="33" font-size="14" fill="#ffffff" font-weight="600">Pro 92g</text>
+                
+                <rect x="210" y="49" width="30" height="6" rx="3" fill="#a1a1aa"/>
+                <text x="250" y="62" font-size="14" fill="#ffffff" font-weight="600">Carbs 184g</text>
+
+                <rect x="210" y="73" width="30" height="6" rx="3" fill="#a1a1aa"/>
+                <text x="250" y="81" font-size="14" fill="#ffffff" font-weight="600">Fat 58g</text>
+             </svg>
+         </div>
+      </div>
+
+    <!-- Scan Button -->
+    <div class="scan-btn"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2"/><rect x="7" y="7" width="10" height="10" rx="1"/> <path d="M17 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/></svg></div>
+
+    <!-- Navigation -->
+    <div class="nav-bar" style="flex: none; background:#0f1117; border-top: 1px solid #1f2937;">
+      <div><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="#d9f437"/><path d="M12 2a10 10 0 0110 10h-2.5A7.5 7.5 0 0012 4.5V2z" fill="#64748b"/></svg><br>Schedule</div>
+      <div style="flex:1; text-align:center;"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#d9f437" stroke-width="2" fill="none"/><rect x="9" y="13" width="6" height="8" stroke="#d9f437" stroke-width="2" fill="none"/></svg><br style="margin-top: 2px;"><svg width="8" height="8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" style="fill:#d9f437;"/></svg></div>
+      <div style="opacity:0.4">Profile</div>
+    </div>
+  </div>
+  <div class="concept-label">B · Deep Focus (High Contrast)</div>
+</div>
+
+<!-- Concept C -->
+<div>
+  <div class="phone con-c">
+      <!-- Header -->
+      <div class="top-bar">
+        <div style="width:40px;height:40px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;">
+           <svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 6v6l4 2" stroke="#ea580c" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <h1 class="header-title">Calbud</h1>
+       <div style="background: linear-gradient(135deg, #ffedd5, #fed7aa); width:40px; height:40px; border-radius:12px; display:flex;align-items:center;justify-content:center;color:#9a3412;font-weight:600;">JS</div>
+      </div>
+
+      <!-- Date Scroller -->
+      <div style="display:flex; justify-content:space-between; padding: 16px 8px 8px 8px; overflow-x:auto; gap:12px;">
+         <div><div style="font-size:12px; color:#a8a29e;">Mon</div><div style="font-weight:600;margin-top:4px;">27</div></div>
+         <div><div style="font-size:12px;color:#a8a29e;">Tue</div><div style="font-weight:600;margin-top:4px;">28</div></div>
+         <div style="background:#ffedd5; padding:4px 12px; border-radius:12px;"><span style="font-size:13px; color:#c2410c; font-weight:600;">29</span></div>
+         <div><div style="font-size:12px;color:#a8a29e;">Thu</div><div style="font-weight:600;margin-top:4px;">30</div></div>
+         <div><div style="font-size:12px;color:#a8a29e;">Fri</div><div style="font-weight:600;margin-top:4px;">31</div></div>
+      </div>
+
+      <!-- Progress -->
+      <div style="padding: 0 16px; margin-bottom:16px;">
+        <svg width="100%" height="18" viewBox="0 0 375 18">
+          <rect x="0" y="4" width="375" height="10" rx="5" fill="#fed7aa"/>
+          <path d="M0 9 Q 120 -10 375 9" fill="none" stroke="#fb923c" stroke-width="8" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <!-- Meal Items -->
+       <div style="height:80px; width:86px; background:linear-gradient(135deg, #fed7aa, #fdba74); border-radius:24px; margin: 0 auto 8px auto;"></div>
+       
+       <svg width="100%" height="500" viewBox="0 0 375 500">
+         <!-- Breakfast -->
+         <text x="24" y="36" font-size="10" fill="#a8a29e" font-weight="700" letter-spacing="1.5">BREAKFAST</text>
+         <rect x="24" y="48" width="327" height="64" rx="20" fill="white" stroke="#fef3c7" stroke-width="2"/>
+         <circle cx="58" cy="80" r="16" fill="#fffbeb"/><text x="58" y="86" text-anchor="middle" font-size="14">🥞</text>
+         <rect x="90" y="72" width="100" height="8" rx="4" fill="#e5e7eb"/>
+         <rect x="90" y="86" width="60" height="6" rx="3" fill="#f3f4f6"/>
+         <text x="352" y="85" text-anchor="end" font-weight="600">580</text>
+
+         <!-- Lunch -->
+         <text x="24" y="140" font-size="10" fill="#a8a29e" letter-spacing="1.5px">LUNCH</text>
+         <rect x="24" y="152" width="327" height="64" rx="20" fill="none" stroke="#fef3c7" stroke-width="2"/>
+         <circle cx="58" cy="184" r="16" fill="#ffedd5"/><text x="58" y="190" text-anchor="middle" font-size="14">🍔</text>
+         <rect x="90" y="176" width="130" height="8" rx="4" fill="#e5e7eb"/>
+         <rect x="90" y="190" width="50" height="6" rx="3" fill="#f3f4f6"/>
+         <text x="352" y="189" text-anchor="end" font-weight="600">720</text>
+
+          <!-- Dinner (Empty state) -->
+         <text x="24" y="250" font-size="10" fill="#d1d5db" letter-spacing="1.5px">DINNER</text>
+         <rect x="24" y="262" width="327" height="64" rx="20" fill="#ffffff" stroke="#f5f5f4" stroke-width="2" stroke-dasharray="6 3"/>
+         <circle cx="58" cy="294" r="16" fill="#fafaf9"/><text x="58" y="300" text-anchor="middle" font-size="12" fill="#d1d5db">+</text>
+         <rect x="90" y="296" width="40" height="4" rx="2" fill="#f4f4f5"/>
+
+          <!-- Macro Pills -->
+           <rect x="24" y="360" width="84" height="36" rx="18" fill="#fef2f2"/><text x="66" y="382" text-anchor="middle" font-size="11" font-weight="600" fill="#991b1b">🥩 72g</text>
+           <rect x="116" y="360" width="84" height="36" rx="18" fill="#fefce8"/><text x="158" y="382" text-anchor="middle" font-size="11" font-weight="600" fill="#854d0e">🍞 94g</text>
+           <rect x="208" y="360" width="84" height="36" rx="18" fill="#f0fdf4"/><text x="250" y="382" text-anchor="middle" font-size="11" font-weight="600" fill="#166534">🥑 56g</text>
+       </svg>
+
+     <!-- Scan Button -->
+     <div class="scan-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+
+      <!-- Navigation -->
+       <svg width="100%" height="84" viewBox="0 0 375 84">
+         <path d="M0 76 Q 375 90 375 76v8a3 3 0 01-3 3H3a3 3 0 01-3-3z" fill="#ffffff" stroke="#f5f5f4"/>
+         <!-- Home Pill -->
+         <circle cx="172" cy="76" r="28" fill="#ffedd5"/>
+         <path d="M165 76h14v-4l3 3 3-3z" stroke="#ea580c" stroke-width="2.5" fill="none" />
+       </svg>
+   </div>
+   <div class="concept-label">C · Soft Coral (Warm & Approachable)</div>
+</div>
+
+</body>
+</html>

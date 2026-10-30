@@ -1,0 +1,75 @@
+# 50: Tokens and shell (redesign)
+
+Read `docs/review/redesign-common.md` first and follow it. This task creates the colors every later task uses, so use the names below exactly.
+
+## Files
+`src/index.css`, `src/App.tsx`, `src/pwa/OfflineBanner.tsx`, `src/pwa/UpdatePrompt.tsx`
+
+## Steps
+1. **`src/index.css`:** replace the whole file (it is 7 lines) with exactly this:
+```css
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --c-cream: #fffaf5; --c-card: #ffffff; --c-ink: #3d2c2c; --c-muted: #7a6b6b; --c-line: #f0e4d8;
+  --c-coral-light: #ffedd5; --c-coral-deep: #c2410c; --c-coral-deeper: #9a3412;
+  --c-link: #c2410c; --c-section: #d97706; --c-danger: #dc2626; --c-warn: #d97706;
+  --c-ring: #10b981; --c-ring-track: #fde8d0;
+  --c-rose-soft: #fff1f2; --c-rose-ink: #be123c;
+  --c-amber-soft: #fefce8; --c-amber-ink: #854d0e;
+  --c-green-soft: #f0fdf4; --c-green-ink: #166534;
+  --card-shadow: 0 2px 8px rgba(61, 44, 44, 0.05);
+}
+:root.dark {
+  color-scheme: dark;
+  --c-cream: #1b1512; --c-card: #271f1b; --c-ink: #f6ece4; --c-muted: #b9a99d; --c-line: #3b2f29;
+  --c-coral-light: #3d2615; --c-coral-deep: #c2410c; --c-coral-deeper: #9a3412;
+  --c-link: #fdba74; --c-section: #fbbf24; --c-danger: #f87171; --c-warn: #fbbf24;
+  --c-ring: #34d399; --c-ring-track: #3d2a1c;
+  --c-rose-soft: #3a1d24; --c-rose-ink: #fda4af;
+  --c-amber-soft: #352b12; --c-amber-ink: #fde047;
+  --c-green-soft: #14301f; --c-green-ink: #86efac;
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+@theme inline {
+  --color-cream: var(--c-cream);
+  --color-card: var(--c-card);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-line);
+  --color-coral: #fb923c;
+  --color-coral-light: var(--c-coral-light);
+  --color-coral-deep: var(--c-coral-deep);
+  --color-coral-deeper: var(--c-coral-deeper);
+  --color-link: var(--c-link);
+  --color-section: var(--c-section);
+  --color-danger: var(--c-danger);
+  --color-warn: var(--c-warn);
+  --color-ring: var(--c-ring);
+  --color-ring-track: var(--c-ring-track);
+  --color-rose-soft: var(--c-rose-soft);
+  --color-rose-ink: var(--c-rose-ink);
+  --color-amber-soft: var(--c-amber-soft);
+  --color-amber-ink: var(--c-amber-ink);
+  --color-green-soft: var(--c-green-soft);
+  --color-green-ink: var(--c-green-ink);
+  --shadow-card: var(--card-shadow);
+}
+
+body {
+  background-color: var(--c-cream);
+  color: var(--c-ink);
+}
+```
+2. **`App.tsx`, shell of the signed-in app** (the `div` with `min-h-screen bg-slate-900 text-white pb-16`): change its classes to `mx-auto max-w-md min-h-screen bg-cream text-ink pb-28`.
+3. **`App.tsx`, header:** classes become `sticky top-0 z-10 bg-cream px-6 pt-6 pb-2 text-[26px] font-extrabold tracking-tight text-ink`; the text stays `Calbud`. The `<main>` becomes `px-5 py-4`.
+4. **`App.tsx`, bottom nav:** the `<nav>` becomes `fixed bottom-0 left-0 right-0 mx-auto max-w-md bg-card rounded-t-[32px] shadow-[0_-4px_16px_rgba(0,0,0,0.05)] flex justify-around items-center h-[72px]`. Each `NavLink` gets the base classes `relative px-4 py-2 text-xs`, plus active `text-coral-deep font-bold` (use `text-link` instead so it is readable in dark) or inactive `text-muted`. For the **active** tab only, render a circle behind the label: `<span className="absolute left-1/2 -top-6 h-16 w-16 -translate-x-1/2 rounded-full bg-coral-light" />`, and wrap the label in `<span className="relative">`. NavLink's `children` can be a function `({ isActive }) => ...`. Keep the same four tabs, links, labels and the `end` prop.
+5. **`App.tsx`, the loading, error and not-configured screens:** `text-white` becomes `text-ink`; red error text becomes `text-danger`; the Retry button becomes `py-2 px-4 rounded-2xl bg-coral-deep hover:bg-coral-deeper text-white font-bold`; the not-configured message box becomes `bg-card text-ink rounded-3xl shadow-card p-6 max-w-sm text-center`.
+6. **`OfflineBanner.tsx`:** the banner classes become `bg-coral-light text-ink text-sm text-center px-4 py-2`.
+7. **`UpdatePrompt.tsx`:** read it, then reskin it with the style rules (bar `bg-card text-ink shadow-card rounded-2xl`, its button a primary button).
+
+## Done means
+- `npx tsc -b` passes, `npm test` passes with the same count as before, and `grep -nE "slate-|gray-|blue-|red-|amber-" src/App.tsx src/pwa/*.tsx` finds nothing.
+- The reply format in `redesign-common.md`.
