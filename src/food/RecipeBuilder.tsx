@@ -5,8 +5,9 @@ import { recipeTotals } from './recipe'
 import { yieldFrom, startAmount, readAmount, ingredientLine } from './recipeDraft'
 import FoodFinder from './FoodFinder'
 
-const toggle = (on: boolean) =>
-  `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
+const toggle = (active: boolean) => active
+  ? 'flex-1 rounded-xl bg-card text-ink shadow-card font-bold py-2'
+  : 'flex-1 py-2 text-muted'
 
 export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe; onChange: (recipe: Recipe) => void }) {
   const [ingredients, setIngredients] = useState<Ingredient[]>(initial?.ingredients ?? [])
@@ -32,7 +33,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
       <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
         className="space-y-3">
         <FoodFinder onPick={(food) => { const s = startAmount(food); setEditing({ food, index: null }); setAmountText(s.text); setUnit(s.unit); setStep('amount') }} />
-        <button type="button" onClick={() => setStep('list')} className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold">Cancel</button>
+        <button type="button" onClick={() => setStep('list')} className="w-full py-3 bg-coral-light hover:bg-coral-deep/10 text-link rounded-2xl font-semibold">Cancel</button>
       </div>
     )
   } else if (step === 'amount' && editing) {
@@ -52,23 +53,23 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
 
     body = (
       <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
-        className="bg-slate-900 rounded-lg p-3 space-y-3">
+        className="space-y-3 bg-coral-light/50 rounded-2xl p-3">
         <div>
           <span className="font-semibold">{editing.food.name}</span>
-          {editing.food.brand && <p className="text-gray-400 text-sm">{editing.food.brand}</p>}
+          {editing.food.brand && <p className="text-muted text-sm">{editing.food.brand}</p>}
         </div>
 
         {toggleMarkup}
 
         <label htmlFor="ingredient-amount" className="block">
-          <span className="text-gray-400 text-xs">{unit === 'serving' ? 'Servings' : 'Grams'}</span>
+          <span className="text-muted text-xs">{unit === 'serving' ? 'Servings' : 'Grams'}</span>
           <input id="ingredient-amount" type="text" inputMode="decimal" value={amountText}
             onChange={(e) => { setAmountText(e.target.value); }}
-            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
         </label>
 
         {amountText.trim() !== '' && amount === null && (
-          <p className="text-red-400 text-xs">Enter an amount above 0.</p>
+          <p className="text-danger text-xs">Enter an amount above 0.</p>
         )}
 
         <div className="flex gap-2">
@@ -79,7 +80,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
             update(next)
             setEditing(null)
             setStep('list')
-          }} className="flex-1 py-3 rounded font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600">
+          }} className="flex-1 py-3 rounded-2xl bg-coral-deep hover:bg-coral-deeper text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed">
             {editing.index !== null ? 'Save' : 'Add'}
           </button>
 
@@ -88,11 +89,11 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
               update(ingredients.filter((_, i) => i !== editing.index))
               setEditing(null)
               setStep('list')
-            }} className="py-3 px-4 rounded bg-red-900 text-white font-semibold">Remove</button>
+            }} className="py-3 px-4 rounded-xl text-danger font-semibold">Remove</button>
           )}
 
           <button type="button" onClick={() => { setEditing(null); setStep('list') }}
-            className="py-3 px-4 rounded bg-slate-700 text-white font-semibold">Cancel</button>
+            className="py-3 px-4 rounded-xl bg-coral-light hover:bg-coral-deep/10 text-link font-semibold">Cancel</button>
         </div>
       </div>
     )
@@ -106,9 +107,9 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
         <div className="space-y-3">
           {ingredients.map((ing, i) => (
             <button key={i} type="button" onClick={() => { setEditing({ food: ing.food, index: i }); setAmountText(String(ing.amount)); setUnit(ing.unit); setStep('amount') }}
-              className="w-full bg-slate-900 border border-slate-700 rounded p-3 text-left hover:bg-slate-700">
+              className="w-full bg-coral-light/50 rounded-2xl p-3 text-left hover:bg-coral-light">
               <span className="font-semibold">{ing.food.name}</span>
-              <p className="text-gray-400 text-sm">{ingredientLine(ing)}</p>
+              <p className="text-muted text-sm">{ingredientLine(ing)}</p>
             </button>
           ))}
         </div>
@@ -121,26 +122,26 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
       const weightToggleActive = mode === 'weight'
       yieldMarkup = (
         <div className="space-y-2">
-          <p className="text-sm text-gray-400">How is it divided?</p>
+          <p className="text-sm font-semibold text-muted">How is it divided?</p>
           <div className="flex gap-2">
             <button type="button" onClick={() => update(ingredients, 'servings', '1')} className={servToggleActive ? toggle(true) : toggle(false)}>Servings</button>
             <button type="button" onClick={() => update(ingredients, 'weight', '')} className={weightToggleActive ? toggle(true) : toggle(false)}>Weigh the cooked dish</button>
           </div>
           {mode === 'servings' ? (
             <div>
-              <label htmlFor="recipe-yield" className="text-gray-400 text-xs">How many servings</label>
+              <label htmlFor="recipe-yield" className="text-muted text-xs">How many servings</label>
               <input id="recipe-yield" type="text" inputMode="decimal" value={yieldText}
                 onChange={(e) => { update(ingredients, 'servings', e.target.value); }}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-              <p className="text-gray-500 text-xs">Each serving is an equal share of everything above.</p>
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
+              <p className="text-muted text-xs">Each serving is an equal share of everything above.</p>
             </div>
           ) : (
             <div>
-              <label htmlFor="recipe-yield" className="text-gray-400 text-xs">Cooked weight of the whole dish (g)</label>
+              <label htmlFor="recipe-yield" className="text-muted text-xs">Cooked weight of the whole dish (g)</label>
               <input id="recipe-yield" type="text" inputMode="decimal" value={yieldText}
                 onChange={(e) => { update(ingredients, 'weight', e.target.value); }}
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-              <p className="text-gray-500 text-xs">Weigh the pot&apos;s contents after cooking, without the pot. Then log the grams you eat.</p>
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
+              <p className="text-muted text-xs">Weigh the pot&apos;s contents after cooking, without the pot. Then log the grams you eat.</p>
             </div>
           )}
         </div>
@@ -150,12 +151,12 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
     body = (
       <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
         className="space-y-3">
-        <p className="text-sm font-semibold text-gray-400">Ingredients</p>
-        {ingredientList ?? <p className="text-gray-500 text-sm">No ingredients yet.</p>}
+        <p className="text-sm font-semibold text-muted">Ingredients</p>
+        {ingredientList ?? <p className="text-muted text-sm">No ingredients yet.</p>}
         <button type="button" onClick={() => setStep('finding')}
-          className="w-full py-2 rounded border border-dashed border-slate-600 text-gray-300 hover:bg-slate-800">+ Add ingredient</button>
+          className="w-full py-2 rounded border border-dashed border-line text-muted hover:bg-coral-light/50">+ Add ingredient</button>
 
-        {ingredients.length > 0 && <p className="text-sm text-gray-300">Total: {totals.kcal} cal · {totals.grams} g as weighed in</p>}
+        {ingredients.length > 0 && <p className="text-sm text-muted font-semibold">Total: {totals.kcal} cal · {totals.grams} g as weighed in</p>}
         {yieldMarkup}
       </div>
     )

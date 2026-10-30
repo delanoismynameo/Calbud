@@ -27,14 +27,14 @@ export default function ExtrasFields({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="text-sm text-blue-400 text-left mb-1"
+        className="text-link ml-4 mb-1 text-sm"
         aria-expanded={open}
       >
         More nutrients (optional) {open ? '▴' : '▾'}
       </button>
 
       {hasErrors && !open && (
-        <p className="text-red-400 text-xs mb-1">Check the nutrients below.</p>
+        <p className="text-danger text-xs mb-1">Check the nutrients below.</p>
       )}
 
       {open && (
@@ -44,7 +44,7 @@ export default function ExtrasFields({
               const key = info.key
               return (
                 <div key={key}>
-                  <label htmlFor={'extra-' + key} className="block text-gray-400 text-sm mb-1">
+                  <label htmlFor={'extra-' + key} className="block text-muted text-sm mb-1">
                     {info.label} ({info.unit})
                   </label>
                   <input
@@ -53,16 +53,16 @@ export default function ExtrasFields({
                     inputMode="decimal"
                     value={values[key] ?? ''}
                     onChange={(e) => onChange(key, e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-3 py-2 focus:outline-none focus:ring-2 focus:ring-coral"
                   />
                   {errors[key] && (
-                    <p className="text-red-400 text-xs mt-1">{errors[key]}</p>
+                    <p className="text-danger text-xs mt-1">{errors[key]}</p>
                   )}
                 </div>
               )
             })}
           </div>
-          <p className="text-gray-500 text-xs mt-2">Per serving, from the label. Leave blank what you don&apos;t know.</p>
+          <p className="text-muted text-xs mt-2">Per serving, from the label. Leave blank what you don&apos;t know.</p>
         </>
       )}
     </div>

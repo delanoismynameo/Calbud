@@ -15,8 +15,9 @@ import { recipeFood, recipeError } from './recipe'
 import RecipeBuilder from './RecipeBuilder'
 import type { Recipe } from './types'
 
-const toggle = (on: boolean) =>
-  `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
+const modeToggle = (active: boolean) => active
+  ? 'flex-1 rounded-xl bg-card text-ink shadow-card font-bold py-2'
+  : 'flex-1 py-2 text-muted'
 
 interface CustomFoodFormProps {
   onSaved: (food: FoodResult) => void
@@ -90,7 +91,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     onSaved(food)
   }
 
-  const fieldClass = 'w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500'
+  const fieldClass = 'w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral'
 
   const preview = previewLabel(input, extraInputs)
 
@@ -100,71 +101,71 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
   const label = built !== null ? builtLabel(built) : null
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-gray-400 px-1">Create a food</h2>
+    <div className="bg-card rounded-3xl shadow-card p-4 space-y-3">
+      <h2 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section px-1">Create a food</h2>
 
-      <div className="flex gap-2">
-        <button type="button" onClick={() => { setMode('numbers'); setRecipeErr('') }} className={toggle(mode === 'numbers')}>Type the numbers</button>
-        <button type="button" onClick={() => { setMode('ingredients'); setRecipeErr('') }} className={toggle(mode === 'ingredients')}>Build from ingredients</button>
+      <div className="flex rounded-2xl bg-coral-light p-1">
+        <button type="button" onClick={() => { setMode('numbers'); setRecipeErr('') }} className={modeToggle(mode === 'numbers')} role="switch" aria-checked={mode === 'numbers'}>Type the numbers</button>
+        <button type="button" onClick={() => { setMode('ingredients'); setRecipeErr('') }} className={modeToggle(mode === 'ingredients')} role="switch" aria-checked={mode === 'ingredients'}>Build from ingredients</button>
       </div>
 
       <div>
-        <label htmlFor="cf-name" className="block text-gray-400 text-sm mb-1">Name</label>
+        <label htmlFor="cf-name" className="block text-muted text-sm mb-1">Name</label>
         <input id="cf-name" type="text" value={input.name} onChange={change('name')}
           className={fieldClass} />
-        {errors.name && <p className="text-red-400 text-xs">{errors.name}</p>}
+        {errors.name && <p className="text-danger text-xs">{errors.name}</p>}
       </div>
 
       {mode === 'numbers' && (
         <>
           <div>
-        <label htmlFor="cf-label" className="block text-gray-400 text-sm mb-1">Serving name</label>
+        <label htmlFor="cf-label" className="block text-muted text-sm mb-1">Serving name</label>
         <input id="cf-label" type="text" value={input.servingLabel} onChange={change('servingLabel')}
           placeholder="1 serving" className={fieldClass} />
-        {errors.servingLabel && <p className="text-red-400 text-xs">{errors.servingLabel}</p>}
+        {errors.servingLabel && <p className="text-danger text-xs">{errors.servingLabel}</p>}
       </div>
 
       <div>
-        <label htmlFor="cf-weight" className="block text-gray-400 text-sm mb-1">Serving weight (g)</label>
+        <label htmlFor="cf-weight" className="block text-muted text-sm mb-1">Serving weight (g)</label>
         <input id="cf-weight" type="text" inputMode="decimal" value={input.servingG} onChange={change('servingG')}
           className={fieldClass} />
-        {errors.servingG && <p className="text-red-400 text-xs">{errors.servingG}</p>}
+        {errors.servingG && <p className="text-danger text-xs">{errors.servingG}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label htmlFor="cf-kcal" className="block text-gray-400 text-sm mb-1">Calories</label>
+          <label htmlFor="cf-kcal" className="block text-muted text-sm mb-1">Calories</label>
           <input id="cf-kcal" type="text" inputMode="decimal" value={input.kcal} onChange={change('kcal')}
             className={fieldClass} />
-          {errors.kcal && <p className="text-red-400 text-xs">{errors.kcal}</p>}
+          {errors.kcal && <p className="text-danger text-xs">{errors.kcal}</p>}
         </div>
         <div>
-          <label htmlFor="cf-protein" className="block text-gray-400 text-sm mb-1">Protein (g)</label>
+          <label htmlFor="cf-protein" className="block text-muted text-sm mb-1">Protein (g)</label>
           <input id="cf-protein" type="text" inputMode="decimal" value={input.protein} onChange={change('protein')}
             className={fieldClass} />
-          {errors.protein && <p className="text-red-400 text-xs">{errors.protein}</p>}
+          {errors.protein && <p className="text-danger text-xs">{errors.protein}</p>}
         </div>
         <div>
-          <label htmlFor="cf-carbs" className="block text-gray-400 text-sm mb-1">Carbs (g)</label>
+          <label htmlFor="cf-carbs" className="block text-muted text-sm mb-1">Carbs (g)</label>
           <input id="cf-carbs" type="text" inputMode="decimal" value={input.carbs} onChange={change('carbs')}
             className={fieldClass} />
-          {errors.carbs && <p className="text-red-400 text-xs">{errors.carbs}</p>}
+          {errors.carbs && <p className="text-danger text-xs">{errors.carbs}</p>}
         </div>
         <div>
-          <label htmlFor="cf-fat" className="block text-gray-400 text-sm mb-1">Fat (g)</label>
+          <label htmlFor="cf-fat" className="block text-muted text-sm mb-1">Fat (g)</label>
           <input id="cf-fat" type="text" inputMode="decimal" value={input.fat} onChange={change('fat')}
             className={fieldClass} />
-          {errors.fat && <p className="text-red-400 text-xs">{errors.fat}</p>}
+          {errors.fat && <p className="text-danger text-xs">{errors.fat}</p>}
         </div>
       </div>
 
-      <p className="text-gray-500 text-xs">Per serving. An estimate is fine.</p>
+      <p className="text-muted text-xs">Per serving. An estimate is fine.</p>
 
       <ExtrasFields values={extraInputs} errors={extraErrors} onChange={changeExtra} />
 
       {preview && (
         <div>
-          <p className="text-gray-400 text-sm mb-1">Label preview</p>
+          <p className="text-muted text-sm mb-1">Label preview</p>
           <NutritionLabel servingText={preview.servingText} kcal={preview.kcal} rows={preview.rows} />
         </div>
       )}
@@ -178,24 +179,24 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
 
           {label && (
             <div>
-              <p className="text-gray-400 text-sm mb-1">Label preview</p>
+              <p className="text-muted text-sm mb-1">Label preview</p>
               <NutritionLabel servingText={label.servingText} kcal={label.kcal} rows={label.rows} />
             </div>
           )}
 
-          {recipeErr && <p className="text-red-400 text-sm">{recipeErr}</p>}
+          {recipeErr && <p className="text-danger text-sm">{recipeErr}</p>}
         </>
       )}
 
-      {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
+      {saveError && <p className="text-danger text-sm">{saveError}</p>}
 
       <div className="space-y-2">
         <button type="button" onClick={handleSubmit} disabled={saving}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded text-white font-semibold">
+          className="w-full py-3 bg-coral-deep hover:bg-coral-deeper disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl text-white font-bold">
           {saving ? 'Saving…' : 'Save'}
         </button>
         <button type="button" onClick={onCancel} disabled={saving}
-          className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold">
+          className="w-full py-3 bg-coral-light hover:bg-coral-deep/10 text-link rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
           Cancel
         </button>
       </div>

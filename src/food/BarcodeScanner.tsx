@@ -59,10 +59,10 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
   return (
     <div className="space-y-3">
       {cameraError ? (
-        <p className="text-yellow-400 text-sm">{cameraError}</p>
+        <p className="text-warn text-sm">{cameraError}</p>
       ) : (
         <>
-          <p className="text-gray-400 text-xs">Point the camera at the barcode.</p>
+        <p className="text-muted text-xs">Point the camera at the barcode.</p>
           <video
             ref={videoRef}
             className="w-full rounded-lg bg-black aspect-[4/3] object-cover"
@@ -73,7 +73,7 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
       )}
 
       <form onSubmit={handleSubmit}>
-        <label htmlFor="barcode-input" className="block text-gray-400 text-sm mb-1">Or type the barcode</label>
+        <label htmlFor="barcode-input" className="block text-muted text-sm mb-1">Or type the barcode</label>
         <div className="flex gap-2">
           <input
             id="barcode-input"
@@ -82,16 +82,16 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
             inputMode="numeric"
             autoComplete="off"
             defaultValue=""
-            className="min-w-0 flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-blue-500"
+            className="min-w-0 flex-1 bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral"
           />
-          <button type="submit" className="py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold">Look up</button>
+          <button type="submit" className="px-4 py-3 bg-coral-deep hover:bg-coral-deeper rounded-2xl text-white font-bold">Look up</button>
         </div>
       </form>
 
       <button
         type="button"
         onClick={onCancel}
-        className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded text-white font-semibold"
+        className="w-full py-3 bg-coral-light hover:bg-coral-deep/10 text-link rounded-2xl font-semibold"
       >
         Cancel
       </button>
