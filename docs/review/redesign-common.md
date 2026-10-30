@@ -17,6 +17,7 @@ Each redesign brief (tasks 50–64) says "read this file first". Follow all of i
 - Primary button: `bg-coral-deep hover:bg-coral-deeper text-white rounded-2xl font-bold py-3`. Secondary button: `bg-coral-light text-link rounded-2xl font-semibold`. Destructive text button: `text-danger`.
 - Inputs, selects, textareas: `bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3`, with `focus:outline-none focus:ring-2 focus:ring-coral`.
 - Old to new: `bg-slate-900` → `bg-cream` (page) or `bg-coral-light/50` (inset row); `bg-slate-800` → card; `hover:bg-slate-700` → `hover:bg-coral-light`; `border-slate-*` → `border-line`; `text-white` → `text-ink`; `text-gray-*` → `text-muted`; blue button → primary button; `text-blue-400` link → `text-link underline`; `text-red-400` → `text-danger`; `text-amber-*` → `text-warn`; `bg-blue-500` progress fills → `bg-ring`; progress tracks → `bg-ring-track`.
+- Coral-coloured text (links, selected/unselected labels) is always `text-link`, never `text-coral-deep` (the dark theme needs the lighter coral). `bg-coral-deep` is only for fills.
 - `text-white` stays only on a filled `bg-coral-deep` button or the coral scan button.
 
 ## Done means (reskin tasks)
