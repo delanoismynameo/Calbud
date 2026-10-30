@@ -7,8 +7,8 @@ export default function Setup() {
   const [step, setStep] = useState(1)
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+    <div className="min-h-screen bg-cream text-ink mx-auto max-w-md px-6 py-10">
+      <div className="bg-card rounded-3xl shadow-card p-6 space-y-4">
         {step === 1 ? (
           <ProfileStep onDone={() => setStep(2)} />
         ) : (
@@ -17,7 +17,7 @@ export default function Setup() {
 
         <div className="flex justify-end mt-4">
           <button onClick={() => supabase.auth.signOut()}
-            className="text-xs text-gray-400 hover:text-white">
+            className="text-xs text-link font-semibold hover:underline">
             Sign out
           </button>
         </div>

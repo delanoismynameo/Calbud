@@ -49,19 +49,19 @@ export default function AuthScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center mb-6 text-white">
+    <div className="min-h-screen bg-cream text-ink mx-auto max-w-md px-6 py-10">
+      <div className="bg-card rounded-3xl shadow-card p-6 space-y-4">
+        <h1 className="text-[26px] font-extrabold tracking-tight text-ink text-center mb-6">
           {mode === 'signIn' ? 'Sign in' : mode === 'signUp' ? 'Create account' : 'Reset password'}
         </h1>
 
-        {urlNotice && <p className="text-green-400 text-center mb-4 bg-slate-700 rounded p-3">{urlNotice}</p>}
-        {success && !error && <p className="text-green-400 text-center mb-4 bg-slate-700 rounded p-3">{success}</p>}
+        {urlNotice && <p className="text-muted text-sm text-center bg-coral-light/50 rounded-2xl p-4">{urlNotice}</p>}
+        {success && !error && <p className="text-muted text-sm text-center bg-coral-light/50 rounded-2xl p-4">{success}</p>}
 
         <div className="flex justify-center gap-4 mb-6">
           {[['signIn', 'Sign in'], ['signUp', 'Create account'], ['forgotPassword', 'Forgot password']].map(([m, label]) => (
             <button key={m} onClick={() => setMode(m as Mode)}
-              className={`text-xs ${mode === m ? 'text-white font-semibold border-b border-white' : 'text-gray-400 hover:text-white'}`}>
+              className={`text-xs text-link ${mode === m ? 'font-bold underline underline-offset-4' : 'opacity-70 hover:opacity-100'}`}>
               {label}
             </button>
           ))}
@@ -69,32 +69,32 @@ export default function AuthScreen() {
 
         <form onSubmit={submit} className="space-y-3">
           {mode === 'signUp' && (
-            <div><label htmlFor="dn" className="block text-gray-400 text-sm mb-1">Display name</label>
+            <div><label htmlFor="dn" className="block text-muted text-sm mb-1">Display name</label>
               <input id="dn" type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} autoComplete="name"
-                className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-[11px] text-white focus:outline-none focus:border-blue-500" /></div>
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" /></div>
           )}
 
-          <div><label htmlFor="email" className="block text-gray-400 text-sm mb-1">Email</label>
+          <div><label htmlFor="email" className="block text-muted text-sm mb-1">Email</label>
             <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required
-              className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-[11px] text-white focus:outline-none focus:border-blue-500" /></div>
+              className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" /></div>
 
           {mode !== 'forgotPassword' && (
-            <div><label htmlFor="pw" className="block text-gray-400 text-sm mb-1">Password</label>
+            <div><label htmlFor="pw" className="block text-muted text-sm mb-1">Password</label>
               <input id="pw" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'} required
-                className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-[11px] text-white focus:outline-none focus:border-blue-500" /></div>
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" /></div>
           )}
 
           {mode === 'signIn' && (
-            <p className="text-xs text-gray-400"><button type="button" onClick={() => setMode('forgotPassword')} className="hover:text-white">Forgot password?</button></p>
+            <p className="text-xs text-muted"><button type="button" onClick={() => setMode('forgotPassword')} className="font-semibold text-link hover:underline">Forgot password?</button></p>
           )}
 
           <button type="submit" disabled={loading}
-            className={`w-full py-3 rounded font-semibold text-white ${loading ? 'bg-slate-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+            className={`w-full py-3 rounded-2xl font-bold ${loading ? 'cursor-not-allowed bg-coral-light/50 text-muted' : 'bg-coral-deep hover:bg-coral-deeper text-white'}`}>
             {loading ? 'Please wait...' : mode === 'signIn' ? 'Sign in' : mode === 'signUp' ? 'Create account' : 'Send reset link'}
           </button>
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {error && <p className="text-danger text-sm text-center">{error}</p>}
         </form>
       </div>
     </div>
