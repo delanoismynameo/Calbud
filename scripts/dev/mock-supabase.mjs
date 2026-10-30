@@ -16,6 +16,8 @@ const foods = []
 const mealLogs = []
 const mealPrep = []
 const menuSlots = []
+const groceryExtras = []
+const groceryTicks = []
 const activities = []
 // Start with Alice already in her own household, so the add-food flow is reachable.
 if (process.argv.includes('--in-household')) {
@@ -222,6 +224,26 @@ http.createServer((req, res) => {
       if (req.method === 'DELETE') hit.forEach((r) => menuSlots.splice(menuSlots.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
+    // grocery_extras and grocery_ticks: shared like meal_prep. POST is an upsert on (household_id, week_start, key).
+    for (const [table, store] of [['grocery_extras', groceryExtras], ['grocery_ticks', groceryTicks]]) {
+      if (url.pathname !== `/rest/v1/${table}`) continue
+      const mine = profiles[ME].household_id
+      const fs = filters(url).filter((f) => f.k !== 'on_conflict')
+      if (req.method === 'POST') {
+        for (const row of [].concat(JSON.parse(body))) {
+          if (!mine || row.household_id !== mine) return pgErr(res, `new row violates row-level security policy for table "${table}"`, 403)
+          if (!String(row.key ?? '').trim()) return pgErr(res, `new row for relation "${table}" violates check constraint`)
+          const existing = store.find((s) => s.household_id === mine && s.week_start === row.week_start && s.key === row.key)
+          if (existing) Object.assign(existing, row)
+          else store.push({ created_at: new Date().toISOString(), ...row })
+        }
+        return send(res, 201, undefined)
+      }
+      const hit = store.filter((r) => mine && r.household_id === mine && match(r, fs))
+      if (req.method === 'GET') return send(res, 200, sortBy([...hit], url.searchParams.get('order') || ''))
+      if (req.method === 'DELETE') hit.forEach((r) => store.splice(store.indexOf(r), 1))
+      return send(res, 200, hit.map((r) => ({ key: r.key })))
+    }
     // activities: reads see your rows and your household's; writes only touch your own rows (0 rows otherwise).
     if (url.pathname === '/rest/v1/activities') {
       const mine = profiles[ME].household_id
@@ -244,7 +266,7 @@ http.createServer((req, res) => {
       if (req.method === 'DELETE') hit.forEach((r) => activities.splice(activities.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
-    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep, menuSlots, activities })
+    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep, menuSlots, groceryExtras, groceryTicks, activities })
     if (url.pathname === '/rest/v1/rpc/create_household') {
       if (profiles[ME].household_id) return pgErr(res, 'create_household: you are already in a household')
       const id = randomUUID()
