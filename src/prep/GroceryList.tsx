@@ -65,12 +65,12 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
         setExtras(next)
         saveExtras(weekStart, next)
         setInputText('')
-      }}>
+      }} className="mb-3">
         <div className="flex gap-2">
           <input
             type="text"
             aria-label="Add item"
-            placeholder="Add an item, e.g. 2 lb chicken"
+            placeholder="Add an item"
             value={inputText}
             onChange={e => setInputText(e.target.value)}
             className="bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral flex-1"
