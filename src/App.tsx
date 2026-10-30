@@ -26,7 +26,7 @@ export default function App() {
   if (!isConfigured()) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <p className="text-white bg-slate-800 rounded-lg shadow-xl p-6 max-w-sm text-center">Supabase isn't configured. Copy .env.example to .env.local and fill in the two values.</p>
+        <p className="bg-card text-ink rounded-3xl shadow-card p-6 max-w-sm text-center">Supabase isn't configured. Copy .env.example to .env.local and fill in the two values.</p>
       </div>
     )
   }
@@ -34,7 +34,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <p className="text-white">Loading…</p>
+        <p className="text-ink">Loading…</p>
       </div>
     )
   }
@@ -58,7 +58,7 @@ function SignedInApp() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <p className="text-white">Loading…</p>
+        <p className="text-ink">Loading…</p>
       </div>
     )
   }
@@ -66,8 +66,8 @@ function SignedInApp() {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4">
-        <p className="text-red-400 mb-3">{error}</p>
-        <button onClick={refresh} className="py-2 bg-slate-700 hover:bg-slate-600 rounded text-white px-4 font-semibold">Retry</button>
+        <p className="text-danger mb-3">{error}</p>
+        <button onClick={refresh} className="py-2 px-4 rounded-2xl bg-coral-deep hover:bg-coral-deeper text-white font-bold">Retry</button>
       </div>
     )
   }
@@ -77,12 +77,12 @@ function SignedInApp() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white pb-16">
-      <header className="sticky top-0 z-10 bg-slate-800 px-4 py-3 text-center text-lg font-semibold">
+    <div className="mx-auto max-w-md min-h-screen bg-cream text-ink pb-28">
+      <header className="sticky top-0 z-10 bg-cream px-6 pt-6 pb-2 text-[26px] font-extrabold tracking-tight text-ink">
         Calbud
       </header>
       <OfflineBanner />
-      <main className="px-4 py-6">
+      <main className="px-5 py-4">
         <Routes>
           <Route path="/" element={<Today />} />
           <Route path="/add" element={<AddFood />} />
@@ -91,17 +91,22 @@ function SignedInApp() {
           <Route path="/us" element={<Us />} />
         </Routes>
       </main>
-      <nav className="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 flex justify-around py-2">
+      <nav className="fixed bottom-0 left-0 right-0 mx-auto max-w-md bg-card rounded-t-[32px] shadow-[0_-4px_16px_rgba(0,0,0,0.05)] flex justify-around items-center h-[72px]">
         {tabs.map((tab) => (
           <NavLink
             key={tab.to}
             to={tab.to}
             end
             className={({ isActive }) =>
-              `text-xs ${isActive ? 'text-white font-semibold' : 'text-gray-400 hover:text-white'}`
+              `relative px-4 py-2 text-xs ${isActive ? 'text-link font-bold' : 'text-muted'}`
             }
           >
-            {tab.label}
+            {({ isActive }) => (
+              <>
+                {isActive && <span className="absolute left-1/2 -top-6 h-16 w-16 -translate-x-1/2 rounded-full bg-coral-light" />}
+                <span className="relative">{tab.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
