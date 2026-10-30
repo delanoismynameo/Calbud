@@ -1,4 +1,4 @@
-import { stripDays } from './dayStrip'
+import { stripDays } from './stripDays'
 
 export default function DayStrip({ selected, today, onPick }: { selected: string; today: string; onPick: (date: string) => void }) {
   const days = stripDays(selected, today)

@@ -94,7 +94,7 @@ export default function Today() {
           {logs.isPending ? (
             <p className="text-muted text-center py-8">Loading…</p>
           ) : total && (
-            <div className="mx-auto w-fit space-y-5">
+            <div className="space-y-5">
               <KcalRing consumed={total.kcal} goal={goals.kcal} />
               <DayStrip selected={date} today={today} onPick={goTo} />
             </div>

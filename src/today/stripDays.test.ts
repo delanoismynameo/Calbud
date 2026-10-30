@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { stripDays } from './dayStrip'
+import { stripDays } from './stripDays'
 
 describe('stripDays', () => {
   it('returns 5 entries in order with the middle selected', () => {
