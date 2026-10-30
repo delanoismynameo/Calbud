@@ -20,7 +20,7 @@ import { builtLabel } from '../food/builtLabel'
 import type { Recipe } from '../food/types'
 
 const toggle = (on: boolean) =>
-  `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
+  `py-3 px-4 rounded font-semibold ${on ? 'bg-card text-ink shadow-card rounded-xl font-bold' : ''} flex-1 ${on ? '' : 'text-link'}`
 
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
@@ -163,62 +163,62 @@ export default function PrepForm({
     : null
 
   return (
-    <div className="bg-slate-900 rounded p-3 space-y-4">
-      <h2 className="text-sm font-semibold text-gray-400 px-1">{headingText}</h2>
+    <div className="bg-card rounded-3xl shadow-card p-4 space-y-3">
+      <h2 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section px-1">{headingText}</h2>
 
       {/* Name */}
       <div>
-        <label htmlFor="prep-title" className="block text-gray-400 text-sm mb-1">Name</label>
+        <label htmlFor="prep-title" className="block text-sm text-muted mb-1">Name</label>
         <input id="prep-title" type="text" value={input.title} onChange={changeField('title')} placeholder="What are you prepping?"
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-        {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title}</p>}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+        {errors.title && <p className="text-danger text-sm mt-1">{errors.title}</p>}
       </div>
 
       {/* Date */}
       <div>
-        <label htmlFor="prep-date" className="block text-gray-400 text-sm mb-1">Date</label>
+        <label htmlFor="prep-date" className="block text-sm text-muted mb-1">Date</label>
         <input id="prep-date" type="date" value={input.date} onChange={(e) => { setInput({ ...input, date: e.target.value }); if (errors.date) setErrors({ ...errors, date: undefined }) }}
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-        {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+        {errors.date && <p className="text-danger text-sm mt-1">{errors.date}</p>}
       </div>
 
       {/* Start time */}
       <div>
-        <label htmlFor="prep-time" className="block text-gray-400 text-sm mb-1">Start time</label>
+        <label htmlFor="prep-time" className="block text-sm text-muted mb-1">Start time</label>
         <input id="prep-time" type="time" value={input.startTime} onChange={changeField('startTime')}
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-        <p className="text-gray-600 text-xs mt-1">Optional</p>
-        {errors.startTime && <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+        <p className="text-muted text-xs mt-1">Optional</p>
+        {errors.startTime && <p className="text-danger text-sm mt-1">{errors.startTime}</p>}
       </div>
 
       {/* Minutes & Servings side by side */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="prep-minutes" className="block text-gray-400 text-sm mb-1">Minutes</label>
+          <label htmlFor="prep-minutes" className="block text-sm text-muted mb-1">Minutes</label>
           <input id="prep-minutes" type="text" inputMode="numeric" value={input.duration} onChange={changeField('duration')} placeholder="60"
-            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-          {errors.duration && <p className="text-red-400 text-xs mt-1">{errors.duration}</p>}
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+          {errors.duration && <p className="text-danger text-sm mt-1">{errors.duration}</p>}
         </div>
         <div>
-          <label htmlFor="prep-servings" className="block text-gray-400 text-sm mb-1">Servings</label>
+          <label htmlFor="prep-servings" className="block text-sm text-muted mb-1">Servings</label>
           <input id="prep-servings" type="text" inputMode="numeric" value={input.servings} onChange={changeField('servings')} placeholder="1"
-            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-          {errors.servings && <p className="text-red-400 text-xs mt-1">{errors.servings}</p>}
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+          {errors.servings && <p className="text-danger text-sm mt-1">{errors.servings}</p>}
         </div>
       </div>
 
       {/* Nutrition per serving (optional) */}
       <div>
-        <h3 className="text-gray-400 text-sm mb-2 px-1">Nutrition per serving (optional)</h3>
+        <h3 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section mb-2 px-1">Nutrition per serving (optional)</h3>
 
-        <div className="flex gap-2 mb-3">
-          <button type="button" onClick={() => { setDishMode('numbers'); setRecipeErr('') }} className={toggle(dishMode === 'numbers')}>Type the numbers</button>
-          <button type="button" onClick={() => { setDishMode('ingredients'); setRecipeErr('') }} className={toggle(dishMode === 'ingredients')}>Build from ingredients</button>
+        <div className="bg-coral-light rounded-2xl p-1 mb-3">
+          <button type="button" onClick={() => { setDishMode('numbers'); setRecipeErr('') }} className={`py-3 px-4 rounded font-semibold ${dishMode === 'numbers' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : `text-link flex-1`}`}>Type the numbers</button>
+          <button type="button" onClick={() => { setDishMode('ingredients'); setRecipeErr('') }} className={`py-3 px-4 rounded font-semibold ${dishMode === 'ingredients' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : `text-link flex-1`}`}>Build from ingredients</button>
         </div>
 
         {savedDishes.data && savedDishes.data.length > 0 && (
           <div className="mb-3">
-            <label htmlFor="same-dish" className="block text-gray-400 text-sm mb-1">Same as a saved dish</label>
+            <label htmlFor="same-dish" className="block text-sm text-muted mb-1">Same as a saved dish</label>
             <select id="same-dish" value={savedDishes.data.find(f => f.source_id === dishSourceId)?.id ?? ''}
               onChange={(e) => {
                 const foodId = e.target.value
@@ -235,7 +235,7 @@ export default function PrepForm({
                   if (!input.title.trim()) setInput({ ...input, title: food.name })
                 }
               }}
-              className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral"
             >
               <option value="">—</option>
               {savedDishes.data.map(f => (
@@ -248,34 +248,34 @@ export default function PrepForm({
         {dishMode === 'numbers' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="dish-serving-g" className="block text-gray-400 text-sm mb-1">Serving weight (g)</label>
+              <label htmlFor="dish-serving-g" className="block text-sm text-muted mb-1">Serving weight (g)</label>
               <input id="dish-serving-g" type="text" inputMode="decimal" value={dish.servingG} onChange={changeDishField('servingG')} placeholder="350"
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-              {dishErrors.servingG && <p className="text-red-400 text-xs mt-1">{dishErrors.servingG}</p>}
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+              {dishErrors.servingG && <p className="text-danger text-sm mt-1">{dishErrors.servingG}</p>}
             </div>
             <div>
-              <label htmlFor="dish-kcal" className="block text-gray-400 text-sm mb-1">Calories</label>
+              <label htmlFor="dish-kcal" className="block text-sm text-muted mb-1">Calories</label>
               <input id="dish-kcal" type="text" inputMode="decimal" value={dish.kcal} onChange={changeDishField('kcal')} placeholder="520"
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-              {dishErrors.kcal && <p className="text-red-400 text-xs mt-1">{dishErrors.kcal}</p>}
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+              {dishErrors.kcal && <p className="text-danger text-sm mt-1">{dishErrors.kcal}</p>}
             </div>
             <div>
-              <label htmlFor="dish-protein" className="block text-gray-400 text-sm mb-1">Protein (g)</label>
+              <label htmlFor="dish-protein" className="block text-sm text-muted mb-1">Protein (g)</label>
               <input id="dish-protein" type="text" inputMode="decimal" value={dish.protein} onChange={changeDishField('protein')} placeholder="30"
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-              {dishErrors.protein && <p className="text-red-400 text-xs mt-1">{dishErrors.protein}</p>}
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+              {dishErrors.protein && <p className="text-danger text-sm mt-1">{dishErrors.protein}</p>}
             </div>
             <div>
-              <label htmlFor="dish-carbs" className="block text-gray-400 text-sm mb-1">Carbs (g)</label>
+              <label htmlFor="dish-carbs" className="block text-sm text-muted mb-1">Carbs (g)</label>
               <input id="dish-carbs" type="text" inputMode="decimal" value={dish.carbs} onChange={changeDishField('carbs')} placeholder="55"
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-              {dishErrors.carbs && <p className="text-red-400 text-xs mt-1">{dishErrors.carbs}</p>}
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+              {dishErrors.carbs && <p className="text-danger text-sm mt-1">{dishErrors.carbs}</p>}
             </div>
             <div>
-              <label htmlFor="dish-fat" className="block text-gray-400 text-sm mb-1">Fat (g)</label>
+              <label htmlFor="dish-fat" className="block text-sm text-muted mb-1">Fat (g)</label>
               <input id="dish-fat" type="text" inputMode="decimal" value={dish.fat} onChange={changeDishField('fat')} placeholder="20"
-                className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-              {dishErrors.fat && <p className="text-red-400 text-xs mt-1">{dishErrors.fat}</p>}
+                className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+              {dishErrors.fat && <p className="text-danger text-sm mt-1">{dishErrors.fat}</p>}
             </div>
           </div>
         )}
@@ -286,7 +286,7 @@ export default function PrepForm({
 
             {dishPreview && (
               <div className="mt-3">
-                <p className="text-gray-400 text-sm mb-1">Label preview</p>
+                <p className="text-muted text-sm mb-1">Label preview</p>
                 <NutritionLabel servingText={dishPreview.servingText} kcal={dishPreview.kcal} rows={dishPreview.rows} />
               </div>
             )}
@@ -299,44 +299,44 @@ export default function PrepForm({
 
             {builtLabelResult && (
               <div className="mt-3">
-                <p className="text-gray-400 text-sm mb-1">Label preview</p>
+                <p className="text-muted text-sm mb-1">Label preview</p>
                 <NutritionLabel servingText={builtLabelResult.servingText} kcal={builtLabelResult.kcal} rows={builtLabelResult.rows} />
               </div>
             )}
 
-            {recipeErr && <p className="text-red-400 text-xs mt-1">{recipeErr}</p>}
+            {recipeErr && <p className="text-danger text-sm mt-1">{recipeErr}</p>}
           </>
         )}
 
-        <p className="text-gray-500 text-xs mt-2 px-1">
+        <p className="text-muted text-xs mt-2 px-1">
           Weigh one portion or estimate it (a bowl of curry is about 350 g). It's saved as a custom food named after this session, so leftovers show up in Add food.
         </p>
       </div>
 
       {/* Recipe link */}
       <div>
-        <label htmlFor="prep-url" className="block text-gray-400 text-sm mb-1">Recipe link</label>
+        <label htmlFor="prep-url" className="block text-sm text-muted mb-1">Recipe link</label>
         <input id="prep-url" type="url" value={input.recipeUrl} onChange={changeField('recipeUrl')} placeholder="https://example.com/recipe"
-          className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-500" />
-        <p className="text-gray-600 text-xs mt-1">Optional</p>
-        {errors.recipeUrl && <p className="text-red-400 text-xs mt-1">{errors.recipeUrl}</p>}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+        <p className="text-muted text-xs mt-1">Optional</p>
+        {errors.recipeUrl && <p className="text-danger text-sm mt-1">{errors.recipeUrl}</p>}
       </div>
 
       {/* Ingredients */}
       <div>
-        <label htmlFor="prep-ingredients" className="block text-gray-400 text-sm mb-1">Ingredients</label>
+        <label htmlFor="prep-ingredients" className="block text-sm text-muted mb-1">Ingredients</label>
         <textarea id="prep-ingredients" rows={5} value={input.ingredients} onChange={changeField('ingredients')}
           placeholder="One per line, like 2 cup rice" className={textareaClass} />
       </div>
 
       {/* Notes */}
       <div>
-        <label htmlFor="prep-notes" className="block text-gray-400 text-sm mb-1">Notes</label>
+        <label htmlFor="prep-notes" className="block text-sm text-muted mb-1">Notes</label>
         <textarea id="prep-notes" rows={3} value={input.notes ?? ''} onChange={changeField('notes')} placeholder="Optional notes" className={textareaClass} />
       </div>
 
-      {saveMutation.isError && <p className="text-red-400 text-sm px-1">{saveMutation.error.message}</p>}
-      {deleteMutation.isError && <p className="text-red-400 text-sm px-1">{deleteMutation.error.message}</p>}
+      {saveMutation.isError && <p className="text-danger text-sm px-1">{saveMutation.error.message}</p>}
+      {deleteMutation.isError && <p className="text-danger text-sm px-1">{deleteMutation.error.message}</p>}
 
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={save} disabled={anyPending}
