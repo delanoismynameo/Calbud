@@ -9,6 +9,7 @@ Each redesign brief (tasks 50–64) says "read this file first". Follow all of i
 - Colors come only from the token classes: `bg-cream`, `bg-card`, `text-ink`, `text-muted`, `border-line`, `bg-coral-light`, `bg-coral-deep`, `hover:bg-coral-deeper`, `text-link`, `text-section`, `text-danger`, `text-warn`, `shadow-card`, `bg-rose-soft`, `text-rose-ink`, and so on (all defined in `src/index.css` by task 50). Never use `slate-`, `gray-`, `blue-`, `red-`, `amber-` classes or hex colors. No `dark:` variants: the tokens switch with the theme by themselves.
 - Edit with the edit tool, one component or JSX block at a time. Never rewrite a whole file from scratch. Write new files in chunks of about 100 lines.
 - Check with `npx tsc -b` and `npm test`. Run `npm test` once before you change anything and note the number of passing tests. If a command is blocked by the sandbox, say so in your reply; do not work around it and do not create config files.
+- Some files contain non-ASCII characters (`‹ › … · —` and emoji). When you edit a line that contains one, copy it exactly: a mangled character like `â€¹` breaks the build. After each edit, check the line still ends its tags correctly (`>`).
 - Do one brief only. Do not start any other task.
 
 ## Style rules for reskin tasks
