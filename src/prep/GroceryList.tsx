@@ -1,50 +1,36 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { groceryList, formatGroceryItem, groceryKey } from './grocery'
 import type { GroceryItem } from './grocery'
 import type { MealPrep } from './types'
 import { sendText, groceryText, type SendNav } from './sendList'
-import { loadExtras, mergeExtras, removeExtra, saveExtras } from './extras'
+import { useGroceryExtras, useGroceryTicks, useAddGroceryExtras, useRemoveGroceryExtra, useToggleGroceryTick, useSetGroceryTicks, useClearGroceryTicks } from './useGrocery'
 import { parseIngredients } from './ingredients'
 
 export default function GroceryList({ sessions, weekStart }: { sessions: MealPrep[]; weekStart: string }) {
   const plannedLists = sessions.filter(s => s.status === 'planned').map(s => s.ingredients)
-  const items = groceryList(plannedLists)
-  const [extras, setExtras] = useState<GroceryItem[]>(() => loadExtras(weekStart))
-  const allItems = groceryList([...plannedLists, extras])
-  const [ticked, setTicked] = useState<Set<string>>(() => loadTicks(weekStart))
+  const extrasQuery = useGroceryExtras(weekStart)
+  const ticksQuery = useGroceryTicks(weekStart)
+  const addExtras = useAddGroceryExtras(weekStart)
+  const removeExtraMutation = useRemoveGroceryExtra(weekStart)
+  const toggleTick = useToggleGroceryTick(weekStart)
+  const setTicks = useSetGroceryTicks(weekStart)
+  const clearTicks = useClearGroceryTicks(weekStart)
+  const extras = extrasQuery.data ?? []
+  const ticked = new Set(ticksQuery.data ?? [])
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'asking'>('idle')
   const [how, setHow] = useState<'shared' | 'copied'>('shared')
   const [sendError, setSendError] = useState<string | null>(null)
   const [inputText, setInputText] = useState('')
 
-  useEffect(() => {
-    // Re-read from storage when weekStart changes
-    setTicked(loadTicks(weekStart))
-    setExtras(loadExtras(weekStart))
-    setSendState('idle')
-    setSendError(null)
-  }, [weekStart])
+  const items = groceryList(plannedLists)
+  const allItems = groceryList([...plannedLists, extras])
 
-  const toggle = useCallback((key: string) => {
-    setTicked(prev => {
-      const next = new Set(prev)
-      if (next.has(key)) {
-        next.delete(key)
-      } else {
-        next.add(key)
-      }
-      saveTicks(weekStart, next)
-      return next
-    })
-  }, [weekStart])
-
-  const clear = useCallback(() => {
-    setTicked(prev => {
-      if (prev.size === 0) return prev
-      saveTicks(weekStart, new Set())
-      return new Set()
-    })
-  }, [weekStart])
+  let mutationError: string | null = null
+  if (addExtras.isError && !mutationError) mutationError = addExtras.error.message
+  if (removeExtraMutation.isError && !mutationError) mutationError = removeExtraMutation.error.message
+  if (toggleTick.isError && !mutationError) mutationError = toggleTick.error.message
+  if (setTicks.isError && !mutationError) mutationError = setTicks.error.message
+  if (clearTicks.isError && !mutationError) mutationError = clearTicks.error.message
 
   const plannedCount = sessions.filter(s => s.status === 'planned').length
 
@@ -61,9 +47,7 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
         e.preventDefault()
         const parsed = parseIngredients(inputText)
         if (parsed.length === 0) return
-        const next = mergeExtras(extras, [...parsed])
-        setExtras(next)
-        saveExtras(weekStart, next)
+        addExtras.mutate([...parsed])
         setInputText('')
       }} className="mb-3">
         <div className="flex gap-2">
@@ -94,7 +78,7 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
                   <input
                     type="checkbox"
                     checked={isTicked}
-                    onChange={() => toggle(key)}
+                    onChange={() => { toggleTick.mutate({ key, ticked: !isTicked }) }}
                     className="accent-coral-deep w-5 h-5 shrink-0"
                   />
                   <span className="text-sm flex-1">{formatGroceryItem(item)}</span>
@@ -117,15 +101,11 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
                       <input
                         type="checkbox"
                         checked={isTicked}
-                        onChange={() => toggle(key)}
+                        onChange={() => { toggleTick.mutate({ key, ticked: !isTicked }) }}
                         className="accent-coral-deep w-5 h-5 shrink-0"
                       />
                       <span className="text-sm flex-1">{formatGroceryItem(item)}</span>
-                      <button type="button" aria-label={'Remove ' + item.name} onClick={() => {
-                        const next = removeExtra(extras, key)
-                        setExtras(next)
-                        saveExtras(weekStart, next)
-                      }} className="text-muted px-2 py-1">✕</button>
+                      <button type="button" aria-label={'Remove ' + item.name} onClick={() => removeExtraMutation.mutate(key)} className="text-muted px-2 py-1">✕</button>
                     </label>
                   )
                 })}
@@ -161,12 +141,10 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
           {sendState === 'asking' && (
             <div className="bg-card rounded-3xl shadow-card p-4 mt-3 text-sm space-y-2">
               <p>{how === 'shared' ? 'Sent. Clear the list?' : 'Copied. Clear the list?'}</p>
-              <p className="text-xs text-muted">This ticks every item on this phone. Your prep sessions stay as they are.</p>
+              <p className="text-xs text-muted">This ticks every item for both of you. Your prep sessions stay as they are.</p>
               <div className="flex gap-2">
                 <button onClick={() => {
-                  const keys = new Set(allItems.map(item => groceryKey(item)))
-                  setTicked(keys)
-                  saveTicks(weekStart, keys)
+                  setTicks.mutate(allItems.map(item => groceryKey(item)))
                   setSendState('idle')
                 }} className="px-3 py-1 rounded bg-coral-deep text-white font-bold">Yes, clear</button>
                 <button onClick={() => setSendState('idle')} className="px-3 py-1 rounded text-muted">Not now</button>
@@ -174,33 +152,14 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
             </div>
           )}
 
-          {sendError && (
-            <p className="text-danger text-xs mt-1">{sendError}</p>          )}
+          {(sendError || mutationError) && (
+            <p className="text-danger text-xs mt-1">{sendError ?? mutationError!}</p>          )}
 
           {ticked.size > 0 && (
-            <button onClick={clear} className="mt-2 text-sm text-link underline">Clear ticks</button>
+            <button onClick={() => clearTicks.mutate()} className="mt-2 text-sm text-link underline">Clear ticks</button>
           )}
         </>
       )}
     </div>
   )
-}
-
-function loadTicks(weekStart: string): Set<string> {
-  try {
-    const raw = localStorage.getItem(`calbud:grocery:${weekStart}`)
-    if (!raw) return new Set()
-    const arr = JSON.parse(raw)
-    return new Set(arr as unknown as string[])
-  } catch {
-    return new Set()
-  }
-}
-
-function saveTicks(weekStart: string, ticks: Set<string>): void {
-  try {
-    localStorage.setItem(`calbud:grocery:${weekStart}`, JSON.stringify([...ticks]))
-  } catch {
-    // Silently fail — keep state in memory only
-  }
 }

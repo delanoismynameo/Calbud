@@ -3,10 +3,10 @@ import { useAllPreps } from './useAllPreps'
 import { recipesFrom } from './recipes'
 import { dayLabel } from './week'
 import { formatGroceryItem } from './grocery'
-import type { GroceryItem } from './grocery'
-import { loadExtras, mergeExtras, saveExtras } from './extras'
+import { useAddGroceryExtras } from './useGrocery'
 
 export default function RecipeList({ weekStart }: { weekStart: string }) {
+  const addExtras = useAddGroceryExtras(weekStart)
   const { data, isLoading, error, refetch } = useAllPreps()
   const [search, setSearch] = useState('')
   const [openKey, setOpenKey] = useState<string | null>(null)
@@ -95,14 +95,15 @@ export default function RecipeList({ weekStart }: { weekStart: string }) {
                     {r.ingredients.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => {
-                          saveExtras(weekStart, mergeExtras(loadExtras(weekStart), r.ingredients as GroceryItem[]))
-                          setAddedKey(r.key)
-                        }}
-                        disabled={addedKey === r.key}
+                        onClick={() => addExtras.mutate(r.ingredients, { onSuccess: () => setAddedKey(r.key) })}
+                        disabled={addedKey === r.key || addExtras.isPending}
                         className={`mt-1 bg-coral-light text-link rounded-2xl font-semibold px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}>
                         {addedKey === r.key ? "Added to this week's list" : 'Add to grocery list'}
                       </button>
+                    )}
+
+                    {addExtras.isError && (
+                      <p className="text-danger text-xs mt-1">{addExtras.error.message}</p>
                     )}
 
                     {r.notes && <p className="text-muted">{r.notes}</p>}
