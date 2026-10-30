@@ -15,6 +15,7 @@ import SlotEditor from '../menu/SlotEditor'
 import { useProfile } from '../household/useProfile'
 import RepeatButton from '../prep/RepeatButton'
 import { usePrepRealtime } from '../prep/usePrepRealtime'
+import { useGroceryRealtime } from '../prep/useGroceryRealtime'
 import GroceryList from '../prep/GroceryList'
 import RecipeList from '../prep/RecipeList'
 import ServingPicker from '../food/ServingPicker'
@@ -29,6 +30,7 @@ export default function Prep() {
   const { data, isLoading, error, refetch } = usePrepWeek(start)
   const profile = useProfile()
   usePrepRealtime(profile.profile?.household_id)
+  useGroceryRealtime(profile.profile?.household_id)
   const menu = useMenuWeek(start)
   const [view, setView] = useState<'plan' | 'menu' | 'grocery' | 'recipes'>('menu')
   const [slotEditing, setSlotEditing] = useState<{ date: string; meal: MenuMeal } | null>(null)
