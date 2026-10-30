@@ -20,7 +20,7 @@ import { builtLabel } from '../food/builtLabel'
 import type { Recipe } from '../food/types'
 
 const toggle = (on: boolean) =>
-  `py-3 px-4 rounded font-semibold ${on ? 'bg-card text-ink shadow-card rounded-xl font-bold' : ''} flex-1 ${on ? '' : 'text-link'}`
+  `flex-1 py-2.5 px-3 rounded-xl text-sm ${on ? 'bg-card text-ink shadow-card font-bold' : 'text-muted font-semibold'}`
 
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
@@ -65,8 +65,8 @@ export default function PrepForm({
     if (dishErrors[field]) setDishErrors({ ...dishErrors, [field]: undefined })
   }
 
-  const textareaClass = 'w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500'
-  const inputClass = 'w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500'
+  const textareaClass = 'w-full bg-card border border-line rounded-2xl px-4 py-3 text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-coral'
+  const inputClass = 'w-full bg-card border border-line rounded-2xl px-4 py-3 text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-coral'
 
   const saveMutation = useMutation({
     mutationFn: async (inputData: { fields: PrepFields; dishFood: FoodResult | null }) => {
@@ -211,9 +211,9 @@ export default function PrepForm({
       <div>
         <h3 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section mb-2 px-1">Nutrition per serving (optional)</h3>
 
-        <div className="bg-coral-light rounded-2xl p-1 mb-3">
-          <button type="button" onClick={() => { setDishMode('numbers'); setRecipeErr('') }} className={`py-3 px-4 rounded font-semibold ${dishMode === 'numbers' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : `text-link flex-1`}`}>Type the numbers</button>
-          <button type="button" onClick={() => { setDishMode('ingredients'); setRecipeErr('') }} className={`py-3 px-4 rounded font-semibold ${dishMode === 'ingredients' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : `text-link flex-1`}`}>Build from ingredients</button>
+        <div className="flex bg-coral-light rounded-2xl p-1 mb-3">
+          <button type="button" onClick={() => { setDishMode('numbers'); setRecipeErr('') }} className={toggle(dishMode === 'numbers')}>Type the numbers</button>
+          <button type="button" onClick={() => { setDishMode('ingredients'); setRecipeErr('') }} className={toggle(dishMode === 'ingredients')}>Build from ingredients</button>
         </div>
 
         {savedDishes.data && savedDishes.data.length > 0 && (
@@ -340,25 +340,25 @@ export default function PrepForm({
 
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={save} disabled={anyPending}
-          className="py-3 rounded font-semibold text-white flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-center">
+          className="py-3 rounded-2xl font-bold text-white flex-1 bg-coral-deep hover:bg-coral-deeper disabled:opacity-50 disabled:cursor-not-allowed text-center">
           {isSaveLoading ? 'Saving…' : 'Save'}
         </button>
 
         {prep && (
           <button type="button" onClick={() => deleteStep === 0 ? setDeleteStep(1) : deleteMutation.mutate()} disabled={anyPending}
-            className={`py-3 rounded font-semibold text-white flex-1 transition-colors ${
+            className={`py-3 rounded-2xl font-bold flex-1 transition-colors ${
               isDeleteLoading
-                ? 'bg-slate-600 cursor-not-allowed'
+                ? 'bg-coral-light/50 text-muted cursor-not-allowed'
                 : deleteStep === 1
-                  ? 'bg-red-500 hover:bg-red-600'
-                  : 'bg-slate-700 hover:bg-slate-600'
+                  ? 'bg-danger text-white'
+                  : 'bg-coral-light text-danger'
             }`}>
             {isDeleteLoading ? 'Deleting…' : deleteStep === 1 ? 'Tap again to delete' : 'Delete'}
           </button>
         )}
 
         <button type="button" onClick={onClose} disabled={anyPending}
-          className="py-3 rounded bg-slate-700 text-white font-semibold px-4 hover:bg-slate-600">
+          className="py-3 rounded-2xl bg-coral-light text-link font-semibold px-4 hover:bg-coral-light/70">
           Cancel
         </button>
       </div>
