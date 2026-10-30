@@ -17,7 +17,7 @@ import { queryClient } from '../lib/queryClient'
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 const toggle = (on: boolean) =>
-  `py-3 px-4 rounded font-semibold text-white flex-1 ${on ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`
+  `py-3 px-4 rounded font-semibold flex-1 ${on ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-coral-deep hover:bg-coral-light'}`
 
 export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn }: {
   food: FoodResult
@@ -70,13 +70,13 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg shadow-xl p-4 space-y-4">
+    <div className="bg-card rounded-3xl shadow-card p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-semibold">{food.name}</p>
-          {food.brand && <p className="text-gray-400 text-sm">{food.brand}</p>}
+          <p className="font-semibold text-ink">{food.name}</p>
+          {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
           {loggedOn != null && loggedOn !== localDateString() && (
-            <p className="text-gray-500 text-sm">Logging to {dayLabel(loggedOn)}</p>
+            <p className="text-muted text-sm">Logging to {dayLabel(loggedOn)}</p>
           )}
         </div>
         <button type="button"
@@ -84,12 +84,12 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
           aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
           disabled={favoriteMutation.isPending || favoriteFoods.isPending}
           onClick={() => favoriteMutation.mutate()}
-          className={`text-2xl leading-none px-2 py-1 rounded hover:bg-slate-700 ${isFav ? 'text-yellow-400' : 'text-gray-400'}`}>
+          className={`text-2xl leading-none px-2 py-1 rounded hover:bg-coral-light/50 ${isFav ? 'text-coral' : 'text-muted'}`}>
           {isFav ? '★' : '☆'}
         </button>
       </div>
 
-      {favoriteMutation.isError && <p className="text-red-400 text-sm">{favoriteMutation.error.message}</p>}
+      {favoriteMutation.isError && <p className="text-danger text-sm">{favoriteMutation.error.message}</p>}
 
       {servingG != null && (
         <div className="flex gap-2">
@@ -99,31 +99,31 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       )}
 
       <div>
-        <label htmlFor="amount" className="block text-gray-400 text-sm mb-1">{unit === 'serving' ? 'Servings' : 'Grams'}</label>
+        <label htmlFor="amount" className="block text-muted text-sm mb-1">{unit === 'serving' ? 'Servings' : 'Grams'}</label>
         <input id="amount" type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
-          className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-3 text-white text-lg focus:outline-none focus:border-blue-500" />
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-coral" />
         {unit === 'serving' && food.servingLabel && isValid && (
-          <p className="text-gray-400 text-sm mt-1">{amount} × {food.servingLabel} = {Math.round(grams)} g</p>
+          <p className="text-muted text-sm mt-1">{amount} × {food.servingLabel} = {Math.round(grams)} g</p>
         )}
       </div>
 
       {nutrition ? (
-        <div className="grid grid-cols-4 gap-2 text-center">
+        <div className="bg-card rounded-3xl shadow-card p-4 grid grid-cols-4 gap-2 text-center">
           {([['Calories', nutrition.kcal], ['Protein', `${nutrition.protein_g} g`], ['Carbs', `${nutrition.carbs_g} g`], ['Fat', `${nutrition.fat_g} g`]] as const).map(([label, val]) => (
-            <div key={label} className="bg-slate-900 rounded py-2">
-              <p className="text-white text-sm font-semibold">{val}</p>
-              <p className="text-gray-400 text-xs">{label}</p>
+            <div key={label} className="bg-cream rounded-2xl py-2">
+              <p className="text-ink text-sm font-semibold">{val}</p>
+              <p className="text-muted text-xs">{label}</p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-red-400 text-sm text-center">Enter an amount between 0 and 5000 g.</p>
+        <p className="text-danger text-sm text-center">Enter an amount between 0 and 5000 g.</p>
       )}
 
       <div className="grid grid-cols-4 gap-2">
         {MEALS.map((m) => (
           <button key={m} type="button" onClick={() => setMealType(m)} aria-pressed={mealType === m}
-            className={`py-3 rounded text-white text-sm font-semibold ${mealType === m ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}`}>
+            className={`py-3 rounded text-white text-sm font-semibold ${mealType === m ? 'bg-coral-deep' : 'bg-coral-light/50 text-coral-deep hover:bg-coral-light'}`}>
             {m.charAt(0).toUpperCase() + m.slice(1)}
           </button>
         ))}
@@ -131,14 +131,14 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
 
       <div className="flex gap-3">
         <button type="button" onClick={() => mutation.mutate()} disabled={!isValid || mutation.isPending}
-          className="py-3 rounded font-semibold text-white flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed">
+          className="py-3 rounded-2xl font-bold text-white flex-1 bg-coral-deep hover:bg-coral-deeper disabled:bg-coral-light/50 disabled:cursor-not-allowed">
           {mutation.isPending ? 'Logging…' : 'Log'}
         </button>
         <button type="button" onClick={onCancel} disabled={mutation.isPending}
-          className="py-3 rounded bg-slate-700 text-white font-semibold px-4 hover:bg-slate-600">Cancel</button>
+          className="py-3 rounded-2xl bg-coral-light text-link font-semibold px-4 hover:bg-coral-light/80">Cancel</button>
       </div>
 
-      {mutation.isError && <p className="text-red-400 text-sm text-center">{mutation.error.message}</p>}
+      {mutation.isError && <p className="text-danger text-sm text-center">{mutation.error.message}</p>}
 
       {nutrition && (
         <NutritionLabel servingText={servingLine(unit, amount, grams, food.servingLabel)} kcal={nutrition.kcal} rows={labelRows({ fat_g: nutrition.fat_g, carbs_g: nutrition.carbs_g, protein_g: nutrition.protein_g, extras: scaleExtras(food.extras100g ?? {}, grams) })} />

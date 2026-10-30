@@ -17,10 +17,10 @@ export default function AddFood() {
   const [creating, setCreating] = useState(false)
 
   return (
-    <div className="space-y-3">
+    <div className="bg-cream space-y-3">
       <div className="flex items-center gap-4">
-        <Link to={home} className="text-blue-400 hover:text-blue-300 font-semibold py-2">&larr; Back</Link>
-        <h1 className="text-lg font-semibold">Add food{day && day !== today && <span className="text-gray-500 text-sm ml-2"> · {dayTitle(day, today)}</span>}</h1>
+        <Link to={home} className="text-link underline hover:text-coral-deep font-bold py-2">&larr; Back</Link>
+        <h1 className="text-lg font-semibold text-ink">Add food{day && day !== today && <span className="text-muted text-sm ml-2"> · {dayTitle(day, today)}</span>}</h1>
       </div>
 
       {selected ? (
