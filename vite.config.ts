@@ -17,8 +17,8 @@ export default defineConfig({
         start_url: './',
         scope: './',
         display: 'standalone',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#fffaf5',
+        background_color: '#fffaf5',
         // PNGs too: Chrome's install prompt wants raster icons of 192 and 512 px.
         icons: [
           { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
