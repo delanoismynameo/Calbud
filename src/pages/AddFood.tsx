@@ -19,7 +19,7 @@ export default function AddFood() {
   return (
     <div className="bg-cream space-y-3">
       <div className="flex items-center gap-4">
-        <Link to={home} className="text-link underline hover:text-coral-deep font-bold py-2">&larr; Back</Link>
+        <Link to={home} className="text-link underline hover:text-link font-bold py-2">&larr; Back</Link>
         <h1 className="text-lg font-semibold text-ink">Add food{day && day !== today && <span className="text-muted text-sm ml-2"> · {dayTitle(day, today)}</span>}</h1>
       </div>
 

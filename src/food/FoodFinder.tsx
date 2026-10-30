@@ -133,7 +133,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
                   className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-bold text-ink">{food.name}</span>
-                    <span className="text-xs px-2 py-1 bg-coral-light text-coral-deep rounded-full font-medium shrink-0">{food.barcode ? 'Packaged' : 'Basic'}</span>
+                    <span className="text-xs px-2 py-1 bg-coral-light text-link rounded-full font-medium shrink-0">{food.barcode ? 'Packaged' : 'Basic'}</span>
                   </div>
                   {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
                   <p className="text-sm text-muted mt-1">{Math.round(food.kcal100g)} cal / 100 g</p>

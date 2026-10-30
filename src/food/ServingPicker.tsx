@@ -17,7 +17,7 @@ import { queryClient } from '../lib/queryClient'
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 const toggle = (on: boolean) =>
-  `py-3 px-4 rounded font-semibold flex-1 ${on ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-coral-deep hover:bg-coral-light'}`
+  `py-3 px-4 rounded font-semibold flex-1 ${on ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-link hover:bg-coral-light'}`
 
 export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn }: {
   food: FoodResult
@@ -123,7 +123,7 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       <div className="grid grid-cols-4 gap-2">
         {MEALS.map((m) => (
           <button key={m} type="button" onClick={() => setMealType(m)} aria-pressed={mealType === m}
-            className={`py-3 rounded text-white text-sm font-semibold ${mealType === m ? 'bg-coral-deep' : 'bg-coral-light/50 text-coral-deep hover:bg-coral-light'}`}>
+            className={`py-3 rounded-2xl text-sm font-semibold ${mealType === m ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-link hover:bg-coral-light'}`}>
             {m.charAt(0).toUpperCase() + m.slice(1)}
           </button>
         ))}
