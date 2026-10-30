@@ -3,9 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#fffaf5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1b1512" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="icon.svg" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <script>try{var p=localStorage.getItem('calbud-theme');var d=p==='dark'||(p!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark')}catch(e){}</script>
     <title>Calbud</title>
   </head>
   <body>
