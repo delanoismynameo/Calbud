@@ -8,8 +8,6 @@ import { mealLabel, parseSlotLabel, copyRows } from './menu'
 import { saveSlot, clearSlot, saveSlots } from './menuApi'
 import { useProfile } from '../household/useProfile'
 
-const inputClass = 'w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500'
-
 export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }: {
   date: string
   meal: MenuMeal
@@ -65,12 +63,12 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
   }
 
   return (
-    <div className="bg-slate-900 rounded p-3 space-y-4">
-      <h2 className="text-sm font-semibold text-gray-400 px-1">{dayLabel(date)} · {mealLabel(meal)}</h2>
+    <div className="bg-card rounded-3xl shadow-card p-4 space-y-4">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted">{dayLabel(date)} · {mealLabel(meal)}</h2>
 
       {dishes.length > 0 && (
         <div>
-          <p className="text-gray-400 text-sm mb-1">This week's dishes</p>
+          <p className="text-xs font-semibold uppercase text-muted mb-1">This week's dishes</p>
           <div className="flex flex-wrap gap-2">
             {dishes.map(dish => (
               <button
@@ -79,8 +77,8 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
                 onClick={() => handleDishClick(dish)}
                 disabled={anyPending}
                 aria-pressed={prepId === dish.id}
-                className={`py-1 px-3 rounded text-xs font-medium ${
-                  prepId === dish.id ? 'bg-blue-600 text-white' : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                className={`py-1 px-4 rounded-full text-xs font-semibold transition-colors ${
+                  prepId === dish.id ? 'bg-coral-deep text-white' : 'bg-coral-light text-link hover:bg-coral-deeper'
                 }`}
               >
                 {dish.title}
@@ -91,20 +89,20 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
       )}
 
       <div>
-        <label htmlFor="slot-label" className="block text-gray-400 text-sm mb-1">Or type it</label>
+        <label htmlFor="slot-label" className="block text-xs font-semibold uppercase text-muted mb-1">Or type it</label>
         <input
           id="slot-label"
           type="text"
           value={text}
           onChange={(e) => { setText(e.target.value); setPrepId(null); setError(null) }}
           placeholder="OYO, sandwich, eat out…"
-          className={inputClass}
+          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral"
         />
-        {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+        {error && <p className="text-danger text-xs mt-1">{error}</p>}
       </div>
 
       <div>
-        <p className="text-gray-400 text-sm mb-1">Also put it on</p>
+        <p className="text-xs font-semibold uppercase text-muted mb-1">Also put it on</p>
         <div className="flex flex-wrap gap-2">
           {weekDays(weekStart(date)).filter(d => d !== date).map(day => (
             <button
@@ -113,8 +111,8 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
               onClick={() => setPicked(p => (p.includes(day) ? p.filter(x => x !== day) : [...p, day]))}
               disabled={anyPending}
               aria-pressed={picked.includes(day)}
-              className={`py-1 px-3 rounded text-xs font-medium ${
-                picked.includes(day) ? 'bg-blue-600 text-white' : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+              className={`py-1 px-4 rounded-full text-xs font-semibold transition-colors ${
+                picked.includes(day) ? 'bg-coral-deep text-white' : 'bg-coral-light text-link hover:bg-coral-deeper'
               }`}
             >
               {dayLabel(day).slice(0, 3)}{filled.includes(day) ? '*' : ''}
@@ -122,19 +120,19 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
           ))}
         </div>
         {picked.some(d => filled.includes(d)) && (
-          <p className="text-gray-500 text-xs mt-1">* already has a meal. Saving replaces it.</p>
+          <p className="text-muted text-xs mt-1">* already has a meal. Saving replaces it.</p>
         )}
       </div>
 
-      {saveMutation.isError && <p className="text-red-400 text-sm px-1">{saveMutation.error.message}</p>}
-      {clearMutation.isError && <p className="text-red-400 text-sm px-1">{clearMutation.error.message}</p>}
+      {saveMutation.isError && <p className="text-danger text-sm px-1">{saveMutation.error.message}</p>}
+      {clearMutation.isError && <p className="text-danger text-sm px-1">{clearMutation.error.message}</p>}
 
       <div className="flex gap-2 pt-1">
         <button
           type="button"
           onClick={save}
           disabled={anyPending}
-          className="py-3 rounded font-semibold text-white flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-center"
+          className="py-3 rounded-full font-bold text-white flex-1 bg-coral-deep hover:bg-coral-deeper disabled:opacity-50 cursor-pointer text-center"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save'}
         </button>
@@ -143,7 +141,7 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
           type="button"
           onClick={onClose}
           disabled={anyPending}
-          className="py-3 rounded bg-slate-700 text-white font-semibold px-4 hover:bg-slate-600 disabled:opacity-50"
+          className="py-3 rounded-full bg-coral-light text-link font-semibold px-4 hover:bg-coral-deeper disabled:opacity-50 cursor-pointer"
         >
           Cancel
         </button>
@@ -153,7 +151,7 @@ export default function SlotEditor({ date, meal, slot, dishes, filled, onClose }
             type="button"
             onClick={() => clearMutation.mutate()}
             disabled={anyPending}
-            className="py-3 rounded bg-slate-700 text-red-400 font-semibold px-4 hover:bg-slate-600 disabled:opacity-50 disabled:text-gray-500"
+            className="py-3 rounded-full text-danger font-semibold px-4 hover:bg-coral-light disabled:opacity-50 cursor-pointer"
           >
             {clearMutation.isPending ? 'Clearing…' : 'Clear'}
           </button>

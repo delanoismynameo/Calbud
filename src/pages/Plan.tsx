@@ -13,14 +13,14 @@ import { useProfile } from '../household/useProfile'
 import ExportButton from '../activities/ExportButton'
 
 function LoadingRow() {
-  return <p className="px-3 py-8 text-center text-gray-500">Loading…</p>
+  return <p className="px-3 py-8 text-center text-muted">Loading…</p>
 }
 
 function ErrorBox({ error, onTryAgain }: { error: Error; onTryAgain: () => void }) {
   return (
     <div className="px-3 py-6 text-center space-y-2">
-      <p className="text-red-400">{error.message}</p>
-      <button onClick={onTryAgain} className="text-sm text-blue-400 underline">Try again</button>
+      <p className="text-danger">{error.message}</p>
+      <button onClick={onTryAgain} className="text-sm text-link underline">Try again</button>
     </div>
   )
 }
@@ -51,22 +51,22 @@ export default function Plan() {
   const showToggle = profile.partner != null
 
   return (
-    <div className="bg-slate-900 min-h-screen text-white">
+    <div className="bg-cream min-h-screen text-ink">
       {/* Header */}
       <div className="px-3 pt-4 pb-2">
         <div className="flex items-center justify-between mb-1">
           <button onClick={prevWeek} aria-label="Previous week"
-            className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700">
+            className="h-10 w-10 flex items-center justify-center rounded-2xl bg-card shadow-card hover:bg-coral-light">
             ‹
           </button>
           <h1 className="text-lg font-semibold">{weekLabel(start)}</h1>
           <button onClick={nextWeek} aria-label="Next week"
-            className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700">
+            className="h-10 w-10 flex items-center justify-center rounded-2xl bg-card shadow-card hover:bg-coral-light">
             ›
           </button>
         </div>
         {!isFirstWeek && (
-          <button onClick={thisWeek} className="text-sm text-blue-400 underline">This week</button>
+          <button onClick={thisWeek} className="text-sm text-link underline">This week</button>
         )}
       </div>
 
@@ -74,11 +74,11 @@ export default function Plan() {
       {showToggle && (
         <div className="flex mx-3 my-2 rounded overflow-hidden">
           <button onClick={() => setVisibility('mine')} aria-pressed={visibility === 'mine'}
-            className={`flex-1 py-2 text-sm font-medium ${visibility === 'mine' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+            className={`flex-1 py-2 text-sm font-semibold ${visibility === 'mine' ? 'bg-coral-deep text-white rounded-full' : 'bg-card text-muted rounded-full'}`}>
             Me
           </button>
           <button onClick={() => setVisibility('both')} aria-pressed={visibility === 'both'}
-            className={`flex-1 py-2 text-sm font-medium ${visibility === 'both' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+            className={`flex-1 py-2 text-sm font-semibold ${visibility === 'both' ? 'bg-coral-deep text-white rounded-full' : 'bg-card text-muted rounded-full'}`}>
             Both
           </button>
         </div>
@@ -94,21 +94,21 @@ export default function Plan() {
       {data && !isLoading && !error && (
         <>
           {visible.length === 0 && (
-            <p className="px-3 py-6 text-center text-gray-500">Nothing planned this week. Tap + Add on a day.</p>
+            <p className="px-3 py-6 text-center text-muted">Nothing planned this week. Tap + Add on a day.</p>
           )}
 
           {weekDays(start).map((day) => {
             const dayActivities = sortDay(visible.filter(a => a.scheduled_date === day))
             return (
-              <div key={day}>
+              <div key={day} className="rounded-3xl bg-card shadow-card overflow-hidden">
                 {/* Day heading */}
-                <div className="px-3 py-2 flex items-center justify-between border-b border-slate-700">
-                  <h2 className="text-sm font-medium text-gray-300 flex items-center gap-1">
+                <div className="px-3 py-2 flex items-center justify-between border-b border-line">
+                  <h2 className="text-sm font-medium text-muted flex items-center gap-1">
                     {dayLabel(day)}
-                    {day === today && <span className="text-xs text-blue-400 ml-1">· Today</span>}
+                    {day === today && <span className="text-xs text-link ml-1">Â· Today</span>}
                   </h2>
                   <button onClick={() => setEditing({ date: day })} aria-label={`Add activity on ${dayLabel(day)}`}
-                    className="text-xs text-blue-400 font-semibold hover:text-blue-300">+ Add</button>
+                    className="text-xs text-link font-semibold hover:text-coral-deeper">+ Add</button>
                 </div>
 
                 {dayActivities.map((a) => {
@@ -138,17 +138,17 @@ export default function Plan() {
                         <button onClick={() => setEditing({ activity: a, date: a.scheduled_date })}
                           className={`flex-1 text-left ${a.completed ? 'line-through opacity-60' : ''}`}>
                           <p className="font-medium">{a.title}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{activityDetails(a)}</p>
-                        </button>
-                      ) : (
-                        <>
-                          <div className="flex-1 text-left">
-                            <p className="font-medium">{a.title}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {[visibility === 'both' ? ownerName : '', activityDetails(a)].filter(Boolean).join(' · ')}
+                          <p className="text-xs text-muted mt-0.5">{activityDetails(a)}</p>
+                         </button>
+                       ) : (
+                         <>
+                           <div className="flex-1 text-left">
+                             <p className="font-medium">{a.title}</p>
+                             <p className="text-xs text-muted mt-0.5">
+                              {[visibility === 'both' ? ownerName : '', activityDetails(a)].filter(Boolean).join(' Â· ')}
                             </p>
                           </div>
-                          {a.completed && <span className="text-green-500 text-xs">Done</span>}
+                          {a.completed && <span className="text-muted text-xs">Done</span>}
                         </>
                       )}
 
@@ -180,8 +180,8 @@ function ToggleStatus({ activityId, current }: { activityId: string; current: bo
   return (
     <button onClick={() => mutation.mutate()} aria-pressed={current} disabled={mutation.isPending}
       className={`px-2 py-1 text-xs font-semibold rounded disabled:opacity-50 ${
-        mutation.isError ? 'bg-red-700 text-white'
-          : current ? 'bg-green-600 text-white' : 'bg-slate-600 text-gray-300 hover:bg-slate-500'
+        mutation.isError ? 'bg-coral-light/50 text-danger'
+          : current ? 'text-link font-semibold' : 'bg-card text-muted hover:bg-coral-light/50 font-semibold'
       }`}>
       {mutation.isError ? 'Try again' : current ? 'Done' : 'Planned'}
     </button>
