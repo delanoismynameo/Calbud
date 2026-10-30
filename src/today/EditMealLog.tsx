@@ -39,7 +39,7 @@ export default function EditMealLog({ log, onClose }: {
   const anyPending = saveMutation.isPending || deleteMutation.isPending
 
   return (
-    <div className="bg-card rounded-3xl shadow-card p-4 border border-line">
+    <div className="bg-card rounded-3xl shadow-card p-4 border border-line space-y-4">
       <div>
         <label htmlFor={`edit-grams-${log.id}`} className="block text-muted text-sm mb-1">Grams</label>
         <input
@@ -72,24 +72,26 @@ export default function EditMealLog({ log, onClose }: {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="space-y-3">
         <button
           type="button" onClick={() => saveMutation.mutate()} disabled={!isValid || anyPending}
-          className="py-3 rounded-2xl font-bold text-white flex-1 bg-coral-deep hover:bg-coral-deeper disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-2xl font-bold text-white bg-coral-deep hover:bg-coral-deeper disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save'}
         </button>
-        <button
-          type="button" onClick={() => deleteStep === 0 ? setDeleteStep(1) : deleteMutation.mutate()} disabled={anyPending}
-          className="py-3 rounded-2xl font-semibold flex-1 text-danger border border-line hover:bg-coral-light disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {deleteMutation.isPending ? 'Deleting…' : deleteStep === 1 ? 'Tap again to delete' : 'Delete'}
-        </button>
-        <button
-          type="button" onClick={onClose} disabled={anyPending} className="py-3 rounded-2xl bg-card border border-line text-ink font-semibold px-4 hover:bg-coral-light disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Cancel
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="button" onClick={() => deleteStep === 0 ? setDeleteStep(1) : deleteMutation.mutate()} disabled={anyPending}
+            className="py-3 rounded-2xl font-semibold flex-1 text-danger border border-line hover:bg-coral-light disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {deleteMutation.isPending ? 'Deleting…' : deleteStep === 1 ? 'Tap again to delete' : 'Delete'}
+          </button>
+          <button
+            type="button" onClick={onClose} disabled={anyPending} className="py-3 rounded-2xl bg-card border border-line text-ink font-semibold flex-1 hover:bg-coral-light disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
 
       {saveMutation.isError && <p className="text-danger text-sm">{saveMutation.error.message}</p>}
