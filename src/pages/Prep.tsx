@@ -51,52 +51,52 @@ export default function Prep() {
   const thisWeek = () => setStart(weekStarts)
 
   return (
-    <div className="bg-slate-900 min-h-screen text-white">
+    <div className="bg-cream min-h-screen text-ink">
       {/* Header */}
       <div className="px-3 pt-4 pb-2">
         <div className="flex items-center justify-between mb-1">
           <button onClick={prevWeek} aria-label="Previous week"
-            className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700">
+            className="h-10 w-10 rounded-2xl bg-card shadow-card text-ink">
             ‹
           </button>
           <h1 className="text-lg font-semibold">{weekLabel(start)}</h1>
           <button onClick={nextWeek} aria-label="Next week"
-            className="w-9 h-9 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700">
+            className="h-10 w-10 rounded-2xl bg-card shadow-card text-ink">
             ›
           </button>
         </div>
         {!isFirstWeek && (
-          <button onClick={thisWeek} className="text-sm text-blue-400 underline">This week</button>
+          <button onClick={thisWeek} className="text-sm text-link underline">This week</button>
         )}
       </div>
 
-      <div className="flex mx-3 my-2 rounded overflow-hidden">
+      <div className="flex mx-3 my-2 bg-coral-light rounded-2xl p-1">
         <button onClick={() => setView('menu')} aria-pressed={view === 'menu'}
-          className={`flex-1 py-2 text-sm font-medium ${view === 'menu' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+          className={`flex-1 py-2 text-sm font-medium ${view === 'menu' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : ''}`}>
           Menu
         </button>
         <button onClick={() => setView('plan')} aria-pressed={view === 'plan'}
-          className={`flex-1 py-2 text-sm font-medium ${view === 'plan' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+          className={`flex-1 py-2 text-sm font-medium ${view === 'plan' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : ''}`}>
           Plan
         </button>
         <button onClick={() => setView('grocery')} aria-pressed={view === 'grocery'}
-          className={`flex-1 py-2 text-sm font-medium ${view === 'grocery' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-300'}`}>
+          className={`flex-1 py-2 text-sm font-medium ${view === 'grocery' ? 'bg-card text-ink shadow-card rounded-xl font-bold' : ''}`}>
           Grocery list
         </button>
       </div>
 
       {/* Loading / Error, for the menu or for the prep sessions */}
-      {(view === 'menu' ? menu.isLoading : isLoading) && <p className="px-3 py-8 text-center text-gray-500">Loading…</p>}
+      {(view === 'menu' ? menu.isLoading : isLoading) && <p className="px-3 py-8 text-center text-muted">Loading…</p>}
       {view === 'menu' && menu.error && !menu.isLoading && (
         <div className="px-3 py-6 text-center space-y-2">
-          <p className="text-red-400">{menu.error.message}</p>
-          <button onClick={() => menu.refetch()} className="text-sm text-blue-400 underline">Try again</button>
+          <p className="text-danger">{menu.error.message}</p>
+          <button onClick={() => menu.refetch()} className="text-sm text-link underline">Try again</button>
         </div>
       )}
       {view !== 'menu' && error && !isLoading && (
         <div className="px-3 py-6 text-center space-y-2">
-          <p className="text-red-400">{error.message}</p>
-          <button onClick={() => refetch()} className="text-sm text-blue-400 underline">Try again</button>
+          <p className="text-danger">{error.message}</p>
+          <button onClick={() => refetch()} className="text-sm text-link underline">Try again</button>
         </div>
       )}
 
@@ -105,7 +105,7 @@ export default function Prep() {
         menu.data && !menu.isLoading && !menu.error && (
           <>
             <MenuGrid days={weekDays(start)} today={today} slots={menu.data} onPick={(date, meal) => setSlotEditing({ date, meal })} />
-            <p className="text-gray-500 text-xs text-center mt-2">Tap a meal to fill it. Dishes come from this week's prep.</p>
+            <p className="text-muted text-xs text-center mt-2">Tap a meal to fill it. Dishes come from this week's prep.</p>
             <RepeatButton kind="menu" start={start} key={start} />
           </>
         )
@@ -115,7 +115,7 @@ export default function Prep() {
         ) : (
           <>
             {data.length === 0 && (
-              <p className="px-3 py-6 text-center text-gray-500">Nothing planned this week. Tap + Add on a day.</p>
+              <p className="px-3 py-6 text-center text-muted">Nothing planned this week. Tap + Add on a day.</p>
             )}
 
             {weekDays(start).map((day) => {
@@ -123,32 +123,29 @@ export default function Prep() {
               return (
                 <div key={day}>
                   {/* Day heading */}
-                  <div className="px-3 py-2 flex items-center justify-between border-b border-slate-700">
-                    <h2 className="text-sm font-medium text-gray-300 flex items-center gap-1">
+                  <div className="px-3 py-2 flex items-center justify-between border-b border-line">
+                    <h2 className="text-sm font-medium text-muted flex items-center gap-1">
                       {dayLabel(day)}
-                      {day === today && <span className="text-xs text-blue-400 ml-1">· Today</span>}
+                      {day === today && <span className="text-xs text-link ml-1">· Today</span>}
                     </h2>
                     <button onClick={() => setEditing({ date: day })} aria-label={`Add prep on ${dayLabel(day)}`}
-                      className="text-xs text-blue-400 font-semibold hover:text-blue-300">+ Add</button>
+                      className="text-xs text-link font-semibold hover:text-coral-deeper">+ Add</button>
                   </div>
 
                   {/* Sessions */}
                   {daySessions.map((session) => (
-                    <div key={session.id}
-                      className={`px-3 py-2 flex items-center gap-2 ${
-                        session.status === 'done' ? 'bg-slate-800/50' : ''
-                      }`}>
+                    <div key={session.id} className="px-3 py-2 flex items-center gap-2 bg-card rounded-3xl shadow-card">
                       {/* Main button — title + info */}
                       <button onClick={() => setEditing({ prep: session, date: session.scheduled_date })}
-                        className={`flex-1 text-left p-2 rounded ${session.status === 'done' ? 'line-through opacity-60' : ''}`}>
+                        className={`flex-1 text-left p-2 rounded-2xl ${session.status === 'done' ? 'line-through opacity-60' : ''}`}>
                         <p className="font-medium">{session.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{sessionDetails(session, menu.data ?? [])}</p>
+                        <p className="text-xs text-muted mt-0.5">{sessionDetails(session, menu.data ?? [])}</p>
                       </button>
 
                       {/* Log button */}
                       {session.foods && (
                         <button onClick={() => setLogging(session)} aria-label={'Log a serving of ' + session.title}
-                          className="px-2 py-1 text-xs font-semibold rounded bg-blue-600 text-white">
+                          className="px-2 py-1 text-xs font-semibold rounded bg-coral-deep text-white hover:bg-coral-deeper">
                           Log
                         </button>
                       )}
@@ -192,9 +189,9 @@ function ToggleStatus({ id, current }: { id: string; current: 'planned' | 'done'
   const isDone = current === 'done'
   return (
     <button onClick={() => mutation.mutate()} aria-pressed={isDone} disabled={mutation.isPending}
-      className={`px-2 py-1 text-xs font-semibold rounded disabled:opacity-50 ${
-        mutation.isError ? 'bg-red-700 text-white'
-          : isDone ? 'bg-green-600 text-white' : 'bg-slate-600 text-gray-300 hover:bg-slate-500'
+      className={`px-3 py-1 text-xs font-bold rounded-full disabled:opacity-50 ${
+        mutation.isError ? 'text-danger'
+          : isDone ? 'bg-green-soft text-green-ink' : 'bg-coral-light text-link'
       }`}>
       {mutation.isError ? 'Try again' : isDone ? 'Done' : 'Planned'}
     </button>

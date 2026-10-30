@@ -42,30 +42,30 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
 
   return (
     <div className="px-3 mt-4 pb-4">
-      <h2 className="text-base font-semibold mb-1 pt-2 border-b border-slate-700 text-gray-200">
+      <h2 className="text-base font-semibold mb-1 pt-2 border-b border-line text-ink">
         Grocery list
       </h2>
-      <p className="text-xs text-gray-400 mb-3">
+      <p className="text-xs text-muted mb-3">
         From {plannedCount} planned session{plannedCount === 1 ? '' : 's'}
       </p>
 
       {items.length === 0 ? (
-        <p className="px-3 py-6 text-center text-gray-500">No ingredients in this week&apos;s planned sessions.</p>
+        <p className="px-3 py-6 text-center text-muted">No ingredients in this week&apos;s planned sessions.</p>
       ) : (
         <>
-          <div className="space-y-1 pb-2">
+          <div className="bg-card rounded-3xl shadow-card space-y-1 pb-2">
             {items.map(item => {
               const key = groceryKey(item)
               const isTicked = ticked.has(key)
               return (
                 <label
                   key={key}
-                  className={`flex items-center gap-3 px-2 py-2 rounded cursor-pointer min-h-[44px] ${isTicked ? 'text-gray-500 line-through' : ''}`}>
+                  className={`flex items-center gap-3 px-2 py-2 rounded-2xl cursor-pointer min-h-[44px] ${isTicked ? 'text-muted line-through' : ''}`}>
                   <input
                     type="checkbox"
                     checked={isTicked}
                     onChange={() => toggle(key)}
-                    className="accent-blue-500 w-5 h-5 shrink-0"
+                    className="accent-coral-deep w-5 h-5 shrink-0"
                   />
                   <span className="text-sm flex-1">{formatGroceryItem(item)}</span>
                 </label>
@@ -93,33 +93,32 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
                 }
               }}
               disabled={sendState === 'sending'}
-              className="mt-2 text-sm text-blue-400 underline">
+              className="mt-2 inline-block text-sm bg-coral-light text-link rounded-2xl font-semibold px-4 py-2">
               {sendState === 'sending' ? 'Sending…' : 'Send to Keep'}
             </button>
           )}
 
           {sendState === 'asking' && (
-            <div className="bg-slate-800 rounded-lg p-3 mt-3 text-sm space-y-2">
+            <div className="bg-card rounded-3xl shadow-card p-4 mt-3 text-sm space-y-2">
               <p>{how === 'shared' ? 'Sent. Clear the list?' : 'Copied. Clear the list?'}</p>
-              <p className="text-xs text-gray-400">This ticks every item on this phone. Your prep sessions stay as they are.</p>
+              <p className="text-xs text-muted">This ticks every item on this phone. Your prep sessions stay as they are.</p>
               <div className="flex gap-2">
                 <button onClick={() => {
                   const keys = new Set(items.map(item => groceryKey(item)))
                   setTicked(keys)
                   saveTicks(weekStart, keys)
                   setSendState('idle')
-                }} className="px-3 py-1 rounded bg-blue-600 text-white font-semibold">Yes, clear</button>
-                <button onClick={() => setSendState('idle')} className="px-3 py-1 rounded bg-slate-700 text-white">Not now</button>
+                }} className="px-3 py-1 rounded bg-coral-deep text-white font-bold">Yes, clear</button>
+                <button onClick={() => setSendState('idle')} className="px-3 py-1 rounded text-muted">Not now</button>
               </div>
             </div>
           )}
 
           {sendError && (
-            <p className="text-red-400 text-xs mt-1">{sendError}</p>
-          )}
+            <p className="text-danger text-xs mt-1">{sendError}</p>          )}
 
           {ticked.size > 0 && (
-            <button onClick={clear} className="mt-2 text-sm text-blue-400 underline">Clear ticks</button>
+            <button onClick={clear} className="mt-2 text-sm text-link underline">Clear ticks</button>
           )}
         </>
       )}

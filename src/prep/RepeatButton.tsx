@@ -66,11 +66,11 @@ export default function RepeatButton({ kind, start }: { kind: 'menu' | 'prep'; s
         type="button"
         onClick={handleClick}
         disabled={repeatMutation.isPending}
-        className="text-sm text-blue-400 underline disabled:opacity-50"
+        className="text-sm bg-coral-light text-link rounded-2xl font-semibold px-3 py-1 disabled:opacity-50"
       >
         {repeatMutation.isPending ? 'Copying…' : 'Repeat last week'}
       </button>
-      {message && <p className={`text-xs mt-1 ${repeatMutation.isError ? 'text-red-400' : 'text-gray-400'}`}>{message}</p>}
+      {message && <p className={`text-xs mt-1 ${repeatMutation.isError ? 'text-danger' : 'text-muted'}`}>{message}</p>}
     </div>
   )
 }
