@@ -5,7 +5,7 @@
   --c-cream: #fffaf5; --c-card: #ffffff; --c-ink: #3d2c2c; --c-muted: #7a6b6b; --c-line: #f0e4d8;
   --c-coral-light: #ffedd5; --c-coral-deep: #c2410c; --c-coral-deeper: #9a3412;
   --c-link: #c2410c; --c-section: #d97706; --c-danger: #dc2626; --c-warn: #d97706;
-  --c-ring: #10b981; --c-ring-track: #fde8d0;
+  --c-ring: #10b981; --c-ring-track: #fde8d0; --c-kcal: #ea580c;
   --c-rose-soft: #fff1f2; --c-rose-ink: #be123c;
   --c-amber-soft: #fefce8; --c-amber-ink: #854d0e;
   --c-green-soft: #f0fdf4; --c-green-ink: #166534;
@@ -16,7 +16,7 @@
   --c-cream: #1b1512; --c-card: #271f1b; --c-ink: #f6ece4; --c-muted: #b9a99d; --c-line: #3b2f29;
   --c-coral-light: #3d2615; --c-coral-deep: #c2410c; --c-coral-deeper: #9a3412;
   --c-link: #fdba74; --c-section: #fbbf24; --c-danger: #f87171; --c-warn: #fbbf24;
-  --c-ring: #34d399; --c-ring-track: #3d2a1c;
+  --c-ring: #34d399; --c-ring-track: #3d2a1c; --c-kcal: #fb923c;
   --c-rose-soft: #3a1d24; --c-rose-ink: #fda4af;
   --c-amber-soft: #352b12; --c-amber-ink: #fde047;
   --c-green-soft: #14301f; --c-green-ink: #86efac;
@@ -39,6 +39,7 @@
   --color-warn: var(--c-warn);
   --color-ring: var(--c-ring);
   --color-ring-track: var(--c-ring-track);
+  --color-kcal: var(--c-kcal);
   --color-rose-soft: var(--c-rose-soft);
   --color-rose-ink: var(--c-rose-ink);
   --color-amber-soft: var(--c-amber-soft);

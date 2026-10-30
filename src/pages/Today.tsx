@@ -64,10 +64,14 @@ export default function Today() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="rounded-full bg-coral-light px-4 py-2 text-sm font-semibold text-link">{dayTitle(date, today)}</h1>
-        {!isToday && (
-          <button type="button" onClick={() => goTo(today)}
-            className="text-sm font-semibold text-link underline">Back to today</button>
-        )}
+        <div className="flex items-center gap-3">
+          {!isToday && (
+            <button type="button" onClick={() => goTo(today)}
+              className="text-sm font-semibold text-link underline">Back to today</button>
+          )}
+          <Link to={isToday ? '/add' : `/add?date=${date}`}
+            className="rounded-full bg-coral-deep hover:bg-coral-deeper px-4 py-2 text-sm font-bold text-white">+ Add food</Link>
+        </div>
       </div>
 
       {logs.isError ? (
@@ -82,12 +86,6 @@ export default function Today() {
               Try again
             </button>
           </div>
-          <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 mx-auto flex max-w-md justify-end px-5">
-            <Link to={isToday ? '/add' : `/add?date=${date}`} aria-label="Add food"
-              className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-coral to-orange-300 text-3xl font-bold text-white shadow-[0_10px_24px_rgba(251,146,60,0.4)]">
-              +
-            </Link>
-          </div>
         </>
       ) : (
         <>
@@ -100,12 +98,6 @@ export default function Today() {
             </div>
           )}
 
-          <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 mx-auto flex max-w-md justify-end px-5">
-            <Link to={isToday ? '/add' : `/add?date=${date}`} aria-label="Add food"
-              className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-coral to-orange-300 text-3xl font-bold text-white shadow-[0_10px_24px_rgba(251,146,60,0.4)]">
-              +
-            </Link>
-          </div>
 
           {logs.data && logs.data.length === 0 && prevLogs.data && prevLogs.data.length > 0 && (
             <button type="button" onClick={() => copyPrevMutation.mutate()} disabled={copyPrevMutation.isPending}

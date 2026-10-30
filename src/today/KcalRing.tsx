@@ -20,8 +20,8 @@ export default function KcalRing({ consumed, goal }: { consumed: number; goal: n
     label = 'cal left'
   }
 
-  const strokeClass = over ? 'stroke-warn' : 'stroke-ring'
-  const textClass = over ? 'text-warn' : 'text-ink'
+  const strokeClass = over ? 'stroke-danger' : 'stroke-kcal'
+  const textClass = over ? 'text-danger' : 'text-ink'
 
   return (
     <div

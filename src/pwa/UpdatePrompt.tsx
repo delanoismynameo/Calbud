@@ -19,7 +19,7 @@ export default function UpdatePrompt() {
   if (!needRefresh) return null
 
   return (
-    <div className="fixed bottom-16 inset-x-0 z-20 px-4">
+    <div className="fixed bottom-[84px] inset-x-0 z-20 px-4">
       <div className="max-w-md mx-auto bg-card text-ink shadow-card rounded-2xl p-3 flex items-center gap-3">
         <span className="flex-1 text-sm">A new version of Calbud is ready.</span>
         <button

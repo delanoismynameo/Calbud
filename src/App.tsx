@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink } from 'react-router'
+import { Routes, Route, NavLink, useLocation } from 'react-router'
 import Today from './pages/Today'
 import Prep from './pages/Prep'
 import Plan from './pages/Plan'
@@ -54,6 +54,7 @@ export default function App() {
 
 function SignedInApp() {
   const { profile, loading, error, refresh } = useProfile()
+  const { pathname } = useLocation()
 
   if (loading) {
     return (
@@ -97,16 +98,17 @@ function SignedInApp() {
             key={tab.to}
             to={tab.to}
             end
-            className={({ isActive }) =>
-              `relative px-4 py-2 text-xs ${isActive ? 'text-link font-bold' : 'text-muted'}`
-            }
+            className="relative px-4 py-2 text-xs"
           >
-            {({ isActive }) => (
-              <>
-                {isActive && <span className="absolute left-1/2 -top-6 h-16 w-16 -translate-x-1/2 rounded-full bg-coral-light" />}
-                <span className="relative">{tab.label}</span>
-              </>
-            )}
+            {({ isActive }) => {
+              const active = isActive || (tab.to === '/' && pathname === '/add')
+              return (
+                <>
+                  {active && <span className="absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-coral-light" />}
+                  <span className={`relative ${active ? 'text-link font-bold' : 'text-muted'}`}>{tab.label}</span>
+                </>
+              )
+            }}
           </NavLink>
         ))}
       </nav>
