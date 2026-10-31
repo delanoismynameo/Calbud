@@ -10,12 +10,12 @@ function RowContent({ row }: { row: LabelRow }) {
     leftContent = <>
       {labelPart}
       {row.amount}
-      {missingNote && <span className="text-xs text-gray-500">{missingNote}</span>}
+      {missingNote && <span className="text-xs text-muted">{missingNote}</span>}
     </>
   } else {
     leftContent = <>
       {labelPart}
-      <span className="text-gray-500">no data</span>
+      <span className="text-muted">no data</span>
     </>
   }
 
@@ -25,7 +25,7 @@ function RowContent({ row }: { row: LabelRow }) {
   }
 
   return (
-    <div className={`flex justify-between text-sm border-b border-gray-400 py-0.5 ${paddingClass}`}>
+    <div className={`flex justify-between text-sm border-b border-muted py-0.5 ${paddingClass}`}>
       <span>{leftContent}</span>
       {rightContent}
     </div>
@@ -52,26 +52,26 @@ export default function NutritionLabel({ servingText, kcal, rows, servingName, n
   const vitaminRows = sepIdx >= 0 ? rows.slice(sepIdx) : []
 
   return (
-    <div className="bg-white text-black rounded p-3 border-2 border-black">
+    <div className="bg-card text-ink rounded p-3 border-2 border-ink">
       {/* Heading */}
       <h2 className="text-3xl font-extrabold leading-none">Nutrition Facts</h2>
-      <div className="border-b border-black pb-1" />
+      <div className="border-b border-ink pb-1" />
 
       {/* Serving line */}
       <div className="flex justify-between text-sm font-bold mt-1">
         <span>{servingName ?? 'Serving size'}</span>
         <span>{servingText}</span>
       </div>
-      <div className="border-b-8 border-black" />
+      <div className="border-b-8 border-ink" />
 
       {/* Calories */}
-      <div className="flex justify-between items-end border-b-4 border-black py-0.5">
+      <div className="flex justify-between items-end border-b-4 border-ink py-0.5">
         <span className="text-2xl font-extrabold">Calories</span>
         <span className="text-3xl font-extrabold">{kcal}</span>
       </div>
 
       {/* % Daily Value header */}
-      <div className="text-right text-xs font-bold border-b border-black pb-0.5">
+      <div className="text-right text-xs font-bold border-b border-ink pb-0.5">
         % Daily Value<sup>*</sup>
       </div>
 
@@ -83,7 +83,7 @@ export default function NutritionLabel({ servingText, kcal, rows, servingName, n
       {/* Thick bar before vitamins */}
       {vitaminRows.length > 0 && (
         <>
-          <div className="border-b-8 border-black" />
+          <div className="border-b-8 border-ink" />
           {vitaminRows.map((row) => (
             <RowContent key={row.key} row={row} />
           ))}
