@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../household/useProfile'
 import { supabase } from '../lib/supabase'
@@ -7,12 +8,14 @@ import GoalsCard from '../household/GoalsCard'
 import YouCard from '../household/YouCard'
 import DataCard from '../household/DataCard'
 import WeekCard from '../dashboard/WeekCard'
+import PersonDay from '../household/PersonDay'
 import { useCanInstall } from '../pwa/installPromptInstance'
 import { installHint, installText } from '../pwa/install'
 import { installPrompt } from '../pwa/installPromptInstance'
 import ThemeToggle from '../ui/ThemeToggle'
 
 export default function Us() {
+  const [viewing, setViewing] = useState<'me' | 'partner' | null>(null)
   const { session } = useAuth()
   const { profile, household, partner } = useProfile()
 
@@ -24,6 +27,13 @@ export default function Us() {
   const installBtn = canInstall ? (
     <button type="button" className="mt-3 px-4 py-2 rounded-2xl bg-coral-deep hover:bg-coral-deeper text-white font-bold" onClick={() => { void installPrompt.prompt() }}>Install app</button>
   ) : null
+
+  if (viewing === 'me' && profile) {
+    return <PersonDay person={profile} onBack={() => setViewing(null)} />
+  }
+  if (viewing === 'partner' && partner) {
+    return <PersonDay person={partner} onBack={() => setViewing(null)} />
+  }
 
   return (
     <div className="text-center space-y-5">
@@ -48,21 +58,22 @@ export default function Us() {
               <p className="text-lg font-extrabold text-ink">{household.name}</p>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-card rounded-3xl shadow-card p-3 text-center">
+                <button type="button" onClick={() => setViewing('me')} className="bg-card rounded-3xl shadow-card p-3 text-center w-full">
                   <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: profile?.color ?? '#6366f1' }} />
                   <p className="text-sm font-semibold">{profile?.display_name}</p>
-                </div>
-                <div className="bg-card rounded-3xl shadow-card p-3 text-center">
-                  {partner ? (
-                    <>
-                      <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: partner.color }} />
-                      <p className="text-sm font-semibold">{partner.display_name}</p>
-                    </>
-                  ) : (
+                </button>
+                {partner ? (
+                  <button type="button" onClick={() => setViewing('partner')} className="bg-card rounded-3xl shadow-card p-3 text-center w-full">
+                    <div className="w-3 h-3 rounded-full mx-auto mb-1" style={{ backgroundColor: partner.color }} />
+                    <p className="text-sm font-semibold">{partner.display_name}</p>
+                  </button>
+                ) : (
+                  <div className="bg-card rounded-3xl shadow-card p-3 text-center">
                     <p className="text-muted text-xs">Waiting…</p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
+              {partner && <p className="text-xs text-muted">Tap a profile to see their day.</p>}
               <div className="max-w-sm mx-auto"><WeekCard /></div>
               <div className="max-w-sm mx-auto"><YouCard /></div>
               <div className="max-w-sm mx-auto">
