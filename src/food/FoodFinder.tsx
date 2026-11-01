@@ -8,6 +8,9 @@ import { householdMatches, withoutHousehold } from './householdFoods'
 import BarcodeScanner from './BarcodeScanner'
 import { normalizeBarcode } from './barcode'
 import { lookupBarcode } from './off'
+import { lookupUsdaBarcode } from './usda'
+import { usdaApiKey } from './search'
+import { sourceMismatch } from './crossCheck'
 import { findHouseholdFoodByBarcode } from './householdBarcode'
 import { useProfile } from '../household/useProfile'
 import type { FoodResult } from './types'
@@ -46,9 +49,21 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
     setScanError(null)
     try {
       const saved = profile?.household_id ? await findHouseholdFoodByBarcode(profile.household_id, code) : null
-      const food = saved ?? await lookupBarcode(code)
+      let food = saved
+      if (!food) {
+        const [off, usda] = await Promise.allSettled([lookupBarcode(code), lookupUsdaBarcode(code, { apiKey: usdaApiKey() })])
+        const offFood = off.status === 'fulfilled' ? off.value : null
+        const usdaFood = usda.status === 'fulfilled' ? usda.value : null
+        if (offFood && usdaFood) {
+          const warning = sourceMismatch(offFood, usdaFood)
+          food = warning ? { ...offFood, crossCheck: warning } : offFood
+        } else {
+          food = offFood ?? usdaFood
+        }
+        if (!food && off.status === 'rejected') throw off.reason
+      }
       if (food) { onPick(food); setScanning(false) }
-      else { setScanError(`No match for ${code} in Open Food Facts. You can create it as a custom food.`) }
+      else { setScanError(`No match for ${code} in Open Food Facts or USDA. You can create it as a custom food.`) }
     } catch {
       setScanError("Couldn't look that up. Check your connection and try again.")
     } finally {

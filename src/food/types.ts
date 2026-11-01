@@ -18,6 +18,7 @@ export interface FoodResult {
   sodiumMg100g: number | null
   barcode: string | null
   extras100g?: Extras
+  crossCheck?: string   // a warning when another source disagrees with this one (set when scanning a barcode)
   recipe?: Recipe   // set on a food built from ingredients
 }
 

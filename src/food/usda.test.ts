@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { normalizeUsdaFood, searchUsda, titleCase } from './usda'
+import { normalizeUsdaFood, searchUsda, titleCase, lookupUsdaBarcode } from './usda'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -218,5 +218,66 @@ describe('searchUsda kind option', () => {
     const callArgs = (mockFetch.mock.calls[0] as [string, RequestInit])
     const body = JSON.parse(callArgs[1].body as string)
     expect(body.dataType).toEqual(['Foundation', 'SR Legacy', 'Survey (FNDDS)'])
+  })
+})
+
+describe('lookupUsdaBarcode', () => {
+  it('returns the correct food when a matching gtinUpc is found', async () => {
+    const mockResponse = {
+      foods: [
+        {
+          fdcId: 111,
+          description: 'Thing',
+          foodNutrients: [
+            { nutrientId: 1008, value: 100 },
+            { nutrientId: 1003, value: 1 },
+            { nutrientId: 1004, value: 2 },
+            { nutrientId: 1005, value: 3 },
+          ],
+        },
+        {
+          fdcId: 222,
+          description: 'Thing',
+          foodNutrients: [
+            { nutrientId: 1008, value: 100 },
+            { nutrientId: 1003, value: 1 },
+            { nutrientId: 1004, value: 2 },
+            { nutrientId: 1005, value: 3 },
+          ],
+          gtinUpc: '0012345678905',
+        },
+      ],
+    }
+    const mockFetch = vi.fn(async () => new Response(JSON.stringify(mockResponse)))
+    const result = await lookupUsdaBarcode('12345678905', { apiKey: 'TEST', fetchFn: mockFetch as unknown as typeof fetch })
+    expect(result).not.toBeNull()
+    expect(result!.sourceId).toBe('222')
+  })
+
+  it('returns null when no matching gtinUpc is found', async () => {
+    const mockResponse = {
+      foods: [
+        {
+          fdcId: 111,
+          description: 'Thing',
+          foodNutrients: [
+            { nutrientId: 1008, value: 100 },
+            { nutrientId: 1003, value: 1 },
+            { nutrientId: 1004, value: 2 },
+            { nutrientId: 1005, value: 3 },
+          ],
+          gtinUpc: '0000000000000',
+        },
+      ],
+    }
+    const mockFetch = vi.fn(async () => new Response(JSON.stringify(mockResponse)))
+    const result = await lookupUsdaBarcode('12345678905', { apiKey: 'TEST', fetchFn: mockFetch as unknown as typeof fetch })
+    expect(result).toBeNull()
+  })
+
+  it('rejects with an error when the response status is 429', async () => {
+    const mockFetch = vi.fn(async () => new Response('Too Many Requests', { status: 429 }))
+    await expect(lookupUsdaBarcode('12345678905', { apiKey: 'TEST', fetchFn: mockFetch as unknown as typeof fetch }))
+      .rejects.toThrow('USDA barcode lookup failed (HTTP 429)')
   })
 })

@@ -135,6 +135,9 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
         )}
       </div>
 
+      {food.crossCheck && !edited && (
+        <p className="text-danger text-sm">{food.crossCheck} Check the package, then tap a row on the label to correct it.</p>
+      )}
       {warning && !editingServing && (
         <p className="text-danger text-sm mb-1">{warning} Check it, then tap Edit serving size to fix it.</p>
       )}

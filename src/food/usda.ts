@@ -179,3 +179,33 @@ export async function searchUsda(
   const foods = (data as Record<string, unknown>).foods as readonly unknown[]
   return foods.map(normalizeUsdaFood).filter((r): r is FoodResult => r !== null)
 }
+
+// The packaged food whose barcode (gtinUpc) is exactly this code, or null. USDA only searches by text, so the code is searched as text and the results are checked.
+export async function lookupUsdaBarcode(
+  code: string,
+  { apiKey, fetchFn = fetch, signal }: { apiKey: string; fetchFn?: typeof fetch; signal?: AbortSignal },
+): Promise<FoodResult | null> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 10000)
+  signal?.addEventListener('abort', () => controller.abort())
+  let res: Response
+  try {
+    res = await fetchFn('https://api.nal.usda.gov/fdc/v1/foods/search?api_key=' + encodeURIComponent(apiKey), {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: code, dataType: ['Branded'], pageSize: 25 }),
+    })
+  } finally {
+    clearTimeout(timer)
+  }
+  if (!res.ok) throw new Error('USDA barcode lookup failed (HTTP ' + res.status + ')')
+  const data = await res.json() as unknown
+  if (typeof data !== 'object' || data === null || !Array.isArray((data as Record<string, unknown>).foods)) return null
+  const want = code.replace(/^0+/, '')
+  for (const raw of (data as Record<string, unknown>).foods as readonly unknown[]) {
+    const gtin = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>).gtinUpc : undefined
+    if (typeof gtin === 'string' && gtin.trim().replace(/^0+/, '') === want) return normalizeUsdaFood(raw)
+  }
+  return null
+}
