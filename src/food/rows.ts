@@ -19,6 +19,7 @@ type FoodRow = {
   sugar_100g: number | null
   sodium_mg_100g: number | null
   extra_100g: Extras
+  barcode?: string
   recipe?: Recipe
 }
 
@@ -41,6 +42,8 @@ export function foodRow(food: FoodResult, householdId: string): FoodRow {
     extra_100g: food.extras100g ?? {},
     // Only built foods send the column, so saving other foods doesn't depend on the recipe migration.
     ...(food.recipe ? { recipe: food.recipe } : {}),
+    // Only a household's own saved barcode food sends the column, so other foods don't depend on the barcode migration.
+    ...(food.source === 'custom' && food.barcode ? { barcode: food.barcode } : {}),
   }
 }
 

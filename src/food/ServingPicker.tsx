@@ -15,6 +15,7 @@ import { useProfile } from '../household/useProfile'
 import { queryClient } from '../lib/queryClient'
 import { applyLabelEdit, applyServingEdit } from './labelEdit'
 import { servingWarning } from './servingCheck'
+import { saveBarcodeFood } from './householdBarcode'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -51,6 +52,13 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       await queryClient.invalidateQueries({ queryKey: ['favorite-foods'] })
     },
   })
+
+  const saveBarcodeMutation = useMutation({
+    mutationFn: () => saveBarcodeFood(shown, profile!.household_id!),
+    onSuccess: (saved) => setEdited(saved),
+  })
+  const isBarcodeSaved = saveBarcodeMutation.data != null && edited === saveBarcodeMutation.data
+  const canSaveBarcode = edited != null && shown.barcode != null && /^[0-9]{6,14}$/.test(shown.barcode)
 
   const n = Number(amount)
   const grams = unit === 'serving' && servingG != null ? n * servingG : n
@@ -184,6 +192,9 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       {edited && (
         <p className="text-sm text-muted">Edited for this log. <button type="button" onClick={() => { setEdited(null); if (food.servingG == null) { setUnit('g'); setAmount('100') } }} className="text-link font-semibold">Undo</button></p>
       )}
+
+      {canSaveBarcode && (isBarcodeSaved ? (<p className="text-sm text-muted">Saved. Scanning this barcode will use your version.</p>) : (<button type="button" onClick={() => saveBarcodeMutation.mutate()} disabled={saveBarcodeMutation.isPending} className="text-link text-sm font-semibold">{saveBarcodeMutation.isPending ? 'Saving…' : 'Save for this barcode'}</button>))}
+      {saveBarcodeMutation.isError && <p className="text-danger text-sm">{saveBarcodeMutation.error.message}</p>}
 
       {nutrition && (
         <NutritionLabel

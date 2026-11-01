@@ -46,6 +46,14 @@ describe('foodRow', () => {
     expect(row.kcal_100g).toBe(143)
     expect(row.protein_100g).toBe(12.6)
   })
+
+  it('includes barcode in result when source is custom and food has a barcode', () => {
+    expect(foodRow({ ...FOOD, source: 'custom', barcode: '0123456789012' }, 'hh-1').barcode).toBe('0123456789012')
+  })
+
+  it('omits barcode from result when food does not have custom source or no barcode', () => {
+    expect('barcode' in foodRow({ ...FOOD, source: 'off', barcode: '0123456789012' }, 'hh-1')).toBe(false)
+  })
 })
 
 describe('mealLogRow', () => {
