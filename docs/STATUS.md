@@ -38,13 +38,14 @@
   - **Food screen:** tap a row (or Calories) on the Nutrition Facts label to correct it for this log; **Edit serving size** changes the serving name and grams (the Servings/Grams toggle is unchanged); a "check this serving" warning when the name's grams disagree with the serving's grams, there is a name but no weight, or the serving is over 1,000 g; the doubled "(31 g) (31 g)" is gone; **Undo** puts everything back.
   - **Save for this barcode:** after a correction, saves the food as the household's own custom food with the barcode (`foods.barcode`, one per household; saving again replaces it), so the next scan of that barcode finds it first.
   - Built by several local models, bench log in `docs/review/model-bench.md` (briefs and exact-instruction prompts, with each model's result).
+- **Task 75 (in `main`, not pushed):** on the Grocery list, save your Keep grocery note's link once per phone ("Send to one note every time"); then **Send to Keep** copies the list and opens that note to paste into, with **Share instead** for the old share sheet. Not tested on a phone: whether a keep.google.com link opens the Keep app.
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All eight migrations in `supabase/migrations/` have been applied through the SQL Editor (the last four on 2026-10-29, `food_barcode` on 2026-11-01). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 494 passing |
+  | `npm test` | 520 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -105,12 +106,13 @@ Before sending a task to the harness in the web UI:
 | 47 | Download your data | [47](review/47-data-export.md) |
 | 48 | Offline banner | [48](review/48-offline-banner.md) |
 | 49 | Install app button, PNG icons | [49](review/49-install-button.md) |
+| 75 | Send the grocery list straight to one saved Keep note | [75](review/75-keep-note.md) |
 
 ## Next, in order
 1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
    - the game plan's build items are done; left are 14 (optional offline write queue) and 16 (testing on both phones)
    - then the rest of game plan items 13 and 15 (offline app shell, settings: timezone, data export, rotate invite code)
-2. **On a phone:** build a food from ingredients with the barcode camera; check the "new version is ready" bar appears and Reload works; import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
+2. **On a phone:** build a food from ingredients with the barcode camera; check the "new version is ready" bar appears and Reload works; import an exported week into a Calbud calendar (Google or Apple), and try Send to Keep from the Grocery list (the real share sheet, and with a saved note link: does it open the Keep app?). **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.

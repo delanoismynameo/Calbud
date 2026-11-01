@@ -165,3 +165,24 @@ export async function copyAndOpen(text: string, link: string, nav: SendNav, open
 - `npx tsc -b` and `npm test` both pass (you ran them). If one fails, fix only your own mistakes.
 - No `any`, no unused imports, token colours only, no `dark:` variants.
 - Reply as in `features-common.md`, and include the output of `npx tsc -b` and the test totals.
+
+---
+
+## Run
+Laguna XS 2.1 at High, web UI, Full access. About 18 minutes, 29 steps, 922K tokens. Speed fell from 29 to 12 tok/s as its context filled up. It read about 120K tokens of brief and files before its first edit, and its first try at running the checks called a tool that doesn't exist ("shell"), then it switched to `pwsh`.
+
+## Result
+PASS. All three files match the brief, nothing else was touched, and its report matches the diff. `npx tsc -b` is clean and all 520 tests pass (10 new), and its own reported totals were right. Mock at phone size:
+- with no link saved, the button opens the share sheet and offers to clear the list
+- a non-Keep link is refused with the error message
+- a Keep link is trimmed and saved
+- Send to Keep copies the remaining items and then opens the note (`_blank`, `noopener`), and the question says "Paste it into your note"
+- Share instead still uses the share sheet
+- Change note fills the box with the saved link, and Remove clears it
+- the saved link survives a reload
+
+## What I changed
+Removed three `as never` casts it added to its tests. The fake objects already fit `SendNav`.
+
+## Verdict
+Usable as delivered. Not tested yet: whether a `keep.google.com` link opens the Keep app on Android, which needs the phone. This was the last exact brief: from task 76 on, models get short plain prompts (the user's call, to see which models can reason it out).
