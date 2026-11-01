@@ -13,6 +13,7 @@ import { logFood } from './logFood'
 import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../household/useProfile'
 import { queryClient } from '../lib/queryClient'
+import { applyLabelEdit } from './labelEdit'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -26,6 +27,9 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
   meal?: MealType
   loggedOn?: string
 }) {
+  const [edited, setEdited] = useState<FoodResult | null>(null)
+  const shown = edited ?? food
+
   const servingG = food.servingG
   const [unit, setUnit] = useState<'g' | 'serving'>(servingG != null ? 'serving' : 'g')
   const [amount, setAmount] = useState(servingG != null ? '1' : '100')
@@ -46,11 +50,11 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
   const n = Number(amount)
   const grams = unit === 'serving' && servingG != null ? n * servingG : n
   const isValid = amount.trim() !== '' && Number.isFinite(grams) && grams > 0 && grams <= 5000
-  const nutrition = isValid ? scaleNutrition(food, grams) : null
+  const nutrition = isValid ? scaleNutrition(shown, grams) : null
 
   const mutation = useMutation({
     mutationFn: () => logFood({
-      food, grams, mealType,
+      food: shown, grams, mealType,
       loggedOn: loggedOn ?? localDateString(), // read at the moment Log is pressed
       userId: session!.user.id,
       householdId: profile!.household_id!,
@@ -140,8 +144,18 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
 
       {mutation.isError && <p className="text-danger text-sm text-center">{mutation.error.message}</p>}
 
+      {edited && (
+        <p className="text-sm text-muted">Edited for this log. <button type="button" onClick={() => setEdited(null)} className="text-link font-semibold">Undo</button></p>
+      )}
+
       {nutrition && (
-        <NutritionLabel servingText={servingLine(unit, amount, grams, food.servingLabel)} kcal={nutrition.kcal} rows={labelRows({ fat_g: nutrition.fat_g, carbs_g: nutrition.carbs_g, protein_g: nutrition.protein_g, extras: scaleExtras(food.extras100g ?? {}, grams) })} />
+        <NutritionLabel
+          servingText={servingLine(unit, amount, grams, food.servingLabel)}
+          kcal={nutrition.kcal}
+          rows={labelRows({ fat_g: nutrition.fat_g, carbs_g: nutrition.carbs_g, protein_g: nutrition.protein_g, extras: scaleExtras(shown.extras100g ?? {}, grams) })}
+          values={{ kcal: nutrition.kcal, fat: nutrition.fat_g, carbs: nutrition.carbs_g, protein: nutrition.protein_g, ...scaleExtras(shown.extras100g ?? {}, grams) }}
+          onEdit={(key, value) => setEdited(applyLabelEdit(shown, key, value, grams))}
+        />
       )}
     </div>
   )
