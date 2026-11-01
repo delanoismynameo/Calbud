@@ -12,10 +12,19 @@ const HINTS = new Map<DecodeHintType, unknown>([
   [DecodeHintType.TRY_HARDER, true],
 ])
 
+// The 1280 x 720 request is the one that showed the picture on a real phone; asking for 1080p plus a focus mode gave a black picture.
 const CONSTRAINT_TRIES: MediaStreamConstraints[] = [
-  { video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' } as unknown as MediaTrackConstraintSet] } },
+  { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
   { video: { facingMode: 'environment' } },
 ]
+
+// Ask for continuous focus once the picture is running. A phone that can't do it just ignores this.
+function requestContinuousFocus(video: HTMLVideoElement) {
+  const stream = video.srcObject
+  if (!(stream instanceof MediaStream)) return
+  const track = stream.getVideoTracks()[0]
+  track?.applyConstraints({ advanced: [{ focusMode: 'continuous' } as unknown as MediaTrackConstraintSet] }).catch(() => {})
+}
 
 export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -52,6 +61,7 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
           )
           // Left before the camera started: turn it off now.
           if (cancelled) controls.stop()
+          else requestContinuousFocus(video)
           return
         } catch (e) {
           lastError = e
