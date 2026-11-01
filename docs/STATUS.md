@@ -1,6 +1,6 @@
 # Calbud status: start here
 
-*Last updated 2026-10-29. Update this file at the end of every task.*
+*Last updated 2026-11-01. Update this file at the end of every task.*
 
 ## Where things stand
 - **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
@@ -32,13 +32,19 @@
   - Create a food and the prep dish form get **Type the numbers / Build from ingredients**. Ingredients come from search, favorites, recents, Your foods or a barcode scan, each with an amount in servings or grams. The dish is divided into servings or by **the cooked weight of the whole dish**, and a label preview shows as you go.
   - A built prep dish reopens with its ingredients, so one line can be changed; it updates the same saved food. 41 is the logic, 42 moved Add food's finder into `FoodFinder`, 43 the `RecipeBuilder`, 44 Create a food, 45 the prep dish.
 - **Task 32 (the `.ics` builder, `src/calendar/ics.ts`, no screen yet) is live (deploy run 40880794963), with no screen using it yet.**
-- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All seven migrations in `supabase/migrations/` have been applied through the SQL Editor (the last four on 2026-10-29). "Confirm email" is **off**.
+- **Scan and correct fixes are live** (pushed 2026-11-01, deploy run 41282035878; migration `20261031000001_food_barcode.sql` applied first through the SQL Editor, and the column was checked through the REST API). These were not tested on a real phone (the camera, and saving on the live database):
+  - **Scanner:** a 10 s timeout on the Open Food Facts lookup (the Hi-Chew "Looking up…" hang), TRY_HARDER, 1080p and continuous focus on the camera, and a "type the number under the barcode" hint after 12 s (the gum that never scanned).
+  - **Scan flow:** the household's saved food for a barcode comes first, then Open Food Facts and USDA at the same time. USDA is matched by exact barcode (`gtinUpc`, leading zeros ignored); when Open Food Facts has nothing, USDA's food is used; when both answer and the calories differ by at least 20 and more than 15%, the food opens with a red "X says N kcal per 100 g but Y says M" warning.
+  - **Food screen:** tap a row (or Calories) on the Nutrition Facts label to correct it for this log; **Edit serving size** changes the serving name and grams (the Servings/Grams toggle is unchanged); a "check this serving" warning when the name's grams disagree with the serving's grams, there is a name but no weight, or the serving is over 1,000 g; the doubled "(31 g) (31 g)" is gone; **Undo** puts everything back.
+  - **Save for this barcode:** after a correction, saves the food as the household's own custom food with the barcode (`foods.barcode`, one per household; saving again replaces it), so the next scan of that barcode finds it first.
+  - Built by several local models, bench log in `docs/review/model-bench.md` (briefs and exact-instruction prompts, with each model's result).
+- **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All eight migrations in `supabase/migrations/` have been applied through the SQL Editor (the last four on 2026-10-29, `food_barcode` on 2026-11-01). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 414 passing |
+  | `npm test` | 494 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
