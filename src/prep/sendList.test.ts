@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groceryText, sendText } from './sendList'
+import { groceryText, sendText, isKeepLink, copyAndOpen } from './sendList'
 
 const items = [
   { name: 'eggs', qty: 6, unit: '' },
@@ -71,5 +71,64 @@ describe('sendText', () => {
     await expect(sendText('x', {} as never)).rejects.toThrow(
       'This browser can neither share nor copy.'
     )
+  })
+})
+
+describe('isKeepLink', () => {
+  it('returns true for valid keep.google.com URL with LIST', () => {
+    expect(isKeepLink('https://keep.google.com/u/0/#LIST/1abc')).toBe(true)
+  })
+
+  it('returns true for valid keep.google.com URL with NOTE and whitespace', () => {
+    expect(isKeepLink('  https://keep.google.com/#NOTE/xyz  ')).toBe(true)
+  })
+
+  it('returns false for http instead of https', () => {
+    expect(isKeepLink('http://keep.google.com/#LIST/1abc')).toBe(false)
+  })
+
+  it('returns false for evil domain', () => {
+    expect(isKeepLink('https://keep.google.com.evil.com/#LIST/1')).toBe(false)
+  })
+
+  it('returns false for URL without protocol', () => {
+    expect(isKeepLink('keep.google.com/#LIST/1abc')).toBe(false)
+  })
+
+  it('returns false for URL with space in path', () => {
+    expect(isKeepLink('https://keep.google.com/#LIST/1 abc')).toBe(false)
+  })
+
+  it('returns false for empty string', () => {
+    expect(isKeepLink('')).toBe(false)
+  })
+})
+
+describe('copyAndOpen', () => {
+  it('copies text and opens URL when clipboard exists', async () => {
+    const events: string[] = []
+    const clipboard = { writeText: (t: string) => { events.push('copy:' + t); return Promise.resolve() } }
+    const nav = { clipboard }
+    const open = (url: string) => { events.push('open:' + url) }
+    const result = await copyAndOpen('milk', 'https://keep.google.com/#LIST/1', nav as never, open)
+    expect(result).toBe('copied')
+    expect(events).toEqual(['copy:milk', 'open:https://keep.google.com/#LIST/1'])
+  })
+
+  it('throws when clipboard does not exist', async () => {
+    const events: string[] = []
+    const nav = {} as never
+    const open = (url: string) => { events.push('open:' + url) }
+    await expect(copyAndOpen('milk', 'https://keep.google.com/#LIST/1', nav, open)).rejects.toThrow('This browser cannot copy.')
+    expect(events).toEqual([])
+  })
+
+  it('throws when writeText rejects', async () => {
+    const events: string[] = []
+    const clipboard = { writeText: () => Promise.reject(new Error('denied')) }
+    const nav = { clipboard } as never
+    const open = (url: string) => { events.push('open:' + url) }
+    await expect(copyAndOpen('milk', 'https://keep.google.com/#LIST/1', nav, open)).rejects.toThrow('denied')
+    expect(events).toEqual([])
   })
 })
