@@ -62,3 +62,16 @@ export function formatGroceryItem(item: GroceryItem): string {
 export function groceryKey(item: GroceryItem): string {
   return `${item.name.trim().toLowerCase()}|${item.unit}|${item.qty === null ? 'n' : 'q'}`
 }
+
+export function filterGroceryItems(
+  plannedItems: GroceryItem[],
+  extras: GroceryItem[],
+  tickedKeys: Set<string>
+) {
+  const allItems = groceryList([plannedItems, extras])
+  const mainItems = plannedItems.filter(item => !tickedKeys.has(groceryKey(item)))
+  const activeExtras = extras.filter(item => !tickedKeys.has(groceryKey(item)))
+  const boughtItems = allItems.filter(item => tickedKeys.has(groceryKey(item)))
+
+  return { mainItems, activeExtras, boughtItems }
+}

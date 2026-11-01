@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groceryList, formatGroceryItem, groceryKey } from './grocery'
+import { groceryList, formatGroceryItem, groceryKey, filterGroceryItems } from './grocery'
 
 describe('groceryList', () => {
   it('empty input returns empty output', () => {
@@ -85,3 +85,21 @@ describe('groceryKey', () => {
   })
 })
 
+describe('filterGroceryItems', () => {
+  it('correctly filters items into main, activeExtras, and bought', () => {
+    const planned = [
+      { name: 'rice', qty: 3, unit: 'cup' },
+      { name: 'pasta', qty: 1, unit: 'box' },
+    ]
+    const extras = [
+      { name: 'extra', qty: 1, unit: 'unit' },
+    ]
+    const tickedKeys = new Set([groceryKey({ name: 'pasta', qty: 1, unit: 'box' })])
+
+    const result = filterGroceryItems(planned, extras, tickedKeys)
+
+    expect(result.mainItems).toEqual([{ name: 'rice', qty: 3, unit: 'cup' }])
+    expect(result.activeExtras).toEqual([{ name: 'extra', qty: 1, unit: 'unit' }])
+    expect(result.boughtItems).toEqual([{ name: 'pasta', qty: 1, unit: 'box' }])
+  })
+})

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { groceryList, formatGroceryItem, groceryKey } from './grocery'
+import { groceryList, formatGroceryItem, groceryKey, filterGroceryItems } from './grocery'
 import type { GroceryItem } from './grocery'
 import type { MealPrep } from './types'
 import { sendText, groceryText, copyAndOpen, isKeepLink, loadKeepLink, saveKeepLink, type SendNav } from './sendList'
@@ -17,6 +17,7 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
   const clearTicks = useClearGroceryTicks(weekStart)
   const extras = extrasQuery.data ?? []
   const ticked = new Set(ticksQuery.data ?? [])
+
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'asking'>('idle')
   const [how, setHow] = useState<'shared' | 'copied'>('shared')
   const [sendError, setSendError] = useState<string | null>(null)
@@ -26,8 +27,13 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
   const [linkText, setLinkText] = useState('')
   const [linkError, setLinkError] = useState<string | null>(null)
 
+  const [isBoughtExpanded, setIsBoughtExpanded] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   const items = groceryList(plannedLists)
   const allItems = groceryList([...plannedLists, extras])
+
+  const { mainItems, activeExtras, boughtItems } = filterGroceryItems(items, extras, ticked)
 
   async function send(toNote: boolean) {
     setSendError(null)
@@ -103,41 +109,41 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
         <p className="px-3 py-6 text-center text-muted">No ingredients in this week&apos;s planned sessions.</p>
       ) : (
         <>
-          <div className="bg-card rounded-3xl shadow-card space-y-1 pb-2">
-            {items.map(item => {
+          {mainItems.length === 0 && activeExtras.length === 0 && (
+            <p className="px-3 py-6 text-center text-muted">Everything is bought.</p>
+          )}
+          {mainItems.length > 0 && <div className="bg-card rounded-3xl shadow-card space-y-1 pb-2">
+            {mainItems.map(item => {
               const key = groceryKey(item)
-              const isTicked = ticked.has(key)
               return (
                 <label
                   key={key}
-                  className={`flex items-center gap-3 px-2 py-2 rounded-2xl cursor-pointer min-h-[44px] ${isTicked ? 'text-muted line-through' : ''}`}>
+                  className="flex items-center gap-3 px-2 py-2 rounded-2xl cursor-pointer min-h-[44px]">
                   <input
                     type="checkbox"
-                    checked={isTicked}
-                    onChange={() => { toggleTick.mutate({ key, ticked: !isTicked }) }}
+                    checked={false}
+                    onChange={() => { toggleTick.mutate({ key, ticked: true }) }}
                     className="accent-coral-deep w-5 h-5 shrink-0"
                   />
                   <span className="text-sm flex-1">{formatGroceryItem(item)}</span>
                 </label>
               )
             })}
-          </div>
-
-          {extras.length > 0 && (
+          </div>}
+          {activeExtras.length > 0 && (
             <>
               <p className="text-[13px] font-bold uppercase tracking-[1.5px] text-section mt-4 mb-2">Added by hand</p>
               <div className="bg-card rounded-3xl shadow-card space-y-1 pb-2 mb-3">
-                {extras.map(item => {
+                {activeExtras.map(item => {
                   const key = groceryKey(item)
-                  const isTicked = ticked.has(key)
                   return (
                     <label
                       key={key}
-                      className={`flex items-center gap-3 px-2 py-2 rounded-2xl cursor-pointer min-h-[44px] ${isTicked ? 'text-muted line-through' : ''}`}>
+                      className="flex items-center gap-3 px-2 py-2 rounded-2xl cursor-pointer min-h-[44px]">
                       <input
                         type="checkbox"
-                        checked={isTicked}
-                        onChange={() => { toggleTick.mutate({ key, ticked: !isTicked }) }}
+                        checked={false}
+                        onChange={() => { toggleTick.mutate({ key, ticked: true }) }}
                         className="accent-coral-deep w-5 h-5 shrink-0"
                       />
                       <span className="text-sm flex-1">{formatGroceryItem(item)}</span>
@@ -215,6 +221,53 @@ export default function GroceryList({ sessions, weekStart }: { sessions: MealPre
           {ticked.size > 0 && (
             <button onClick={() => clearTicks.mutate()} className="mt-2 text-sm text-link underline">Clear ticks</button>
           )}
+
+          <div className="mt-6">
+            {boughtItems.length > 0 && (
+              <div className="space-y-2">
+                <button
+                  onClick={() => setIsBoughtExpanded(!isBoughtExpanded)}
+                  className="flex items-center gap-2 text-sm font-bold text-section"
+                >
+                  Bought ({boughtItems.length})
+                  <span>{isBoughtExpanded ? '▲' : '▼'}</span>
+                </button>
+                {isBoughtExpanded && (
+                  <div className="bg-card rounded-3xl shadow-card p-2 space-y-1">
+                    {boughtItems.map(item => {
+                      const key = groceryKey(item)
+                      return (
+                        <label
+                          key={key}
+                          className="flex items-center gap-3 px-2 py-2 rounded-2xl cursor-pointer min-h-[44px] bg-card"
+                          onClick={() => { toggleTick.mutate({ key, ticked: false }) }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={true}
+                            readOnly
+                            className="accent-coral-deep w-5 h-5 shrink-0"
+                          />
+                          <span className="text-sm flex-1">{formatGroceryItem(item)}</span>
+                        </label>
+                      )
+                    })}
+                    <button
+                      onClick={() => {
+                        const boughtExtras = extras.filter(item => ticked.has(groceryKey(item)))
+                        if (window.confirm(`Delete ${boughtExtras.length} bought item${boughtExtras.length === 1 ? '' : 's'} you added by hand? Items from your plan stay here, ticked.`)) {
+                          boughtExtras.forEach(item => removeExtraMutation.mutate(groceryKey(item)))
+                        }
+                      }}
+                      className="mt-2 text-xs text-danger font-bold"
+                    >
+                      Delete bought items I added
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>
