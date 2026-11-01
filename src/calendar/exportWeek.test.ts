@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { Activity } from '../activities/types'
 import type { CalEvent } from './ics'
-import { activityEvents, exportFileName, isIosStandalone, deliverIcs } from './exportWeek'
+import { activityEvents, exportFileName, isPhoneOrTablet, deliverIcs } from './exportWeek'
 
 interface ShareNavMock {
   canShare?: (data: { files: File[] }) => boolean
@@ -96,40 +96,31 @@ describe('exportFileName', () => {
   })
 })
 
-describe('isIosStandalone', () => {
-  it('iPhone with standalone true returns true', () => {
-    expect(isIosStandalone('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', 5, true)).toBe(true)
+describe('isPhoneOrTablet', () => {
+  it('iPhone, iPad as Mac with touch, and Android are phones or tablets', () => {
+    expect(isPhoneOrTablet('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', 5)).toBe(true)
+    expect(isPhoneOrTablet('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5)).toBe(true)
+    expect(isPhoneOrTablet('Mozilla/5.0 (Linux; Android 14; Pixel 8)', 5)).toBe(true)
   })
 
-  it('iPhone with standalone false returns false', () => {
-    expect(isIosStandalone('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', 5, false)).toBe(false)
-  })
-
-  it('iPad Macintosh with maxTouchPoints > 1 and standalone true returns true', () => {
-    expect(isIosStandalone('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5, true)).toBe(true)
-  })
-
-  it('real Mac with maxTouchPoints 0 returns false', () => {
-    expect(isIosStandalone('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 0, true)).toBe(false)
-  })
-
-  it('Android returns false', () => {
-    expect(isIosStandalone('Mozilla/5.0 (Linux; Android 14)', 5, true)).toBe(false)
+  it('a real Mac and a Windows PC are not', () => {
+    expect(isPhoneOrTablet('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 0)).toBe(false)
+    expect(isPhoneOrTablet('Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 0)).toBe(false)
   })
 })
 
 describe('deliverIcs', () => {
-  it('preferShare false calls download and returns downloaded', async () => {
+  it('preferShare false downloads and never opens the share sheet', async () => {
     const file = makeFile()
-    let called = false
-    const download = (f: File) => { called = true }
-    const nav: ShareNavMock = { canShare: () => true, share: async () => {} }
-    const result = await deliverIcs(file, false, nav, download)
-    expect(called).toBe(true)
+    const share = vi.fn(async () => {})
+    const download = vi.fn()
+    const result = await deliverIcs(file, false, { canShare: () => true, share }, download)
+    expect(share).not.toHaveBeenCalled()
+    expect(download).toHaveBeenCalledTimes(1)
     expect(result).toBe('downloaded')
   })
 
-  it('preferShare true with working share calls share and returns shared', async () => {
+  it('when navigator.share and navigator.canShare exist and canShare returns true, shares and returns shared', async () => {
     const file = makeFile()
     let shareCalled = false
     const share: ShareNavMock['share'] = async () => { shareCalled = true }
@@ -168,7 +159,27 @@ describe('deliverIcs', () => {
     expect(result).toBe('downloaded')
   })
 
-  it('preferShare true but nav is empty calls download', async () => {
+  it('when nav.share is undefined calls download', async () => {
+    const file = makeFile()
+    let downloadCalled = false
+    const download = (f: File) => { downloadCalled = true }
+    const nav: ShareNavMock = { canShare: () => true } // no share
+    const result = await deliverIcs(file, true, nav, download)
+    expect(downloadCalled).toBe(true)
+    expect(result).toBe('downloaded')
+  })
+
+  it('when nav.canShare is undefined calls download', async () => {
+    const file = makeFile()
+    let downloadCalled = false
+    const download = (f: File) => { downloadCalled = true }
+    const nav: ShareNavMock = { share: async () => {} } // no canShare
+    const result = await deliverIcs(file, true, nav, download)
+    expect(downloadCalled).toBe(true)
+    expect(result).toBe('downloaded')
+  })
+
+  it('when nav is empty calls download', async () => {
     const file = makeFile()
     let downloadCalled = false
     const download = (f: File) => { downloadCalled = true }
@@ -177,7 +188,7 @@ describe('deliverIcs', () => {
     expect(result).toBe('downloaded')
   })
 
-  it('preferShare true but canShare returns false calls download', async () => {
+  it('when canShare returns false calls download', async () => {
     const file = makeFile()
     let downloadCalled = false
     const download = (f: File) => { downloadCalled = true }

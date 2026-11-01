@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useProfile } from '../household/useProfile'
 import type { Activity } from './types'
 import { buildIcs } from '../calendar/ics'
-import { activityEvents, exportFileName, isIosStandalone, deliverIcs, type ShareNav } from '../calendar/exportWeek'
+import { activityEvents, exportFileName, isPhoneOrTablet, deliverIcs, type ShareNav } from '../calendar/exportWeek'
 
 export default function ExportButton({
   items,
@@ -33,12 +33,9 @@ export default function ExportButton({
     try {
       const events = activityEvents(items, names, prefixNames)
       const text = buildIcs(events, { timeZone: profile.timezone, now: new Date(), calendarName: 'Calbud' })
-      const file = new File([text], exportFileName(start), { type: 'text/calendar' })
+      const file = new File([text], exportFileName(start), { type: 'text/calendar;charset=utf-8' })
 
-      const standalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (navigator as unknown as { standalone?: boolean }).standalone === true
-      const preferShare = isIosStandalone(navigator.userAgent, navigator.maxTouchPoints, standalone)
+      const preferShare = isPhoneOrTablet(navigator.userAgent, navigator.maxTouchPoints)
       const result = await deliverIcs(file, preferShare, navigator as unknown as ShareNav, downloadFile)
 
       if (result !== 'cancelled') {
@@ -63,7 +60,7 @@ export default function ExportButton({
         Export week
       </button>
       <p className="text-xs text-muted mt-1">
-        Import the file into a Calbud calendar. In Google Calendar: Settings, then Import &amp; export, then Import.
+        On a phone, use the share sheet to import into Calendar. On a computer, import the downloaded file in Google Calendar's web Settings.
       </p>
       {message && (
         <p className={`text-xs mt-1 ${failed ? 'text-danger' : 'text-muted'}`}>

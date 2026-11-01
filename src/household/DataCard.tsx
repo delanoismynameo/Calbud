@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useLocalDate } from '../lib/useLocalDate'
 import { downloadFile } from '../lib/download'
-import { isIosStandalone, deliverIcs, type ShareNav } from '../calendar/exportWeek'
+import { isPhoneOrTablet, deliverIcs, type ShareNav } from '../calendar/exportWeek'
 import { allRows, fetchAllData } from './exportApi'
 import { mealLogsCsv, dataFileName } from './dataExport'
 import type { MealLog } from '../today/types'
@@ -16,12 +16,9 @@ export default function DataCard() {
 
   if (!session) return null
 
-  // Shares on an installed iPhone app (downloads are unreliable there), downloads everywhere else.
+  // Shares on a phone or tablet, downloads on a computer.
   const deliver = (file: File) => {
-    const standalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as unknown as { standalone?: boolean }).standalone === true
-    const preferShare = isIosStandalone(navigator.userAgent, navigator.maxTouchPoints, standalone)
+    const preferShare = isPhoneOrTablet(navigator.userAgent, navigator.maxTouchPoints)
     return deliverIcs(file, preferShare, navigator as unknown as ShareNav, downloadFile, 'Calbud data')
   }
 

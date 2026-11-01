@@ -1,4 +1,4 @@
-// Saves a file through a temporary link (desktop and Android). On an installed iOS app, prefer deliverIcs's share sheet.
+// Saves a file through a temporary link, for computers and as the fallback when the share sheet is not available. Phones use deliverIcs's share sheet first.
 export function downloadFile(file: File): void {
   const url = URL.createObjectURL(file)
   const a = document.createElement('a')

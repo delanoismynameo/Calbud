@@ -53,11 +53,10 @@ export function exportFileName(weekStart: string): string {
   return `calbud-${weekStart}.ics`
 }
 
-export function isIosStandalone(userAgent: string, maxTouchPoints: number, standalone: boolean): boolean {
-  if (!standalone) return false
-  const isiPhone = userAgent.includes('iPhone')
-  const isiPad = userAgent.includes('Macintosh') && maxTouchPoints > 1
-  return isiPhone || isiPad
+// A phone or tablet (iPads report as a Mac with a touch screen). Computers should download, not open the share dialog.
+export function isPhoneOrTablet(userAgent: string, maxTouchPoints: number): boolean {
+  if (/iPhone|iPad|Android/.test(userAgent)) return true
+  return userAgent.includes('Macintosh') && maxTouchPoints > 1
 }
 
 export type DeliverResult = 'shared' | 'downloaded' | 'cancelled'
