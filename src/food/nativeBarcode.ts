@@ -48,3 +48,25 @@ export function startNativeReader(
     clearTimeout(timer)
   }
 }
+
+// Phones without a built-in reader (iPhone) get the same kind of reader from the barcode-detector package
+// (ZXing C++ compiled to WebAssembly). It is only downloaded on those phones, and its .wasm file ships with the app.
+let fallback: Promise<DetectorClass | undefined> | undefined
+
+export function fallbackDetector(): Promise<DetectorClass | undefined> {
+  fallback ??= loadFallback()
+  return fallback
+}
+
+async function loadFallback(): Promise<DetectorClass | undefined> {
+  try {
+    const [{ BarcodeDetector, prepareZXingModule }, { default: wasmUrl }] = await Promise.all([
+      import('barcode-detector/ponyfill'),
+      import('zxing-wasm/reader/zxing_reader.wasm?url'),
+    ])
+    prepareZXingModule({ overrides: { locateFile: (path: string, prefix: string) => (path.endsWith('.wasm') ? wasmUrl : prefix + path) } })
+    return BarcodeDetector as unknown as DetectorClass
+  } catch {
+    return undefined
+  }
+}

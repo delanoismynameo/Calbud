@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { BrowserMultiFormatOneDReader, type IScannerControls } from '@zxing/browser'
 import { BarcodeFormat, DecodeHintType } from '@zxing/library'
-import { startNativeReader } from './nativeBarcode'
+import { browserDetector, fallbackDetector, startNativeReader } from './nativeBarcode'
 
 interface BarcodeScannerProps {
   onCode: (code: string) => void
@@ -34,6 +34,7 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
     let cancelled = false
     let controls: IScannerControls | undefined
     let stopNative = () => {}
+    let found = false
 
     const startCamera = async () => {
       // Limited to grocery barcodes for speed.
@@ -48,6 +49,7 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
             video,
             (result, _err, ctl) => {
               if (result) {
+                found = true
                 stopNative()
                 ctl.stop()
                 onCodeRef.current(result.getText())
@@ -55,8 +57,12 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
             },
           )
           // Left before the camera started: turn it off now.
-          if (cancelled) controls.stop()
-          else stopNative = startNativeReader(video, (code) => { controls?.stop(); onCodeRef.current(code) })
+          if (cancelled) {
+            controls.stop()
+            return
+          }
+          const Detector = browserDetector() ?? await fallbackDetector()
+          if (!cancelled && !found) stopNative = startNativeReader(video, (code) => { controls?.stop(); onCodeRef.current(code) }, Detector)
           return
         } catch (e) {
           lastError = e
