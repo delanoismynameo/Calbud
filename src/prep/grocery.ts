@@ -64,14 +64,17 @@ export function groceryKey(item: GroceryItem): string {
 }
 
 export function filterGroceryItems(
-  plannedItems: GroceryItem[],
-  extras: GroceryItem[],
+  items: GroceryItem[],
   tickedKeys: Set<string>
 ) {
-  const allItems = groceryList([plannedItems, extras])
-  const mainItems = plannedItems.filter(item => !tickedKeys.has(groceryKey(item)))
-  const activeExtras = extras.filter(item => !tickedKeys.has(groceryKey(item)))
-  const boughtItems = allItems.filter(item => tickedKeys.has(groceryKey(item)))
+  const activeItems = items.filter(item => !tickedKeys.has(groceryKey(item)))
+  const boughtItems = items.filter(item => tickedKeys.has(groceryKey(item)))
 
-  return { mainItems, activeExtras, boughtItems }
+  return { activeItems, boughtItems }
+}
+
+// Planned ingredients (merged across sessions) that are not on the list yet, so adding the plan twice never doubles amounts.
+export function missingPlanItems(plannedLists: GroceryItem[][], listed: GroceryItem[]): GroceryItem[] {
+  const have = new Set(listed.map(groceryKey))
+  return groceryList(plannedLists).filter(item => !have.has(groceryKey(item)))
 }

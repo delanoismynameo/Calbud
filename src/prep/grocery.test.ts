@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groceryList, formatGroceryItem, groceryKey, filterGroceryItems } from './grocery'
+import { groceryList, formatGroceryItem, groceryKey, filterGroceryItems, missingPlanItems } from './grocery'
 
 describe('groceryList', () => {
   it('empty input returns empty output', () => {
@@ -86,20 +86,76 @@ describe('groceryKey', () => {
 })
 
 describe('filterGroceryItems', () => {
-  it('correctly filters items into main, activeExtras, and bought', () => {
-    const planned = [
+  it('correctly filters items into activeItems and boughtItems', () => {
+    const items = [
       { name: 'rice', qty: 3, unit: 'cup' },
       { name: 'pasta', qty: 1, unit: 'box' },
-    ]
-    const extras = [
       { name: 'extra', qty: 1, unit: 'unit' },
     ]
     const tickedKeys = new Set([groceryKey({ name: 'pasta', qty: 1, unit: 'box' })])
 
-    const result = filterGroceryItems(planned, extras, tickedKeys)
+    const result = filterGroceryItems(items, tickedKeys)
 
-    expect(result.mainItems).toEqual([{ name: 'rice', qty: 3, unit: 'cup' }])
-    expect(result.activeExtras).toEqual([{ name: 'extra', qty: 1, unit: 'unit' }])
+    expect(result.activeItems).toEqual([
+      { name: 'rice', qty: 3, unit: 'cup' },
+      { name: 'extra', qty: 1, unit: 'unit' },
+    ])
     expect(result.boughtItems).toEqual([{ name: 'pasta', qty: 1, unit: 'box' }])
+  })
+
+  it('returns empty arrays when no items', () => {
+    const result = filterGroceryItems([], new Set())
+    expect(result.activeItems).toEqual([])
+    expect(result.boughtItems).toEqual([])
+  })
+
+  it('handles all items bought', () => {
+    const items = [
+      { name: 'rice', qty: 3, unit: 'cup' },
+      { name: 'pasta', qty: 1, unit: 'box' },
+    ]
+    const tickedKeys = new Set([
+      groceryKey({ name: 'rice', qty: 3, unit: 'cup' }),
+      groceryKey({ name: 'pasta', qty: 1, unit: 'box' }),
+    ])
+
+    const result = filterGroceryItems(items, tickedKeys)
+
+    expect(result.activeItems).toEqual([])
+    expect(result.boughtItems).toEqual([
+      { name: 'rice', qty: 3, unit: 'cup' },
+      { name: 'pasta', qty: 1, unit: 'box' },
+    ])
+  })
+
+  it('handles no items bought', () => {
+    const items = [
+      { name: 'rice', qty: 3, unit: 'cup' },
+      { name: 'pasta', qty: 1, unit: 'box' },
+    ]
+
+    const result = filterGroceryItems(items, new Set())
+
+    expect(result.activeItems).toEqual([
+      { name: 'rice', qty: 3, unit: 'cup' },
+      { name: 'pasta', qty: 1, unit: 'box' },
+    ])
+    expect(result.boughtItems).toEqual([])
+  })
+})
+
+describe('missingPlanItems', () => {
+  it('merges the sessions and skips what is already listed', () => {
+    const plan = [
+      [{ name: 'rice', qty: 1, unit: 'cup' }, { name: 'tofu', qty: 2, unit: '' }],
+      [{ name: 'rice', qty: 2, unit: 'cup' }],
+    ]
+    const listed = [{ name: 'Tofu', qty: 2, unit: '' }]
+    expect(missingPlanItems(plan, listed)).toEqual([{ name: 'rice', qty: 3, unit: 'cup' }])
+  })
+
+  it('returns nothing once everything is on the list', () => {
+    const plan = [[{ name: 'rice', qty: 1, unit: 'cup' }]]
+    expect(missingPlanItems(plan, [{ name: 'rice', qty: 1, unit: 'cup' }])).toEqual([])
   })
 })
