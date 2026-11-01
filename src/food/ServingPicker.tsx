@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import type { FoodResult } from './types'
 import { foodKey, setFavorite } from './favorites'
@@ -13,7 +13,7 @@ import { logFood } from './logFood'
 import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../household/useProfile'
 import { queryClient } from '../lib/queryClient'
-import { applyLabelEdit } from './labelEdit'
+import { applyLabelEdit, applyServingEdit } from './labelEdit'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -30,9 +30,12 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
   const [edited, setEdited] = useState<FoodResult | null>(null)
   const shown = edited ?? food
 
-  const servingG = food.servingG
+  const servingG = shown.servingG
   const [unit, setUnit] = useState<'g' | 'serving'>(servingG != null ? 'serving' : 'g')
   const [amount, setAmount] = useState(servingG != null ? '1' : '100')
+  const [editingServing, setEditingServing] = useState(false)
+  const [servingText, setServingText] = useState('')
+  const [servingGrams, setServingGrams] = useState('')
   const [mealType, setMealType] = useState<MealType>(meal ?? defaultMealType())
   const { session } = useAuth()
   const { profile } = useProfile()
@@ -73,6 +76,17 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
     setUnit(next)
   }
 
+  const saveServing = (e: FormEvent) => {
+    e.preventDefault()
+    const g = Number(servingGrams.replace(',', '.'))
+    if (Number.isFinite(g) && g > 0 && g <= 5000) {
+      setEdited(applyServingEdit(shown, servingText, g))
+      setUnit('serving')
+      setAmount('1')
+      setEditingServing(false)
+    }
+  }
+
   return (
     <div className="bg-card rounded-3xl shadow-card p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
@@ -106,8 +120,25 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
         <label htmlFor="amount" className="block text-muted text-sm mb-1">{unit === 'serving' ? 'Servings' : 'Grams'}</label>
         <input id="amount" type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
           className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-coral" />
-        {unit === 'serving' && food.servingLabel && isValid && (
-          <p className="text-muted text-sm mt-1">{amount} × {food.servingLabel} = {Math.round(grams)} g</p>
+        {unit === 'serving' && shown.servingLabel && isValid && (
+          <p className="text-muted text-sm mt-1">{amount} × {shown.servingLabel} = {Math.round(grams)} g</p>
+        )}
+      </div>
+
+      <div>
+        {editingServing ? (
+          <form onSubmit={saveServing} className="space-y-2">
+            <label htmlFor="serving-text" className="block text-muted text-sm">Serving name (for example 1 cup)</label>
+            <input id="serving-text" type="text" value={servingText} onChange={(e) => setServingText(e.target.value)} className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
+            <label htmlFor="serving-grams" className="block text-muted text-sm">Grams in one serving</label>
+            <input id="serving-grams" type="text" inputMode="decimal" value={servingGrams} onChange={(e) => setServingGrams(e.target.value)} className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
+            <div className="flex gap-3">
+              <button type="submit" className="text-link font-semibold">Save serving</button>
+              <button type="button" onClick={() => setEditingServing(false)} className="text-muted">Cancel</button>
+            </div>
+          </form>
+        ) : (
+          <button type="button" onClick={() => { setServingText(shown.servingLabel ?? ''); setServingGrams(shown.servingG != null ? String(shown.servingG) : ''); setEditingServing(true) }} className="text-link text-sm font-semibold">{shown.servingG != null ? 'Edit serving size' : 'Set serving size'}</button>
         )}
       </div>
 
@@ -145,12 +176,12 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       {mutation.isError && <p className="text-danger text-sm text-center">{mutation.error.message}</p>}
 
       {edited && (
-        <p className="text-sm text-muted">Edited for this log. <button type="button" onClick={() => setEdited(null)} className="text-link font-semibold">Undo</button></p>
+        <p className="text-sm text-muted">Edited for this log. <button type="button" onClick={() => { setEdited(null); if (food.servingG == null) { setUnit('g'); setAmount('100') } }} className="text-link font-semibold">Undo</button></p>
       )}
 
       {nutrition && (
         <NutritionLabel
-          servingText={servingLine(unit, amount, grams, food.servingLabel)}
+          servingText={servingLine(unit, amount, grams, shown.servingLabel)}
           kcal={nutrition.kcal}
           rows={labelRows({ fat_g: nutrition.fat_g, carbs_g: nutrition.carbs_g, protein_g: nutrition.protein_g, extras: scaleExtras(shown.extras100g ?? {}, grams) })}
           values={{ kcal: nutrition.kcal, fat: nutrition.fat_g, carbs: nutrition.carbs_g, protein: nutrition.protein_g, ...scaleExtras(shown.extras100g ?? {}, grams) }}

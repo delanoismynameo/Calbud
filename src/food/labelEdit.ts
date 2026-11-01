@@ -71,3 +71,9 @@ export function applyLabelEdit(
     extras100g: { ...(food.extras100g ?? {}), [key]: per100 },
   }
 }
+
+export function applyServingEdit(food: FoodResult, label: string, grams: number): FoodResult {
+  if (!Number.isFinite(grams) || grams <= 0) return food
+  const trimmed = label.trim()
+  return { ...food, servingG: grams, servingLabel: trimmed === '' ? null : trimmed }
+}

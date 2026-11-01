@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { FoodResult } from './types'
-import { applyLabelEdit, editUnit } from './labelEdit'
+import { applyLabelEdit, applyServingEdit, editUnit } from './labelEdit'
 
 const base: FoodResult = {
   source: 'off',
@@ -70,5 +70,34 @@ describe('editUnit', () => {
 
   it('returns mg for sodium_mg key (test h)', () => {
     expect(editUnit('sodium_mg')).toBe('mg')
+  })
+})
+
+describe('applyServingEdit', () => {
+  it('applies serving with trimmed label', () => {
+    const result = applyServingEdit(base, ' 1 cup ', 240)
+    expect(result.servingG).toBe(240)
+    expect(result.servingLabel).toBe('1 cup')
+  })
+
+  it('sets servingLabel to null for blank label', () => {
+    const result = applyServingEdit(base, '   ', 100)
+    expect(result.servingLabel).toBeNull()
+  })
+
+  it('returns same object when grams is 0', () => {
+    const result = applyServingEdit(base, '1 cup', 0)
+    expect(result).toBe(base)
+  })
+
+  it('returns same object when grams is NaN', () => {
+    const result = applyServingEdit(base, '1 cup', Number.NaN)
+    expect(result).toBe(base)
+  })
+
+  it('does not modify original base', () => {
+    const result = applyServingEdit(base, '1 cup', 100)
+    expect(base.servingG).toBe(31)
+    expect(base.servingLabel).toBe('6 pieces')
   })
 })
