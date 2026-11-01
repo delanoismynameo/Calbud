@@ -4,6 +4,12 @@ import type { Recipe, Ingredient, FoodResult } from './types'
 import { recipeTotals } from './recipe'
 import { yieldFrom, startAmount, readAmount, ingredientLine } from './recipeDraft'
 import FoodFinder from './FoodFinder'
+import { scaleNutrition } from './nutrition'
+import { labelRows, servingLine } from './label'
+import { scaleExtras } from './extras'
+import NutritionLabel from './NutritionLabel'
+import { applyLabelEdit, applyServingEdit } from './labelEdit'
+import type { EditKey } from './labelEdit'
 
 const toggle = (active: boolean) => active
   ? 'flex-1 rounded-xl bg-card text-ink shadow-card font-bold py-2'
@@ -16,6 +22,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
   const [yieldText, setYieldText] = useState<string>(yieldDefault)
   const [step, setStep] = useState<'list' | 'finding' | 'amount'>('list')
   const [editing, setEditing] = useState<{ food: FoodResult; index: number | null } | null>(null)
+  const [edited, setEdited] = useState<FoodResult | null>(null)
   const [amountText, setAmountText] = useState('')
   const [unit, setUnit] = useState<'g' | 'serving'>('g')
 
@@ -32,7 +39,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
     body = (
       <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
         className="space-y-3">
-        <FoodFinder onPick={(food) => { const s = startAmount(food); setEditing({ food, index: null }); setAmountText(s.text); setUnit(s.unit); setStep('amount') }} />
+        <FoodFinder onPick={(food) => { const s = startAmount(food); setEditing({ food, index: null }); setEdited(null); setAmountText(s.text); setUnit(s.unit); setStep('amount') }} />
         <button type="button" onClick={() => setStep('list')} className="w-full py-3 bg-coral-light hover:bg-coral-deep/10 text-link rounded-2xl font-semibold">Cancel</button>
       </div>
     )
@@ -40,8 +47,11 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
     const amount = readAmount(amountText)
     const canSubmit = amount !== null
 
+    // Use edited food if available, otherwise use the original from editing
+    const shown = edited ?? editing.food
+
     let toggleMarkup: ReactNode = null
-    if (editing.food.servingG != null) {
+    if (shown.servingG != null) {
       const isServing = unit === 'serving'
       toggleMarkup = (
         <div className="flex gap-2">
@@ -51,12 +61,42 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
       )
     }
 
+    // Calculate nutrition for the current amount
+    let nutrition: { kcal: number; protein_g: number; carbs_g: number; fat_g: number } | null = null
+    let grams: number | null = null
+    let servingText: string | null = null
+
+    if (amount !== null && amount > 0) {
+      const calculatedGrams = unit === 'serving' && shown.servingG != null ? amount * shown.servingG : amount
+      if (calculatedGrams > 0 && calculatedGrams <= 5000) {
+        grams = calculatedGrams
+        nutrition = scaleNutrition(shown, grams)
+        servingText = shown.servingG != null
+          ? servingLine(unit, amountText, grams, shown.servingLabel)
+          : `${Math.round(grams)} g`
+      }
+    }
+
+    const handleLabelEdit = (key: EditKey, value: number) => {
+      if (grams != null) {
+        const updated = applyLabelEdit(shown, key, value, grams)
+        setEdited(updated)
+      }
+    }
+
+    const handleServingEdit = (label: string, newGrams: number) => {
+      const updated = applyServingEdit(shown, label, newGrams)
+      setEdited(updated)
+      setUnit('serving')
+      setAmountText('1')
+    }
+
     body = (
       <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
         className="space-y-3 bg-coral-light/50 rounded-2xl p-3">
         <div>
-          <span className="font-semibold">{editing.food.name}</span>
-          {editing.food.brand && <p className="text-muted text-sm">{editing.food.brand}</p>}
+          <span className="font-semibold">{shown.name}</span>
+          {shown.brand && <p className="text-muted text-sm">{shown.brand}</p>}
         </div>
 
         {toggleMarkup}
@@ -64,7 +104,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
         <label htmlFor="ingredient-amount" className="block">
           <span className="text-muted text-xs">{unit === 'serving' ? 'Servings' : 'Grams'}</span>
           <input id="ingredient-amount" type="text" inputMode="decimal" value={amountText}
-            onChange={(e) => { setAmountText(e.target.value); }}
+            onChange={(e) => { setAmountText(e.target.value) }}
             className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
         </label>
 
@@ -72,13 +112,40 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
           <p className="text-danger text-xs">Enter an amount above 0.</p>
         )}
 
+        {nutrition && grams != null && servingText && (
+          <NutritionLabel
+            servingText={servingText}
+            kcal={nutrition.kcal}
+            rows={labelRows({
+              fat_g: nutrition.fat_g,
+              carbs_g: nutrition.carbs_g,
+              protein_g: nutrition.protein_g,
+              extras: scaleExtras(shown.extras100g ?? {}, grams),
+            })}
+            values={{
+              kcal: nutrition.kcal,
+              fat: nutrition.fat_g,
+              carbs: nutrition.carbs_g,
+              protein: nutrition.protein_g,
+              ...scaleExtras(shown.extras100g ?? {}, grams),
+            }}
+            onEdit={handleLabelEdit}
+            servingG={shown.servingG}
+            servingLabel={shown.servingLabel}
+            onEditServing={handleServingEdit}
+          />
+        )}
+
         <div className="flex gap-2">
           <button type="button" disabled={!canSubmit} onClick={() => {
             if (amount === null) return
-            const ing: Ingredient = { food: editing.food, amount, unit }
+            // Use the edited food if available, otherwise use the original
+            const foodToUse = edited ?? editing.food
+            const ing: Ingredient = { food: foodToUse, amount, unit }
             const next = editing.index !== null ? ingredients.map((item, i) => i === editing.index ? ing : item) : [...ingredients, ing]
             update(next)
             setEditing(null)
+            setEdited(null)
             setStep('list')
           }} className="flex-1 py-3 rounded-2xl bg-coral-deep hover:bg-coral-deeper text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed">
             {editing.index !== null ? 'Save' : 'Add'}
@@ -88,11 +155,12 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
             <button type="button" onClick={() => {
               update(ingredients.filter((_, i) => i !== editing.index))
               setEditing(null)
+              setEdited(null)
               setStep('list')
             }} className="py-3 px-4 rounded-xl text-danger font-semibold">Remove</button>
           )}
 
-          <button type="button" onClick={() => { setEditing(null); setStep('list') }}
+          <button type="button" onClick={() => { setEditing(null); setEdited(null); setStep('list') }}
             className="py-3 px-4 rounded-xl bg-coral-light hover:bg-coral-deep/10 text-link font-semibold">Cancel</button>
         </div>
       </div>
@@ -106,7 +174,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
       ingredientList = (
         <div className="space-y-3">
           {ingredients.map((ing, i) => (
-            <button key={i} type="button" onClick={() => { setEditing({ food: ing.food, index: i }); setAmountText(String(ing.amount)); setUnit(ing.unit); setStep('amount') }}
+            <button key={i} type="button" onClick={() => { setEditing({ food: ing.food, index: i }); setEdited(null); setAmountText(String(ing.amount)); setUnit(ing.unit); setStep('amount') }}
               className="w-full bg-coral-light/50 rounded-2xl p-3 text-left hover:bg-coral-light">
               <span className="font-semibold">{ing.food.name}</span>
               <p className="text-muted text-sm">{ingredientLine(ing)}</p>
