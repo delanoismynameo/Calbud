@@ -9,6 +9,7 @@ interface BarcodeScannerProps {
 
 const HINTS = new Map<DecodeHintType, unknown>([
   [DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.UPC_A, BarcodeFormat.EAN_8, BarcodeFormat.UPC_E]],
+  [DecodeHintType.TRY_HARDER, true],
 ])
 
 export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps) {
@@ -16,6 +17,8 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
   const onCodeRef = useRef(onCode)
   onCodeRef.current = onCode
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [slow, setSlow] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setSlow(true), 12000); return () => clearTimeout(t) }, [])
 
   useEffect(() => {
     const video = videoRef.current
@@ -30,7 +33,7 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
       const reader = new BrowserMultiFormatOneDReader(HINTS as Map<DecodeHintType, any>, { delayBetweenScanAttempts: 80, delayBetweenScanSuccess: 300 })
       try {
         controls = await reader.decodeFromConstraints(
-          { video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } },
+          { video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' } as unknown as MediaTrackConstraintSet] } },
           video,
           (result, _err, ctl) => {
             if (result) {
@@ -84,6 +87,8 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
           </div>
         </>
       )}
+
+      {slow && !cameraError && <p className="text-muted text-sm text-center">Can't scan? Type the number under the barcode below.</p>}
 
       <form onSubmit={handleSubmit}>
         <label htmlFor="barcode-input" className="block text-muted text-sm mb-1">Or type the barcode</label>
