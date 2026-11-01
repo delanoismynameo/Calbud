@@ -88,7 +88,10 @@ export function servingLine(
   }
   const roundedGrams = Math.round(grams)
   if (servingLabel != null) {
-    return amount + ' × ' + servingLabel + ' (' + roundedGrams + ' g)'
+    if (!servingLabel.toLowerCase().includes('(' + roundedGrams + ' g)')) {
+      return amount + ' × ' + servingLabel + ' (' + roundedGrams + ' g)'
+    }
+    return amount + ' × ' + servingLabel
   }
   if (amount === '1') {
     return '1 serving (' + roundedGrams + ' g)'

@@ -114,4 +114,9 @@ describe('servingLine', () => {
     expect(servingLine('serving', '1', 30, null)).toBe('1 serving (30 g)')
     expect(servingLine('serving', '2', 60, null)).toBe('2 servings (60 g)')
   })
+
+  it('returns serving line without grams in parentheses when already present', () => {
+    expect(servingLine('serving', '1', 31, '6 PIECES (31 g)')).toBe('1 × 6 PIECES (31 g)')
+    expect(servingLine('serving', '2', 62, '6 PIECES (31 g)')).toBe('2 × 6 PIECES (31 g) (62 g)')
+  })
 })

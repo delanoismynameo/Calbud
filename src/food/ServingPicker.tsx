@@ -14,6 +14,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useProfile } from '../household/useProfile'
 import { queryClient } from '../lib/queryClient'
 import { applyLabelEdit, applyServingEdit } from './labelEdit'
+import { servingWarning } from './servingCheck'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -29,6 +30,7 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
 }) {
   const [edited, setEdited] = useState<FoodResult | null>(null)
   const shown = edited ?? food
+  const warning = servingWarning(shown)
 
   const servingG = shown.servingG
   const [unit, setUnit] = useState<'g' | 'serving'>(servingG != null ? 'serving' : 'g')
@@ -124,6 +126,10 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
           <p className="text-muted text-sm mt-1">{amount} × {shown.servingLabel} = {Math.round(grams)} g</p>
         )}
       </div>
+
+      {warning && !editingServing && (
+        <p className="text-danger text-sm mb-1">{warning} Check it, then tap Edit serving size to fix it.</p>
+      )}
 
       <div>
         {editingServing ? (
