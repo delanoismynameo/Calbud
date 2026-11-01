@@ -110,14 +110,14 @@ describe('copyAndOpen', () => {
     const clipboard = { writeText: (t: string) => { events.push('copy:' + t); return Promise.resolve() } }
     const nav = { clipboard }
     const open = (url: string) => { events.push('open:' + url) }
-    const result = await copyAndOpen('milk', 'https://keep.google.com/#LIST/1', nav as never, open)
+    const result = await copyAndOpen('milk', 'https://keep.google.com/#LIST/1', nav, open)
     expect(result).toBe('copied')
     expect(events).toEqual(['copy:milk', 'open:https://keep.google.com/#LIST/1'])
   })
 
   it('throws when clipboard does not exist', async () => {
     const events: string[] = []
-    const nav = {} as never
+    const nav = {}
     const open = (url: string) => { events.push('open:' + url) }
     await expect(copyAndOpen('milk', 'https://keep.google.com/#LIST/1', nav, open)).rejects.toThrow('This browser cannot copy.')
     expect(events).toEqual([])
@@ -126,7 +126,7 @@ describe('copyAndOpen', () => {
   it('throws when writeText rejects', async () => {
     const events: string[] = []
     const clipboard = { writeText: () => Promise.reject(new Error('denied')) }
-    const nav = { clipboard } as never
+    const nav = { clipboard }
     const open = (url: string) => { events.push('open:' + url) }
     await expect(copyAndOpen('milk', 'https://keep.google.com/#LIST/1', nav, open)).rejects.toThrow('denied')
     expect(events).toEqual([])
