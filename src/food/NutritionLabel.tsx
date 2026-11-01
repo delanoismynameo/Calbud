@@ -81,7 +81,7 @@ function EditBox({ rowKey, values, onEdit, onCancel, label, unit }: {
   )
 }
 
-export default function NutritionLabel({ servingText, kcal, rows, servingName, note, values, onEdit }: {
+export default function NutritionLabel({ servingText, kcal, rows, servingName, note, values, onEdit, servingG, servingLabel, onEditServing }: {
   servingText: string
   kcal: number
   rows: LabelRow[]
@@ -89,8 +89,14 @@ export default function NutritionLabel({ servingText, kcal, rows, servingName, n
   note?: string // a text-xs mt-1 line after the footnote, only when given
   values?: Partial<Record<EditKey, number>>
   onEdit?: (key: EditKey, value: number) => void
+  servingG?: number | null // grams in one serving, for editing
+  servingLabel?: string | null // serving label (e.g., "1 cup"), for editing
+  onEditServing?: (label: string, grams: number) => void // callback for serving edit
 }) {
   const [editing, setEditing] = useState<EditKey | null>(null)
+  const [editingServing, setEditingServing] = useState(false)
+  const [servingTextLocal, setServingTextLocal] = useState(servingLabel ?? '')
+  const [servingGramsLocal, setServingGramsLocal] = useState(String(servingG ?? ''))
 
   // Split rows into main and vitamins groups
   let sepIdx = -1
@@ -113,10 +119,34 @@ export default function NutritionLabel({ servingText, kcal, rows, servingName, n
       <div className="border-b border-ink pb-1" />
 
       {/* Serving line */}
-      <div className="flex justify-between text-sm font-bold mt-1">
-        <span>{servingName ?? 'Serving size'}</span>
-        <span>{servingText}</span>
-      </div>
+      {onEditServing && editingServing ? (
+        <div className="border-b border-muted py-0.5">
+          <form onSubmit={(e) => { e.preventDefault(); const g = Number(servingGramsLocal.replace(',', '.')); if (Number.isFinite(g) && g > 0 && g <= 5000) { onEditServing(servingTextLocal, g); setEditingServing(false); } }}>
+            <label htmlFor="serving-text-edit" className="block text-muted text-sm">Serving name</label>
+            <input id="serving-text-edit" type="text" value={servingTextLocal} onChange={(e) => setServingTextLocal(e.target.value)} className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
+            <div className="flex gap-2 mt-2">
+              <label htmlFor="serving-grams-edit" className="block text-muted text-sm">Grams in one serving</label>
+              <input id="serving-grams-edit" type="text" inputMode="decimal" value={servingGramsLocal} onChange={(e) => setServingGramsLocal(e.target.value)} className="w-20 bg-card border border-line rounded px-2 py-0.5 text-ink focus:outline-none focus:ring-2 focus:ring-coral" />
+            </div>
+            <div className="flex gap-3 mt-2">
+              <button type="submit" className="text-link font-semibold">Save</button>
+              <button type="button" onClick={() => setEditingServing(false)} className="text-muted">Cancel</button>
+            </div>
+          </form>
+        </div>
+      ) : onEditServing ? (
+        <button type="button" onClick={() => { setServingTextLocal(servingLabel ?? ''); setServingGramsLocal(String(servingG ?? '')); setEditingServing(true) }} className="w-full text-left">
+          <div className="flex justify-between text-sm font-bold mt-1">
+            <span>{servingName ?? 'Serving size'}</span>
+            <span>{servingText}</span>
+          </div>
+        </button>
+      ) : (
+        <div className="flex justify-between text-sm font-bold mt-1">
+          <span>{servingName ?? 'Serving size'}</span>
+          <span>{servingText}</span>
+        </div>
+      )}
       <div className="border-b-8 border-ink" />
 
       {/* Calories */}

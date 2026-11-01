@@ -95,6 +95,11 @@ describe('applyServingEdit', () => {
     expect(result).toBe(base)
   })
 
+  it('returns same object when grams is negative', () => {
+    const result = applyServingEdit(base, '1 cup', -10)
+    expect(result).toBe(base)
+  })
+
   it('does not modify original base', () => {
     const result = applyServingEdit(base, '1 cup', 100)
     expect(base.servingG).toBe(31)

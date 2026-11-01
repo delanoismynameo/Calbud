@@ -206,6 +206,9 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
           rows={labelRows({ fat_g: nutrition.fat_g, carbs_g: nutrition.carbs_g, protein_g: nutrition.protein_g, extras: scaleExtras(shown.extras100g ?? {}, grams) })}
           values={{ kcal: nutrition.kcal, fat: nutrition.fat_g, carbs: nutrition.carbs_g, protein: nutrition.protein_g, ...scaleExtras(shown.extras100g ?? {}, grams) }}
           onEdit={(key, value) => setEdited(applyLabelEdit(shown, key, value, grams))}
+          servingG={shown.servingG}
+          servingLabel={shown.servingLabel}
+          onEditServing={(label, grams) => { setEdited(applyServingEdit(shown, label, grams)); setUnit('serving'); setAmount('1') }}
         />
       )}
     </div>
