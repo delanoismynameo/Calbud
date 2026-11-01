@@ -123,3 +123,12 @@ describe('recentFoods', () => {
     expect(result).toEqual([])
   })
 })
+
+describe('foodResultFromRow barcode', () => {
+  it('uses the saved barcode column when present', () => {
+    expect(foodResultFromRow({ ...usdaRow, source: 'custom', source_id: 'c-1', barcode: '02289902' }).barcode).toBe('02289902')
+  })
+  it('keeps the off barcode from source_id when there is no barcode column', () => {
+    expect(foodResultFromRow({ ...usdaRow, source: 'off', source_id: 'bar-xyz' }).barcode).toBe('bar-xyz')
+  })
+})

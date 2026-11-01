@@ -7,6 +7,7 @@ export type FoodRowFromDb = {
   household_id: string
   source: 'usda' | 'off' | 'custom'
   source_id: string | null
+  barcode?: string | null
   name: string
   brand: string | null
   serving_g: number | null
@@ -29,7 +30,7 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
   return {
     source: row.source,
     sourceId: row.source_id ?? '',
-    barcode: row.source === 'off' ? row.source_id : null,
+    barcode: row.barcode ?? (row.source === 'off' ? row.source_id : null),
     name: row.name,
     brand: row.brand,
     servingG: row.serving_g != null ? Number(row.serving_g) : null,

@@ -8,6 +8,8 @@ import { householdMatches, withoutHousehold } from './householdFoods'
 import BarcodeScanner from './BarcodeScanner'
 import { normalizeBarcode } from './barcode'
 import { lookupBarcode } from './off'
+import { findHouseholdFoodByBarcode } from './householdBarcode'
+import { useProfile } from '../household/useProfile'
 import type { FoodResult } from './types'
 
 export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodResult) => void; onCreate?: () => void }) {
@@ -21,6 +23,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   const favorites = useFavoriteFoods()
   const empty = query.trim() === ''
   const household = useHouseholdFoods()
+  const { profile } = useProfile()
   const yours = tooShort || empty ? [] : householdMatches(household.data ?? [], query)
   const usdaResults = withoutHousehold(results, yours)
   const favoriteList = favorites.data ?? []
@@ -42,7 +45,8 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
     setLookingUp(true)
     setScanError(null)
     try {
-      const food = await lookupBarcode(code)
+      const saved = profile?.household_id ? await findHouseholdFoodByBarcode(profile.household_id, code) : null
+      const food = saved ?? await lookupBarcode(code)
       if (food) { onPick(food); setScanning(false) }
       else { setScanError(`No match for ${code} in Open Food Facts. You can create it as a custom food.`) }
     } catch {
@@ -50,7 +54,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
     } finally {
       setLookingUp(false)
     }
-  }, [lookingUp])
+  }, [lookingUp, profile?.household_id])
 
   const onScannerCancel = useCallback(() => {
     setScanning(false)
