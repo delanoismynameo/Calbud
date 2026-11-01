@@ -117,7 +117,12 @@ export async function lookupBarcode(
   if (code.trim() === '') return null
   const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments`
 
-  const res = await fetchFn(url, { signal })
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 10000)
+  signal?.addEventListener('abort', () => controller.abort())
+  let res: Response
+  try { res = await fetchFn(url, { signal: controller.signal }) }
+  finally { clearTimeout(timer) }
   let data: OffProductResponse
 
   // Parse before checking the status: an unknown barcode is HTTP 404 with { status: 0 }.
