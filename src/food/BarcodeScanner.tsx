@@ -12,6 +12,11 @@ const HINTS = new Map<DecodeHintType, unknown>([
   [DecodeHintType.TRY_HARDER, true],
 ])
 
+const CONSTRAINT_TRIES: MediaStreamConstraints[] = [
+  { video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' } as unknown as MediaTrackConstraintSet] } },
+  { video: { facingMode: 'environment' } },
+]
+
 export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const onCodeRef = useRef(onCode)
@@ -31,22 +36,31 @@ export default function BarcodeScanner({ onCode, onCancel }: BarcodeScannerProps
       // Limited to grocery barcodes for speed.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const reader = new BrowserMultiFormatOneDReader(HINTS as Map<DecodeHintType, any>, { delayBetweenScanAttempts: 80, delayBetweenScanSuccess: 300 })
-      try {
-        controls = await reader.decodeFromConstraints(
-          { video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' } as unknown as MediaTrackConstraintSet] } },
-          video,
-          (result, _err, ctl) => {
-            if (result) {
-              ctl.stop()
-              onCodeRef.current(result.getText())
-            }
-          },
-        )
-        // Left before the camera started: turn it off now.
-        if (cancelled) controls.stop()
-      } catch {
-        if (!cancelled) setCameraError('Camera not available. Type the barcode below.')
+      // The sharper request first; if the phone rejects it, the plain one. A denied permission is not retried.
+      let lastError: unknown
+      for (const constraints of CONSTRAINT_TRIES) {
+        try {
+          controls = await reader.decodeFromConstraints(
+            constraints,
+            video,
+            (result, _err, ctl) => {
+              if (result) {
+                ctl.stop()
+                onCodeRef.current(result.getText())
+              }
+            },
+          )
+          // Left before the camera started: turn it off now.
+          if (cancelled) controls.stop()
+          return
+        } catch (e) {
+          lastError = e
+          if (cancelled) return
+          const name = e instanceof Error ? e.name : ''
+          if (name === 'NotAllowedError' || name === 'SecurityError') break
+        }
       }
+      setCameraError(`Camera not available (${lastError instanceof Error ? lastError.name : 'unknown error'}). Type the barcode below.`)
     }
 
     startCamera()
