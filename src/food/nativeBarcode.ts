@@ -1,6 +1,7 @@
+import { compressUpcE } from './barcode'
 // Chrome on Android has the phone's own barcode reader (BarcodeDetector). It reads small codes, like an 8-digit
 // gum barcode, that the zxing reader misses. Where it doesn't exist (iPhone, Firefox) this does nothing.
-type FoundCode = { rawValue: string }
+type FoundCode = { rawValue: string; format?: string }
 export type NativeDetector = { detect: (source: HTMLVideoElement) => Promise<FoundCode[]> }
 export type DetectorClass = new (options: { formats: string[] }) => NativeDetector
 
@@ -30,7 +31,8 @@ export function startNativeReader(
     try {
       if (video.readyState >= 2) {
         const found = await detector.detect(video)
-        const code = found[0]?.rawValue
+        const first = found[0]
+        const code = first?.format === 'upc_e' ? (compressUpcE(first.rawValue) ?? first.rawValue) : first?.rawValue
         if (!stopped && code) {
           stopped = true
           onFound(code)

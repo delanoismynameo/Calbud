@@ -5,7 +5,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function createFakeDetector(results: { rawValue: string }[][]) {
+function createFakeDetector(results: { rawValue: string; format?: string }[][]) {
   const state = { calls: 0 }
   const FakeDetector = class {
     detect = async () => {
@@ -14,7 +14,7 @@ function createFakeDetector(results: { rawValue: string }[][]) {
       return r
     }
   }
-  return { class: FakeDetector as unknown as new (options: { formats: string[] }) => { detect: (video: HTMLVideoElement) => Promise<{ rawValue: string }[]> }, state }
+  return { class: FakeDetector as unknown as new (options: { formats: string[] }) => { detect: (video: HTMLVideoElement) => Promise<{ rawValue: string; format?: string }[]> }, state }
 }
 
 describe('startNativeReader', () => {
@@ -86,9 +86,31 @@ describe('startNativeReader', () => {
     const onFound = vi.fn()
     const FakeDetector = class {
       constructor() { throw new Error('test error') }
-    } as unknown as new (options: { formats: string[] }) => { detect: (video: HTMLVideoElement) => Promise<{ rawValue: string }[]> }
+    } as unknown as new (options: { formats: string[] }) => { detect: (video: HTMLVideoElement) => Promise<{ rawValue: string; format?: string }[]> }
     expect(() => startNativeReader(video, onFound, FakeDetector)).not.toThrow()
     await vi.advanceTimersByTimeAsync(300)
     expect(onFound).not.toHaveBeenCalled()
+  })
+
+  it('a detector that returns [{ rawValue: "0022000008992", format: "upc_e" }] calls onFound with "02289902" after 300 ms', async () => {
+    vi.useFakeTimers()
+    const video = { readyState: 4 } as unknown as HTMLVideoElement
+    const onFound = vi.fn()
+    const { class: FakeDetector } = createFakeDetector([[{ rawValue: '0022000008992', format: 'upc_e' }]])
+    const stop = startNativeReader(video, onFound, FakeDetector)
+    await vi.advanceTimersByTimeAsync(300)
+    expect(onFound).toHaveBeenCalledWith('02289902')
+    stop()
+  })
+
+  it('a detector that returns [{ rawValue: "0022000008992", format: "ean_13" }] calls onFound with "0022000008992" after 300 ms', async () => {
+    vi.useFakeTimers()
+    const video = { readyState: 4 } as unknown as HTMLVideoElement
+    const onFound = vi.fn()
+    const { class: FakeDetector } = createFakeDetector([[{ rawValue: '0022000008992', format: 'ean_13' }]])
+    const stop = startNativeReader(video, onFound, FakeDetector)
+    await vi.advanceTimersByTimeAsync(300)
+    expect(onFound).toHaveBeenCalledWith('0022000008992')
+    stop()
   })
 })

@@ -20,3 +20,18 @@ export function normalizeBarcode(text: string): string | null {
   if (digits[len - 1] !== expectedCheck) return null
   return cleaned
 }
+
+// The 8-digit UPC-E form of a 12-digit UPC-A code (or 13 digits starting with 0), or null when it has none.
+// Some readers report a short UPC-E barcode, like the gum's 02289902, in this long form, and Open Food Facts files the two separately.
+export function compressUpcE(code: string): string | null {
+  const a = code.length === 13 && code.startsWith('0') ? code.slice(1) : code
+  if (!/^[01]\d{11}$/.test(a)) return null
+  const m = a.slice(1, 6)
+  const p = a.slice(6, 11)
+  let six: string | null = null
+  if (/^\d\d[012]00$/.test(m) && p.startsWith('00')) six = m.slice(0, 2) + p.slice(2) + m[2]
+  else if (/^\d\d\d00$/.test(m) && p.startsWith('000')) six = m.slice(0, 3) + p.slice(3) + '3'
+  else if (/^\d\d\d\d0$/.test(m) && p.startsWith('0000')) six = m.slice(0, 4) + p[4] + '4'
+  else if (p.startsWith('0000') && /[5-9]/.test(p[4])) six = m + p[4]
+  return six ? a[0] + six + a[11] : null
+}

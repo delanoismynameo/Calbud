@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeBarcode } from './barcode'
+import { normalizeBarcode, compressUpcE } from './barcode'
 
 describe('normalizeBarcode', () => {
   it('3017624010701 returns itself', () => {
@@ -35,5 +35,39 @@ describe('normalizeBarcode', () => {
     expect(normalizeBarcode('')).toBeNull()
     expect(normalizeBarcode('1234567')).toBeNull()
     expect(normalizeBarcode('1234567890')).toBeNull()
+  })
+})
+
+describe('compressUpcE', () => {
+  it('compresses 0022000008992 to 02289902', () => {
+    expect(compressUpcE('0022000008992')).toBe('02289902')
+  })
+
+  it('compresses 022000008992 to 02289902', () => {
+    expect(compressUpcE('022000008992')).toBe('02289902')
+  })
+
+  it('compresses 012300000457 to 01234537', () => {
+    expect(compressUpcE('012300000457')).toBe('01234537')
+  })
+
+  it('compresses 012340000057 to 01234547', () => {
+    expect(compressUpcE('012340000057')).toBe('01234547')
+  })
+
+  it('compresses 012345000058 to 01234558', () => {
+    expect(compressUpcE('012345000058')).toBe('01234558')
+  })
+
+  it('returns null for 0851681008379', () => {
+    expect(compressUpcE('0851681008379')).toBeNull()
+  })
+
+  it('returns null for 3017624010701', () => {
+    expect(compressUpcE('3017624010701')).toBeNull()
+  })
+
+  it('returns null for 02289902', () => {
+    expect(compressUpcE('02289902')).toBeNull()
   })
 })
