@@ -16,7 +16,7 @@ import OfflineBanner from './pwa/OfflineBanner'
 const tabs = [
   { to: '/', label: 'Today' },
   { to: '/prep', label: 'Prep' },
-  { to: '/plan', label: 'Plan' },
+  { to: '/plan', label: 'Workout' },
   { to: '/us', label: 'Us' },
 ]
 
