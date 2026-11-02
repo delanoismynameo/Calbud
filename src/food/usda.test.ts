@@ -281,3 +281,14 @@ describe('lookupUsdaBarcode', () => {
       .rejects.toThrow('USDA barcode lookup failed (HTTP 429)')
   })
 })
+
+describe('normalizeUsdaFood liquids', () => {
+  it('a serving in ml makes the food an ml food', () => {
+    const data = loadFixture('usda-search-egg.json') as Record<string, unknown>
+    const first = (data.foods as Record<string, unknown>[])[0]
+    const result = normalizeUsdaFood({ ...first, servingSize: 355, servingSizeUnit: 'ml', householdServingFullText: '1 can' })
+    expect(result!.unit).toBe('ml')
+    expect(result!.servingG).toBe(355)
+    expect(result!.servingLabel).toBe('1 can (355 ml)')
+  })
+})

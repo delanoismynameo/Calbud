@@ -291,3 +291,18 @@ describe('offServingLabel with ml unit', () => {
     expect(offServingLabel('1 cup', 240)).toBe('1 cup (240 g)')
   })
 })
+
+describe('liquid detection from the package quantity', () => {
+  const nut = { 'energy-kcal_100g': 40, proteins_100g: 0, carbohydrates_100g: 10, fat_100g: 0 }
+  it('is ml when only the quantity says ml', () => {
+    const r = normalizeOffProduct({ product_name: 'Cola', code: '5449000000996', serving_size: '1 can', serving_quantity: 330, quantity: '330 ml', nutriments: nut })
+    expect(r!.unit).toBe('ml')
+  })
+  it('asks for quantity and its unit from Open Food Facts', async () => {
+    let url = ''
+    const f: typeof fetch = (input) => { url = String(input); return Promise.resolve(new Response(JSON.stringify({ status: 0 }), { status: 200 })) }
+    await lookupBarcode('5449000000996', { fetchFn: f })
+    expect(url).toContain('quantity')
+    expect(url).toContain('product_quantity_unit')
+  })
+})

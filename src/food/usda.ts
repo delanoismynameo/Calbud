@@ -105,9 +105,19 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
   // Serving
   let servingG: number | null = null
   let servingLabel: string | null = null
+  let unit: 'g' | 'ml' = 'g'
 
   if (typeof raw.servingSize === 'number' && typeof raw.servingSizeUnit === 'string') {
     const unitUpper = raw.servingSizeUnit.toUpperCase()
+    if (unitUpper === 'ML' || unitUpper === 'MLT') {
+      // liquid: 1 ml counts as 1 g in the math
+      unit = 'ml'
+      servingG = raw.servingSize
+      const rawHsf = typeof rec.householdServingFullText === 'string' ? rec.householdServingFullText.trim() : ''
+      servingLabel = rawHsf && !/^\d+(\.\d+)?\s*(ml|mlt)$/i.test(rawHsf)
+        ? `${rawHsf} (${raw.servingSize} ml)`
+        : `1 serving (${raw.servingSize} ml)`
+    }
     if (unitUpper === 'G' || unitUpper === 'GRM') {
       servingG = raw.servingSize
       // Check if householdServingFullText is just a gram amount like "45 GRM" or "74 g"
@@ -138,7 +148,7 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
     brand,
     servingG,
     servingLabel,
-    unit: 'g',
+    unit,
     kcal100g: energy,
     protein100g: protein,
     carbs100g: carbs,

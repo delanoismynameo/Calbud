@@ -182,7 +182,7 @@ export async function lookupBarcode(
   { fetchFn = fetch, signal }: RequestOpts = {},
 ): Promise<FoodResult | null> {
   if (code.trim() === '') return null
-  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments,images`
+  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json?fields=code,product_name,brands,serving_size,serving_quantity,quantity,product_quantity_unit,nutriments,images`
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 10000)
