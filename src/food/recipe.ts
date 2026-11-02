@@ -80,6 +80,7 @@ export function recipeFood(recipe: Recipe, name: string, id: string): FoodResult
     brand: null,
     servingG: servings ? round(t.grams / servings, 2) : null,
     servingLabel: servings ? '1 serving' : null,
+    unit: 'g',
     kcal100g: per100(t.kcal),
     protein100g: per100(t.protein_g),
     carbs100g: per100(t.carbs_g),

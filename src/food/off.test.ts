@@ -205,3 +205,89 @@ describe('image URL for short barcodes', () => {
     expect(result!.imageUrl).toBe('https://images.openfoodfacts.org/images/products/12345670/front_en.3.200.jpg')
   })
 })
+
+describe('liquid detection', () => {
+  it('detects liquid from serving_size with "330 ml"', () => {
+    const result = normalizeOffProduct({
+      code: 'cola-123',
+      product_name: 'Cola',
+      serving_size: '330 ml',
+      serving_quantity: 330,
+      product_quantity: 330,
+      product_quantity_unit: 'ml',
+      quantity: '330 ml',
+      nutriments: { 'energy-kcal_100g': 42, proteins_100g: 0, carbohydrates_100g: 11, fat_100g: 0 },
+    })
+    expect(result).not.toBeNull()
+    expect(result!.unit).toBe('ml')
+  })
+
+  it('detects liquid from product_quantity_unit "l"', () => {
+    const result = normalizeOffProduct({
+      code: 'water-123',
+      product_name: 'Water',
+      serving_size: '1 l',
+      serving_quantity: 1000,
+      product_quantity: 1,
+      product_quantity_unit: 'l',
+      nutriments: { 'energy-kcal_100g': 0, proteins_100g: 0, carbohydrates_100g: 0, fat_100g: 0 },
+    })
+    expect(result).not.toBeNull()
+    expect(result!.unit).toBe('ml')
+  })
+
+  it('detects liquid from serving_size with "1 l"', () => {
+    const result = normalizeOffProduct({
+      code: 'juice-123',
+      product_name: 'Juice',
+      serving_size: '1 l',
+      serving_quantity: 250,
+      nutriments: { 'energy-kcal_100g': 50, proteins_100g: 0, carbohydrates_100g: 11, fat_100g: 0 },
+    })
+    expect(result).not.toBeNull()
+    expect(result!.unit).toBe('ml')
+  })
+
+  it('detects solid food (unit = "g") from serving_size without ml', () => {
+    const result = normalizeOffProduct({
+      code: 'crackers-123',
+      product_name: 'Crackers',
+      serving_size: '30 g',
+      serving_quantity: 30,
+      nutriments: { 'energy-kcal_100g': 450, proteins_100g: 8, carbohydrates_100g: 65, fat_100g: 15 },
+    })
+    expect(result).not.toBeNull()
+    expect(result!.unit).toBe('g')
+  })
+
+  it('sets unit to g for products without liquid indicators', () => {
+    const result = normalizeOffProduct({
+      code: 'cookies-123',
+      product_name: 'Cookies',
+      serving_size: '1 pack',
+      serving_quantity: 50,
+      nutriments: { 'energy-kcal_100g': 450, proteins_100g: 5, carbohydrates_100g: 60, fat_100g: 20 },
+    })
+    expect(result).not.toBeNull()
+    expect(result!.unit).toBe('g')
+  })
+})
+
+describe('offServingLabel with ml unit', () => {
+  it('returns ml unit label when unit is ml and no serving_size', () => {
+    expect(offServingLabel('', 330, 'ml')).toBe('1 serving (330 ml)')
+  })
+
+  it('returns ml unit label when serving_size already has ml', () => {
+    expect(offServingLabel('330 ml', 330, 'ml')).toBe('330 ml')
+  })
+
+  it('appends ml unit when serving_size has different format', () => {
+    expect(offServingLabel('1 can', 355, 'ml')).toBe('1 can (355 ml)')
+  })
+
+  it('still works with default g unit', () => {
+    expect(offServingLabel('', 100)).toBe('1 serving (100 g)')
+    expect(offServingLabel('1 cup', 240)).toBe('1 cup (240 g)')
+  })
+})

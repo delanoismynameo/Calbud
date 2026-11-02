@@ -9,6 +9,7 @@ const base: FoodResult = {
   brand: null,
   servingG: 31,
   servingLabel: '6 pieces',
+  unit: 'g',
   kcal100g: 419,
   protein100g: 0,
   carbs100g: 80,

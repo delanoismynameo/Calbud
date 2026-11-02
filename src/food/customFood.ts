@@ -82,6 +82,7 @@ export function parseCustomFood(input: CustomFoodInput, id: string): CustomFoodR
       brand: null,
       servingG: servingGNum,
       servingLabel: label,
+      unit: 'g',
       kcal100g: r(kcalNum / servingGNum * 100),
       protein100g: r((numMap.protein ?? 0) / servingGNum * 100),
       carbs100g: r((numMap.carbs ?? 0) / servingGNum * 100),

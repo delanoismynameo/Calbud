@@ -13,6 +13,7 @@ function food(
     brand,
     servingG: null,
     servingLabel: null,
+    unit: 'g',
     kcal100g: 0,
     protein100g: 0,
     carbs100g: 0,

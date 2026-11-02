@@ -138,6 +138,7 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
     brand,
     servingG,
     servingLabel,
+    unit: 'g',
     kcal100g: energy,
     protein100g: protein,
     carbs100g: carbs,

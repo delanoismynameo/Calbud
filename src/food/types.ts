@@ -9,6 +9,7 @@ export interface FoodResult {
   brand: string | null
   servingG: number | null
   servingLabel: string | null
+  unit: 'g' | 'ml'   // 'g' is default, 'ml' for liquids
   kcal100g: number
   protein100g: number
   carbs100g: number

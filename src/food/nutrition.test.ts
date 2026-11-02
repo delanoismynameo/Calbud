@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'vitest'
+import type { FoodResult } from './types'
 import { scaleNutrition } from './nutrition'
 
-const FOOD = {
+const FOOD: FoodResult = {
   source: 'off' as const,
   sourceId: 'test',
   name: 'Test Food',
   brand: null,
   servingG: null,
   servingLabel: null,
+  unit: 'g',
   kcal100g: 143,
   protein100g: 12.6,
   carbs100g: 25.0,

@@ -6,9 +6,10 @@ import { scaleExtras } from './extras'
 
 export function builtLabel(food: FoodResult): { servingText: string; kcal: number; rows: LabelRow[] } {
   const grams = food.servingG ?? 100
+  const unit = food.unit
   const servingText = food.servingG != null
-    ? `1 serving (${Math.round(grams)} g)`
-    : '100 g'
+    ? `1 serving (${Math.round(grams)} ${unit})`
+    : `${Math.round(grams)} ${unit}`
   const n = scaleNutrition(food, grams)
   const rows = labelRows({
     fat_g: n.fat_g,

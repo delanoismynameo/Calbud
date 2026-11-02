@@ -78,23 +78,25 @@ export function labelRows(input: LabelInput): LabelRow[] {
 
 // The "Serving size" line.
 export function servingLine(
-  unit: 'g' | 'serving',
+  amountUnit: 'g' | 'serving',
   amount: string,
   grams: number,
-  servingLabel: string | null
+  servingLabel: string | null,
+  displayUnit: 'g' | 'ml' = 'g'
 ): string {
-  if (unit === 'g') {
-    return Math.round(grams) + ' g'
+  if (amountUnit === 'g') {
+    return Math.round(grams) + ' ' + displayUnit
   }
   const roundedGrams = Math.round(grams)
   if (servingLabel != null) {
-    if (!servingLabel.toLowerCase().includes('(' + roundedGrams + ' g)')) {
-      return amount + ' × ' + servingLabel + ' (' + roundedGrams + ' g)'
+    const unitStr = displayUnit
+    if (!servingLabel.toLowerCase().includes('(' + roundedGrams + ' ' + unitStr + ')')) {
+      return amount + ' × ' + servingLabel + ' (' + roundedGrams + ' ' + unitStr + ')'
     }
     return amount + ' × ' + servingLabel
   }
   if (amount === '1') {
-    return '1 serving (' + roundedGrams + ' g)'
+    return '1 serving (' + roundedGrams + ' ' + displayUnit + ')'
   }
-  return amount + ' servings (' + roundedGrams + ' g)'
+  return amount + ' servings (' + roundedGrams + ' ' + displayUnit + ')'
 }

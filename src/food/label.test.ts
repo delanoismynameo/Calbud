@@ -113,6 +113,9 @@ describe('servingLine', () => {
     expect(servingLine('serving', '1.5', 150, '1 cup')).toBe('1.5 × 1 cup (150 g)')
     expect(servingLine('serving', '1', 30, null)).toBe('1 serving (30 g)')
     expect(servingLine('serving', '2', 60, null)).toBe('2 servings (60 g)')
+    // Test with ml display unit
+    expect(servingLine('g', '250', 250, null, 'ml')).toBe('250 ml')
+    expect(servingLine('serving', '1', 330, '1 can', 'ml')).toBe('1 × 1 can (330 ml)')
   })
 
   it('returns serving line without grams in parentheses when already present', () => {

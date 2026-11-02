@@ -2,6 +2,27 @@ import type { FoodResult } from './types'
 import { extrasFromOff } from './extras'
 
 const gramRegex = /\d\s*(g|gr|grams?)\b/i
+const mlRegex = /\d\s*(ml|cl)\b/i
+
+// Detects if a product is a liquid based on serving_size, quantity, and product_quantity_unit.
+// Returns true for products that should be labeled in 'ml' instead of 'g'.
+function isLiquidProduct(product: Record<string, unknown>): boolean {
+  // Check serving_size for "ml", "cl", or "l"
+  const servingSize = String(product.serving_size ?? '')
+  if (mlRegex.test(servingSize)) return true
+  if (/\d\s*l\b/i.test(servingSize)) return true
+
+  // Check product_quantity_unit for "ml", "cl", or "l"
+  const qtyUnit = String(product.product_quantity_unit ?? '').toLowerCase()
+  if (['ml', 'cl', 'l'].includes(qtyUnit)) return true
+
+  // Check quantity string for liquid indicators
+  const quantity = String(product.quantity ?? '')
+  if (mlRegex.test(quantity)) return true
+  if (/\d\s*(ml|cl|l)\b/i.test(quantity)) return true
+
+  return false
+}
 
 // Generates a small (200px) image URL from Open Food Facts product data.
 // The images field contains front image info with imgid and rev, used to construct the URL.
@@ -39,11 +60,13 @@ function extractImageUrl(code: string, product: Record<string, unknown>): string
   return `https://images.openfoodfacts.org/images/products/${folder}/${filename}`
 }
 
-export function offServingLabel(sizeText: string, servingG: number): string {
+export function offServingLabel(sizeText: string, servingG: number, unit: 'g' | 'ml' = 'g'): string {
   const trimmed = sizeText.trim()
-  if (trimmed === '') return `1 serving (${servingG} g)`
-  if (gramRegex.test(trimmed)) return trimmed
-  return `${trimmed} (${servingG} g)`
+  if (trimmed === '') return `1 serving (${servingG} ${unit})`
+  // Check if sizeText already has the correct unit
+  const unitRegex = unit === 'ml' ? mlRegex : gramRegex
+  if (unitRegex.test(trimmed)) return trimmed
+  return `${trimmed} (${servingG} ${unit})`
 }
 
 type OffSearchResponse = Record<string, unknown>
@@ -115,11 +138,15 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
 
   let servingG: number | null = null
   let servingLabel: string | null = null
+  
+  // Detect if this is a liquid product (e.g., water, juice, soda)
+  const unit: 'g' | 'ml' = isLiquidProduct(product) ? 'ml' : 'g'
+  
   const servingQtyRaw = (product as Record<string, unknown>).serving_quantity as number | undefined
   if (servingQtyRaw !== undefined && isFinite(servingQtyRaw) && servingQtyRaw > 0) {
     servingG = Math.round(servingQtyRaw * 10) / 10
     const sizeText = String((product as Record<string, unknown>).serving_size ?? '')
-    servingLabel = offServingLabel(sizeText, servingG)
+    servingLabel = offServingLabel(sizeText, servingG, unit)
   }
 
   const brandsRaw = (product as Record<string, unknown>).brands as unknown
@@ -134,6 +161,7 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
     brand,
     servingG,
     servingLabel,
+    unit,
     kcal100g: energyKcal,
     protein100g: protein,
     carbs100g: carbs,

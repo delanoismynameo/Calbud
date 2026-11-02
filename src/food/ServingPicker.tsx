@@ -35,6 +35,8 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
   const warning = servingWarning(shown)
 
   const servingG = shown.servingG
+  const displayUnit = shown.unit
+  const amountWord = displayUnit === 'ml' ? 'ml' : 'Grams'
   const [unit, setUnit] = useState<'g' | 'serving'>(servingG != null ? 'serving' : 'g')
   const [amount, setAmount] = useState(servingG != null ? '1' : '100')
   const [editingServing, setEditingServing] = useState(false)
@@ -124,16 +126,16 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       {servingG != null && (
         <div className="flex gap-2">
           <button type="button" aria-pressed={unit === 'serving'} onClick={() => switchUnit('serving')} className={toggle(unit === 'serving')}>Servings</button>
-          <button type="button" aria-pressed={unit === 'g'} onClick={() => switchUnit('g')} className={toggle(unit === 'g')}>Grams</button>
+          <button type="button" aria-pressed={unit === 'g'} onClick={() => switchUnit('g')} className={toggle(unit === 'g')}>{amountWord}</button>
         </div>
       )}
 
       <div>
-        <label htmlFor="amount" className="block text-muted text-sm mb-1">{unit === 'serving' ? 'Servings' : 'Grams'}</label>
+        <label htmlFor="amount" className="block text-muted text-sm mb-1">{unit === 'serving' ? 'Servings' : amountWord}</label>
         <input id="amount" type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
           className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-coral" />
         {unit === 'serving' && shown.servingLabel && isValid && (
-          <p className="text-muted text-sm mt-1">{amount} × {shown.servingLabel} = {Math.round(grams)} g</p>
+          <p className="text-muted text-sm mt-1">{amount} × {shown.servingLabel} = {Math.round(grams)} {displayUnit}</p>
         )}
       </div>
 
@@ -171,7 +173,7 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
           ))}
         </div>
       ) : (
-        <p className="text-danger text-sm text-center">Enter an amount between 0 and 5000 g.</p>
+        <p className="text-danger text-sm text-center">Enter an amount between 0 and 5000 {displayUnit}.</p>
       )}
 
       <div className="grid grid-cols-4 gap-2">
@@ -203,7 +205,7 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
 
       {nutrition && (
         <NutritionLabel
-          servingText={servingLine(unit, amount, grams, shown.servingLabel)}
+          servingText={servingLine(unit, amount, grams, shown.servingLabel, displayUnit)}
           kcal={nutrition.kcal}
           rows={labelRows({ fat_g: nutrition.fat_g, carbs_g: nutrition.carbs_g, protein_g: nutrition.protein_g, extras: scaleExtras(shown.extras100g ?? {}, grams) })}
           values={{ kcal: nutrition.kcal, fat: nutrition.fat_g, carbs: nutrition.carbs_g, protein: nutrition.protein_g, ...scaleExtras(shown.extras100g ?? {}, grams) }}

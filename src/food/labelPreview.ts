@@ -3,7 +3,15 @@ import type { LabelRow } from './label'
 import { labelRows } from './label'
 import { EXTRAS } from './extras'
 
-export interface PreviewInput { servingLabel: string; servingG: string; kcal: string; protein: string; carbs: string; fat: string }
+export interface PreviewInput { 
+  servingLabel: string; 
+  servingG: string; 
+  kcal: string; 
+  protein: string; 
+  carbs: string; 
+  fat: string;
+  unit?: 'g' | 'ml'
+}
 
 function readNumber(s: string): number | null {
   const trimmed = s.trim()
@@ -37,6 +45,7 @@ export function previewLabel(input: PreviewInput, extraInputs: ExtraInputs): { k
   // Build servingText.
   let servingText: string
   const trimmedLabel = input.servingLabel.trim()
+  const unit = input.unit ?? 'g'
   if (trimmedLabel === '') {
     servingText = '1 serving'
   } else {
@@ -44,7 +53,7 @@ export function previewLabel(input: PreviewInput, extraInputs: ExtraInputs): { k
   }
   const gValue = readNumber(input.servingG)
   if (gValue !== null && gValue > 0) {
-    servingText += ' (' + Math.round(gValue) + ' g)'
+    servingText += ' (' + Math.round(gValue) + ' ' + unit + ')'
   }
 
   const rows = labelRows({ fat_g: fatNum, carbs_g: carbsNum, protein_g: proteinNum, extras })

@@ -35,6 +35,7 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
     brand: row.brand,
     servingG: row.serving_g != null ? Number(row.serving_g) : null,
     servingLabel: row.serving_label,
+    unit: 'g', // Default to 'g' for database-backed foods
     kcal100g: Number(row.kcal_100g),
     protein100g: Number(row.protein_100g),
     carbs100g: Number(row.carbs_100g),

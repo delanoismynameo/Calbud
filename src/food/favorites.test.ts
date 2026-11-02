@@ -9,6 +9,7 @@ const usdaFood: FoodResult = {
   brand: null,
   servingG: 240,
   servingLabel: '1 cup',
+  unit: 'g',
   kcal100g: 389,
   protein100g: 16.9,
   carbs100g: 66.3,
