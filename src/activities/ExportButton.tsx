@@ -4,6 +4,7 @@ import { useProfile } from '../household/useProfile'
 import type { Activity } from './types'
 import { buildIcs } from '../calendar/ics'
 import { activityEvents, exportFileName, isPhoneOrTablet, deliverIcs, type ShareNav } from '../calendar/exportWeek'
+import { toGoogleCalendarUrl } from '../calendar/googleCalendar'
 
 export default function ExportButton({
   items,
@@ -26,12 +27,17 @@ export default function ExportButton({
   if (partner) {
     names[partner.id] = partner.display_name
   }
+  
+  const events = activityEvents(items, names, prefixNames)
+  const googleLinks = events.map((event) => ({
+    title: event.title,
+    url: toGoogleCalendarUrl(event, profile.timezone),
+  }))
 
   const handleClick = async () => {
     setMessage(null)
     setFailed(false)
     try {
-      const events = activityEvents(items, names, prefixNames)
       const text = buildIcs(events, { timeZone: profile.timezone, now: new Date(), calendarName: 'Calbud' })
       const file = new File([text], exportFileName(start), { type: 'text/calendar;charset=utf-8' })
 
@@ -66,6 +72,29 @@ export default function ExportButton({
         <p className={`text-xs mt-1 ${failed ? 'text-danger' : 'text-muted'}`}>
           {message}
         </p>
+      )}
+      
+      {items.length > 0 && (
+        <div className="mt-3 px-3">
+          <p className="text-xs text-muted mb-2">
+            Tap each activity to add it to Google Calendar.
+          </p>
+          <ul className="space-y-1">
+            {googleLinks.map((link, index) => (
+              <li key={events[index].uid}>
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-xs text-link hover:underline block truncate"
+                  title={link.title}
+                >
+                  {link.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )
