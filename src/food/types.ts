@@ -38,4 +38,5 @@ export type RecipeYield = { kind: 'servings'; servings: number } | { kind: 'weig
 export interface Recipe {
   ingredients: Ingredient[]
   yield: RecipeYield
+  unit?: 'g' | 'ml'   // unit the built food is measured/labelled in (default 'g'; 'ml' for a drink dish)
 }

@@ -80,7 +80,7 @@ export function recipeFood(recipe: Recipe, name: string, id: string): FoodResult
     brand: null,
     servingG: servings ? round(t.grams / servings, 2) : null,
     servingLabel: servings ? '1 serving' : null,
-    unit: 'g',
+    unit: recipe.unit ?? 'g', // g by default; 'ml' for a drinking dish (1 ml counts as 1 g, no density)
     kcal100g: per100(t.kcal),
     protein100g: per100(t.protein_g),
     carbs100g: per100(t.carbs_g),
@@ -122,5 +122,8 @@ export function cleanRecipe(raw: unknown): Recipe | null {
   const y = cleanYield(raw.yield)
   const ingredients = raw.ingredients.map(cleanIngredient)
   if (!y || ingredients.some((i) => i === null)) return null
-  return { ingredients: ingredients as Ingredient[], yield: y }
+  const cleaned: Recipe = { ingredients: ingredients as Ingredient[], yield: y }
+  // Only restore the stored unit; recipeFood still defaults it to 'g'.
+  if (raw.unit === 'ml' || raw.unit === 'g') cleaned.unit = raw.unit
+  return cleaned
 }

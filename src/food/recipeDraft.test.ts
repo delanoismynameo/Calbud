@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { FoodResult } from './types'
-import { readAmount, startAmount, ingredientLine, yieldFrom } from './recipeDraft'
+import { readAmount, startAmount, ingredientLine, ingredientUnit, yieldFrom } from './recipeDraft'
 
 function food(overrides: Partial<FoodResult> = {}): FoodResult {
   return {
@@ -68,6 +68,11 @@ describe('ingredientLine', () => {
   it("returns '30 g · 141 cal'", () => {
     const result = ingredientLine({ food: food({ kcal100g: 471 }), amount: 30, unit: 'g' })
     expect(result).toBe('30 g · 141 cal')
+  })
+
+  it("returns '30 ml · 141 cal' for a drink (unit ml)", () => {
+    const result = ingredientLine({ food: food({ name: 'Juice', unit: 'ml', kcal100g: 471 }), amount: 30, unit: 'g' })
+    expect(result).toBe('30 ml · 141 cal')
   })
 
   it("returns '1 × serving · 105 cal' when no servingLabel", () => {

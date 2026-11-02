@@ -25,12 +25,15 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
   const [edited, setEdited] = useState<FoodResult | null>(null)
   const [amountText, setAmountText] = useState('')
   const [unit, setUnit] = useState<'g' | 'serving'>('g')
+  const [dishUnit, setDishUnit] = useState<'g' | 'ml'>((initial?.unit as 'g' | 'ml') ?? 'g')
+  // The unit this ingredient is actually measured in — the food's own, so a drink defaults to ml.
+  const [foodUnit, setFoodUnit] = useState<'g' | 'ml'>('g')
 
-  const update = (nextIngredients: Ingredient[], nextMode = mode, nextText = yieldText) => {
+  const update = (nextIngredients: Ingredient[], nextMode = mode, nextText = yieldText, nextDishUnit = dishUnit) => {
     setIngredients(nextIngredients)
     setMode(nextMode)
     setYieldText(nextText)
-    onChange({ ingredients: nextIngredients, yield: yieldFrom(nextMode, nextText) })
+    onChange({ ingredients: nextIngredients, yield: yieldFrom(nextMode, nextText), unit: nextDishUnit })
   }
 
   let body: ReactNode
@@ -39,7 +42,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
     body = (
       <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
         className="space-y-3">
-        <FoodFinder onPick={(food) => { const s = startAmount(food); setEditing({ food, index: null }); setEdited(null); setAmountText(s.text); setUnit(s.unit); setStep('amount') }} />
+        <FoodFinder onPick={(food) => { const s = startAmount(food); setEditing({ food, index: null }); setEdited(null); setAmountText(s.text); setUnit(s.unit); setFoodUnit(food.unit); setStep('amount') }} />
         <button type="button" onClick={() => setStep('list')} className="w-full py-3 bg-coral-light hover:bg-coral-deep/10 text-link rounded-2xl font-semibold">Cancel</button>
       </div>
     )
@@ -72,8 +75,8 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
         grams = calculatedGrams
         nutrition = scaleNutrition(shown, grams)
         servingText = shown.servingG != null
-          ? servingLine(unit, amountText, grams, shown.servingLabel)
-          : `${Math.round(grams)} g`
+          ? servingLine(unit, amountText, grams, shown.servingLabel, foodUnit)
+          : `${Math.round(grams)} ${foodUnit}`
       }
     }
 
@@ -102,7 +105,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
         {toggleMarkup}
 
         <label htmlFor="ingredient-amount" className="block">
-          <span className="text-muted text-xs">{unit === 'serving' ? 'Servings' : 'Grams'}</span>
+          <span className="text-muted text-xs">{unit === 'serving' ? 'Servings' : foodUnit === 'g' ? 'Grams' : 'Millilitres'}</span>
           <input id="ingredient-amount" type="text" inputMode="decimal" value={amountText}
             onChange={(e) => { setAmountText(e.target.value) }}
             className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
@@ -174,7 +177,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
       ingredientList = (
         <div className="space-y-3">
           {ingredients.map((ing, i) => (
-            <button key={i} type="button" onClick={() => { setEditing({ food: ing.food, index: i }); setEdited(null); setAmountText(String(ing.amount)); setUnit(ing.unit); setStep('amount') }}
+            <button key={i} type="button" onClick={() => { setEditing({ food: ing.food, index: i }); setEdited(null); setAmountText(String(ing.amount)); setUnit(ing.unit); setFoodUnit(ing.food.unit ?? 'g'); setStep('amount') }}
               className="w-full bg-coral-light/50 rounded-2xl p-3 text-left hover:bg-coral-light">
               <span className="font-semibold">{ing.food.name}</span>
               <p className="text-muted text-sm">{ingredientLine(ing)}</p>
@@ -216,6 +219,21 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
       )
     }
 
+    const dishChip = (active: boolean) =>
+      `text-sm font-semibold px-3 py-1 rounded ${active ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-link hover:bg-coral-light'}`
+    let dishUnitToggle: ReactNode = null
+    if (ingredients.length > 0) {
+      dishUnitToggle = (
+        <div className="flex items-center gap-2">
+          <span className="text-muted text-sm">Measured in:</span>
+          <button type="button" aria-pressed={dishUnit === 'g'} onClick={() => { setDishUnit('g'); update(ingredients, mode, yieldText, 'g') }}
+            className={dishChip(dishUnit === 'g')}>g</button>
+          <button type="button" aria-pressed={dishUnit === 'ml'} onClick={() => { setDishUnit('ml'); update(ingredients, mode, yieldText, 'ml') }}
+            className={dishChip(dishUnit === 'ml')}>ml</button>
+        </div>
+      )
+    }
+
     body = (
       <div onKeyDown={(e) => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) e.preventDefault() }}
         className="space-y-3">
@@ -226,6 +244,7 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
 
         {ingredients.length > 0 && <p className="text-sm text-muted font-semibold">Total: {totals.kcal} cal · {totals.grams} g as weighed in</p>}
         {yieldMarkup}
+        {dishUnitToggle}
       </div>
     )
   }

@@ -107,7 +107,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
   // The ingredients-mode label preview, when the recipe can be saved.
   const err = recipeError(recipe)
   const built: FoodResult | null = err === null ? recipeFood(recipe, input.name, 'preview') : null
-  const label = built !== null ? builtLabel(built) : null
+  const label = built ? builtLabel(built) : null
 
   return (
     <div className="bg-card rounded-3xl shadow-card p-4 space-y-3">

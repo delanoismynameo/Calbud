@@ -19,14 +19,19 @@ export function startAmount(food: FoodResult): { text: string; unit: 'g' | 'serv
   return { text: '100', unit: 'g' }
 }
 
-// One line of the list: `${amount} × ${servingLabel ?? 'serving'}` for unit 'serving' (e.g. '0.5 × 1 cup'), `${amount} g` for 'g';
-// then ' · ' and the ingredient's kcal: Math.round(food.kcal100g * ingredientGrams(ing) / 100) + ' cal'.
+// The display unit for an ingredient's amount: the food's own unit, defaulting to 'g'.
+export function ingredientUnit(ing: Ingredient): 'g' | 'ml' {
+  return ing.food.unit ?? 'g'
+}
+
+// One line of the list: `${amount} × ${servingLabel ?? 'serving'}` for unit 'serving' (e.g. '0.5 × 1 cup'),
+// `${amount} <food unit>` for 'g'; then ' · ' and the ingredient's kcal.
 export function ingredientLine(ing: Ingredient): string {
   const calories = Math.round(ing.food.kcal100g * ingredientGrams(ing) / 100)
   if (ing.unit === 'serving') {
     return `${ing.amount} × ${ing.food.servingLabel ?? 'serving'} · ${calories} cal`
   }
-  return `${ing.amount} g · ${calories} cal`
+  return `${ing.amount} ${ingredientUnit(ing)} · ${calories} cal`
 }
 
 // The yield from the form: mode 'servings' gives { kind: 'servings', servings: Number(text) };
