@@ -15,7 +15,7 @@ import { useProfile } from '../household/useProfile'
 import { queryClient } from '../lib/queryClient'
 import { applyLabelEdit, applyServingEdit } from './labelEdit'
 import { servingWarning } from './servingCheck'
-import { saveBarcodeFood } from './householdBarcode'
+import { saveBarcodeFood, deleteSavedBarcodeFoodAndLookupOriginal } from './householdBarcode'
 import FoodImage from './FoodImage'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
@@ -62,6 +62,19 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
   })
   const isBarcodeSaved = saveBarcodeMutation.data != null && edited === saveBarcodeMutation.data
   const canSaveBarcode = edited != null && shown.barcode != null && /^[0-9]{6,14}$/.test(shown.barcode)
+
+  // Mutation for "Use the original" button - deletes saved food and looks up original
+  const useOriginalMutation = useMutation({
+    mutationFn: () => deleteSavedBarcodeFoodAndLookupOriginal(profile!.household_id!, shown.barcode!),
+    onSuccess: (original) => {
+      if (original) {
+        setEdited(original)
+      }
+      queryClient.invalidateQueries({ queryKey: ['favorite-foods'] })
+      queryClient.invalidateQueries({ queryKey: ['recent-foods'] })
+    },
+  })
+  const isSavedBarcodeFood = food.source === 'custom' && food.barcode != null && /^[0-9]{6,14}$/.test(food.barcode)
 
   const n = Number(amount)
   const grams = unit === 'serving' && servingG != null ? n * servingG : n
@@ -202,6 +215,19 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
 
       {canSaveBarcode && (isBarcodeSaved ? (<p className="text-sm text-muted">Saved. Scanning this barcode will use your version.</p>) : (<button type="button" onClick={() => saveBarcodeMutation.mutate()} disabled={saveBarcodeMutation.isPending} className="text-link text-sm font-semibold">{saveBarcodeMutation.isPending ? 'Saving…' : 'Save for this barcode'}</button>))}
       {saveBarcodeMutation.isError && <p className="text-danger text-sm">{saveBarcodeMutation.error.message}</p>}
+
+      {/* Use the original button for saved barcode foods */}
+      {isSavedBarcodeFood && !useOriginalMutation.isSuccess && (
+        <button type="button" onClick={() => useOriginalMutation.mutate()} disabled={useOriginalMutation.isPending}
+          className="text-link text-sm font-semibold">
+          {useOriginalMutation.isPending ? 'Looking up…' : 'Use the original'}
+        </button>
+      )}
+
+      {useOriginalMutation.isSuccess && useOriginalMutation.data == null && (
+        <p className="text-sm text-muted">Your saved version is deleted. No original was found for this barcode.</p>
+      )}
+      {useOriginalMutation.isError && <p className="text-danger text-sm">{useOriginalMutation.error.message}</p>}
 
       {nutrition && (
         <NutritionLabel

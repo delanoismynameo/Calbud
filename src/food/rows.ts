@@ -21,6 +21,8 @@ type FoodRow = {
   extra_100g: Extras
   barcode?: string
   recipe?: Recipe
+  unit?: 'g' | 'ml'  // nullable, default 'g'
+  image_url?: string | null  // nullable, default null
 }
 
 export function foodRow(food: FoodResult, householdId: string): FoodRow {
@@ -42,8 +44,11 @@ export function foodRow(food: FoodResult, householdId: string): FoodRow {
     extra_100g: food.extras100g ?? {},
     // Only built foods send the column, so saving other foods doesn't depend on the recipe migration.
     ...(food.recipe ? { recipe: food.recipe } : {}),
-    // Only a household's own saved barcode food sends the column, so other foods don't depend on the barcode migration.
+    // Only a household's own saved barcode food sends the barcode column, so other foods don't depend on the barcode migration.
     ...(food.source === 'custom' && food.barcode ? { barcode: food.barcode } : {}),
+    // Only saved barcode foods send unit and image_url, so other foods don't depend on this migration.
+    ...(food.source === 'custom' && food.barcode && food.unit === 'ml' ? { unit: 'ml' } : {}),
+    ...(food.source === 'custom' && food.barcode && food.imageUrl ? { image_url: food.imageUrl } : {}),
   }
 }
 

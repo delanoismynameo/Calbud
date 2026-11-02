@@ -2,16 +2,24 @@ import { supabase } from '../lib/supabase'
 import type { MealLog } from './types'
 import type { MealLogInsert } from './day'
 
+type LogWithFood = MealLog & { foods?: { image_url: string | null } | null }
+
+// The photo comes from the food the log points at. If the image_url migration isn't applied yet, the log list still loads without photos.
 export async function fetchMealLogs(userId: string, date: string): Promise<MealLog[]> {
-  const { data, error } = await supabase
+  const base = () => supabase.from('meal_logs').select('*').eq('user_id', userId).eq('logged_on', date).order('created_at', { ascending: true })
+  const withFood = await supabase
     .from('meal_logs')
-    .select('*')
+    .select('*, foods(image_url)')
     .eq('user_id', userId)
     .eq('logged_on', date)
     .order('created_at', { ascending: true })
 
-  if (error) throw new Error(error.message)
-  return data ?? []
+  if (!withFood.error) {
+    return ((withFood.data ?? []) as LogWithFood[]).map(({ foods, ...log }) => ({ ...log, image_url: foods?.image_url ?? null }))
+  }
+  const plain = await base()
+  if (plain.error) throw new Error(plain.error.message)
+  return plain.data ?? []
 }
 
 export async function updateMealLog(

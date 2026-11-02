@@ -17,4 +17,5 @@ export interface MealLog {
   fat_g: number
   extra?: Extras
   created_at: string
+  image_url?: string | null  // front-of-package photo from Open Food Facts
 }

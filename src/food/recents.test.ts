@@ -132,3 +132,29 @@ describe('foodResultFromRow barcode', () => {
     expect(foodResultFromRow({ ...usdaRow, source: 'off', source_id: 'bar-xyz' }).barcode).toBe('bar-xyz')
   })
 })
+
+describe('foodResultFromRow unit and image_url', () => {
+  it('defaults unit to g when not specified', () => {
+    const result = foodResultFromRow(usdaRow)
+    expect(result.unit).toBe('g')
+  })
+
+  it('reads unit from row when specified', () => {
+    const result = foodResultFromRow({ ...usdaRow, unit: 'ml' })
+    expect(result.unit).toBe('ml')
+  })
+
+  it('returns undefined imageUrl when not specified', () => {
+    const result = foodResultFromRow(usdaRow)
+    expect(result.imageUrl).toBeUndefined()
+  })
+
+  it('reads imageUrl from row when specified', () => {
+    const result = foodResultFromRow({ ...usdaRow, image_url: 'https://example.com/image.jpg' })
+    expect(result.imageUrl).toBe('https://example.com/image.jpg')
+  })
+  it('returns undefined imageUrl when image_url is null', () => {
+    const result = foodResultFromRow({ ...usdaRow, image_url: null })
+    expect(result.imageUrl).toBeUndefined()
+  })
+})

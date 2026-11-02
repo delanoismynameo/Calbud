@@ -22,6 +22,8 @@ export type FoodRowFromDb = {
   extra_100g?: unknown
   recipe?: unknown
   is_favorite: boolean
+  unit?: 'g' | 'ml'  // nullable, defaults to 'g'
+  image_url?: string | null  // nullable, defaults to null
 }
 
 export type RecentLogRow = { food_id: string | null; foods: FoodRowFromDb | null }
@@ -35,7 +37,7 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
     brand: row.brand,
     servingG: row.serving_g != null ? Number(row.serving_g) : null,
     servingLabel: row.serving_label,
-    unit: 'g', // Default to 'g' for database-backed foods
+    unit: row.unit ?? 'g',
     kcal100g: Number(row.kcal_100g),
     protein100g: Number(row.protein_100g),
     carbs100g: Number(row.carbs_100g),
@@ -44,7 +46,7 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
     sugar100g: row.sugar_100g != null ? Number(row.sugar_100g) : null,
     sodiumMg100g: row.sodium_mg_100g != null ? Number(row.sodium_mg_100g) : null,
     extras100g: cleanExtras(row.extra_100g),
-    imageUrl: null, // Database doesn't store images, so loaded foods have no image
+    imageUrl: row.image_url ?? undefined,
     ...withRecipe(cleanRecipe(row.recipe)),
   }
 }

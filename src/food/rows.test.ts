@@ -55,6 +55,26 @@ describe('foodRow', () => {
   it('omits barcode from result when food does not have custom source or no barcode', () => {
     expect('barcode' in foodRow({ ...FOOD, source: 'off', barcode: '0123456789012' }, 'hh-1')).toBe(false)
   })
+
+  it('includes unit g in result when custom barcode food has unit g (default)', () => {
+    const row = foodRow({ ...FOOD, source: 'custom', barcode: '0123456789012', unit: 'g' }, 'hh-1')
+    expect('unit' in row).toBe(false)  // default 'g' is omitted
+  })
+
+  it('includes unit ml in result when custom barcode food has unit ml', () => {
+    const row = foodRow({ ...FOOD, source: 'custom', barcode: '0123456789012', unit: 'ml' }, 'hh-1')
+    expect(row.unit).toBe('ml')
+  })
+
+  it('includes image_url in result when custom barcode food has imageUrl', () => {
+    const row = foodRow({ ...FOOD, source: 'custom', barcode: '0123456789012', imageUrl: 'https://example.com/image.jpg' }, 'hh-1')
+    expect(row.image_url).toBe('https://example.com/image.jpg')
+  })
+
+  it('omits image_url from result when custom barcode food has no imageUrl', () => {
+    const row = foodRow({ ...FOOD, source: 'custom', barcode: '0123456789012', imageUrl: null }, 'hh-1')
+    expect('image_url' in row).toBe(false)
+  })
 })
 
 describe('mealLogRow', () => {
