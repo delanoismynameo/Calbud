@@ -20,6 +20,7 @@ export interface FoodResult {
   extras100g?: Extras
   crossCheck?: string   // a warning when another source disagrees with this one (set when scanning a barcode)
   recipe?: Recipe   // set on a food built from ingredients
+  imageUrl?: string | null   // front-of-package photo from Open Food Facts (null if no image)
 }
 
 // One ingredient of a built food: a snapshot of the food as picked (per-100 g values, without its own recipe),

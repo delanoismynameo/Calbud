@@ -43,6 +43,7 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
     sugar100g: row.sugar_100g != null ? Number(row.sugar_100g) : null,
     sodiumMg100g: row.sodium_mg_100g != null ? Number(row.sodium_mg_100g) : null,
     extras100g: cleanExtras(row.extra_100g),
+    imageUrl: null, // Database doesn't store images, so loaded foods have no image
     ...withRecipe(cleanRecipe(row.recipe)),
   }
 }

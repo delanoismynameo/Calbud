@@ -16,6 +16,7 @@ import { queryClient } from '../lib/queryClient'
 import { applyLabelEdit, applyServingEdit } from './labelEdit'
 import { servingWarning } from './servingCheck'
 import { saveBarcodeFood } from './householdBarcode'
+import FoodImage from './FoodImage'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -99,8 +100,9 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
 
   return (
     <div className="bg-card rounded-3xl shadow-card p-4 space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex items-start gap-3">
+        <FoodImage imageUrl={food.imageUrl} alt={food.name} />
+        <div className="flex-1">
           <p className="font-semibold text-ink">{food.name}</p>
           {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
           {loggedOn != null && loggedOn !== localDateString() && (

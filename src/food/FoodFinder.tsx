@@ -14,6 +14,7 @@ import { sourceMismatch } from './crossCheck'
 import { findHouseholdFoodByBarcode } from './householdBarcode'
 import { useProfile } from '../household/useProfile'
 import type { FoodResult } from './types'
+import FoodImage from './FoodImage'
 
 export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodResult) => void; onCreate?: () => void }) {
   const [query, setQuery] = useState('')
@@ -34,10 +35,13 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   const recentList = withoutFavorites(recents.data ?? [], favoriteList)
   const quickPick = (food: FoodResult) => (
     <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
-      className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light">
-      <span className="font-bold text-ink">{food.name}</span>
-      {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
-      <p className="text-sm text-muted mt-1">{Math.round(food.kcal100g)} cal / 100 g</p>
+      className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
+      <FoodImage imageUrl={food.imageUrl} alt={food.name} />
+      <div className="flex-1">
+        <span className="font-bold text-ink">{food.name}</span>
+        {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
+        <p className="text-sm text-muted mt-1">{Math.round(food.kcal100g)} cal / 100 g</p>
+      </div>
     </button>
   )
 
@@ -149,13 +153,16 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
             <div className="space-y-2 pb-4">
               {usdaResults.map((food) => (
                 <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
-                  className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-ink">{food.name}</span>
-                    <span className="text-xs px-2 py-1 bg-coral-light text-link rounded-full font-medium shrink-0">{food.barcode ? 'Packaged' : 'Basic'}</span>
+                  className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
+                  <FoodImage imageUrl={food.imageUrl} alt={food.name} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-ink">{food.name}</span>
+                      <span className="text-xs px-2 py-1 bg-coral-light text-link rounded-full font-medium shrink-0">{food.barcode ? 'Packaged' : 'Basic'}</span>
+                    </div>
+                    {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
+                    <p className="text-sm text-muted mt-1">{Math.round(food.kcal100g)} cal / 100 g</p>
                   </div>
-                  {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
-                  <p className="text-sm text-muted mt-1">{Math.round(food.kcal100g)} cal / 100 g</p>
                 </button>
               ))}
             </div>

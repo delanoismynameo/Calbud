@@ -3,6 +3,42 @@ import { extrasFromOff } from './extras'
 
 const gramRegex = /\d\s*(g|gr|grams?)\b/i
 
+// Generates a small (200px) image URL from Open Food Facts product data.
+// The images field contains front image info with imgid and rev, used to construct the URL.
+// Returns null if no front image is available.
+function extractImageUrl(code: string, product: Record<string, unknown>): string | null {
+  const images = (product.images as Record<string, unknown>) ?? {}
+  
+  // Try different front image keys (with language codes and without)
+  const frontKey = Object.keys(images).find(key => 
+    key === 'front' || key.startsWith('front_') || key.startsWith('images/front_')
+  )
+  
+  if (!frontKey) return null
+  
+  const frontImg = images[frontKey] as Record<string, unknown> | undefined
+  if (!frontImg || typeof frontImg !== 'object') return null
+  
+  const rev = frontImg['rev']
+  const imgid = frontImg['imgid']
+  
+  if (typeof rev !== 'string' && typeof rev !== 'number' ||
+      typeof imgid !== 'string' && typeof imgid !== 'number') {
+    return null
+  }
+  
+  // Open Food Facts keeps codes of 8 digits or fewer in one folder, longer ones padded to 13 and split 3/3/3/rest
+  const trimmedCode = code.trim()
+  const paddedCode = trimmedCode.padStart(13, '0')
+  const folder = trimmedCode.length <= 8
+    ? trimmedCode
+    : `${paddedCode.slice(0, 3)}/${paddedCode.slice(3, 6)}/${paddedCode.slice(6, 9)}/${paddedCode.slice(9)}`
+
+  // 200px is a good size for thumbnails
+  const filename = `${frontKey}.${rev}.200.jpg`
+  return `https://images.openfoodfacts.org/images/products/${folder}/${filename}`
+}
+
 export function offServingLabel(sizeText: string, servingG: number): string {
   const trimmed = sizeText.trim()
   if (trimmed === '') return `1 serving (${servingG} g)`
@@ -89,6 +125,8 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
   const brandsRaw = (product as Record<string, unknown>).brands as unknown
   const brand = extractBrand(brandsRaw)
 
+  const imageUrl = extractImageUrl(code, product)
+
   return {
     source: 'off',
     sourceId: code,
@@ -105,6 +143,7 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
     sodiumMg100g: sodiumMg,
     barcode: code,
     extras100g: extrasFromOff(nutriments),
+    imageUrl,
   }
 }
 
@@ -115,7 +154,7 @@ export async function lookupBarcode(
   { fetchFn = fetch, signal }: RequestOpts = {},
 ): Promise<FoodResult | null> {
   if (code.trim() === '') return null
-  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments`
+  const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code.trim())}.json?fields=code,product_name,brands,serving_size,serving_quantity,nutriments,images`
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 10000)

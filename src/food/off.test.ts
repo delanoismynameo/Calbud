@@ -11,6 +11,12 @@ function loadFixture(name: string): unknown {
   return JSON.parse(raw) as unknown
 }
 
+// Helper to check if the request URL includes images field
+function getRequestFields(url: string): string[] {
+  const match = url.match(/fields=([^&]+)/)
+  return match ? match[1].split(',') : []
+}
+
 describe('normalizeOffProduct', () => {
   it('the brand is taken from a brands array first element ("Pepperidge Farm" from ["Pepperidge Farm", "Santa Cruz"])', () => {
     const data = loadFixture('off-search-oatmeal.json') as Record<string, unknown>
@@ -142,5 +148,60 @@ describe('offServingLabel', () => {
     expect(result).not.toBeNull()
     expect(result!.servingLabel).toBe('0.75 cup (50 g)')
     expect(result!.servingG).toBe(50)
+  })
+})
+
+describe('image URL extraction', () => {
+  it('extracts image URL from Nutella fixture with front_fr image', () => {
+    const nutellaData = loadFixture('off-product-nutella.json') as Record<string, unknown>
+    const productPart = (nutellaData.product as Record<string, unknown>) ?? nutellaData
+    const result = normalizeOffProduct({ code: '3017620422003', ...productPart })
+    expect(result).not.toBeNull()
+    // Barcode 3017620422003 -> folder 301/762/042/2003
+    // front_fr.4.200.jpg
+    expect(result!.imageUrl).toBe('https://images.openfoodfacts.org/images/products/301/762/042/2003/front_fr.4.200.jpg')
+  })
+
+  it('returns null imageUrl when product has no images', () => {
+    // Use a product that has all required nutriments but no images
+    const input = {
+      product_name: 'Test cereal',
+      code: '1234567890123',
+      serving_size: '0.75 cup (50 g)',
+      serving_quantity: 50,
+      nutriments: {
+        'energy-kcal_100g': 380,
+        proteins_100g: 8,
+        carbohydrates_100g: 80,
+        fat_100g: 3,
+      },
+    }
+    const result = normalizeOffProduct(input)
+    expect(result).not.toBeNull()
+    expect(result!.imageUrl).toBeNull()
+  })
+
+  it('lookupBarcode requests images field in the API call', async () => {
+    const nutellaData = loadFixture('off-product-nutella.json') as Record<string, unknown>
+    let capturedUrl: string | null = null
+    const mockFetch: typeof fetch = (input) => {
+      capturedUrl = String(input)
+      return Promise.resolve(new Response(JSON.stringify(nutellaData), { status: 200 }))
+    }
+    await lookupBarcode('3017620422003', { fetchFn: mockFetch as unknown as typeof fetch })
+    expect(capturedUrl).not.toBeNull()
+    const fields = getRequestFields(capturedUrl!)
+    expect(fields).toContain('images')
+  })
+})
+
+describe('image URL for short barcodes', () => {
+  it('uses the plain code as the folder for an 8 digit barcode', () => {
+    const result = normalizeOffProduct({
+      product_name: 'Mint', code: '12345670',
+      nutriments: { 'energy-kcal_100g': 10, proteins_100g: 0, carbohydrates_100g: 2, fat_100g: 0 },
+      images: { front_en: { rev: '3', imgid: '1' } },
+    })
+    expect(result!.imageUrl).toBe('https://images.openfoodfacts.org/images/products/12345670/front_en.3.200.jpg')
   })
 })
