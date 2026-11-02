@@ -4,6 +4,16 @@ import { parseCustomFood } from './customFood'
 const base = (o = {}) => ({ name: 'Sunday chili', servingLabel: '1 bowl', servingG: '350', kcal: '420', protein: '28', carbs: '35', fat: '14', ...o })
 
 describe('parseCustomFood', () => {
+  it('default unit is g', () => {
+    const result = parseCustomFood(base(), 'id-1')
+    expect(result.ok && result.food.unit).toBe('g')
+  })
+
+  it('a drink can be set to ml', () => {
+    const result = parseCustomFood(base({ unit: 'ml' }), 'id-1')
+    expect(result.ok && result.food.unit).toBe('ml')
+  })
+
   it('valid input returns ok:true with correct food', () => {
     const result = parseCustomFood(base(), 'id-1')
     expect(result).toEqual({

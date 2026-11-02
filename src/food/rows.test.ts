@@ -56,12 +56,31 @@ describe('foodRow', () => {
     expect('barcode' in foodRow({ ...FOOD, source: 'off', barcode: '0123456789012' }, 'hh-1')).toBe(false)
   })
 
-  it('includes unit g in result when custom barcode food has unit g (default)', () => {
+  it('sends unit g for a custom barcode food now in grams', () => {
     const row = foodRow({ ...FOOD, source: 'custom', barcode: '0123456789012', unit: 'g' }, 'hh-1')
-    expect('unit' in row).toBe(false)  // default 'g' is omitted
+    expect(row.unit).toBe('g')
   })
 
-  it('includes unit ml in result when custom barcode food has unit ml', () => {
+  it('sends unit ml when a custom drink is saved with no barcode', () => {
+    const row = foodRow({ ...FOOD, source: 'custom', name: 'Coffee', unit: 'ml' }, 'hh-1')
+    expect(row.unit).toBe('ml')
+  })
+
+  it('omits unit for a custom food that is neither a drink nor a saved barcode food', () => {
+    const row = foodRow({ ...FOOD, source: 'custom', name: 'Salad' }, 'hh-1')
+    expect('unit' in row).toBe(false)
+  })
+
+  it('sends unit ml for a food from any source, and omits unit for grams', () => {
+    expect(foodRow({ ...FOOD, source: 'off', barcode: '0123456789012', unit: 'ml' }, 'hh-1').unit).toBe('ml')
+    expect('unit' in foodRow({ ...FOOD, source: 'off', unit: 'g' }, 'hh-1')).toBe(false)
+  })
+
+  it('sends the photo link for a food from any source', () => {
+    expect(foodRow({ ...FOOD, source: 'off', imageUrl: 'https://example.com/a.jpg' }, 'hh-1').image_url).toBe('https://example.com/a.jpg')
+  })
+
+  it('includes unit when a custom barcode food is in ml', () => {
     const row = foodRow({ ...FOOD, source: 'custom', barcode: '0123456789012', unit: 'ml' }, 'hh-1')
     expect(row.unit).toBe('ml')
   })

@@ -26,6 +26,10 @@ type FoodRow = {
 }
 
 export function foodRow(food: FoodResult, householdId: string): FoodRow {
+  // Unit and photo are columns from the foods_image_url_and_unit migration. Grams is the default, so a food only
+  // sends the unit when it is ml; a saved barcode food also sends g so it can be switched back from ml.
+  const savedBarcode = food.source === 'custom' && food.barcode != null
+  const shouldSendUnit = food.unit === 'ml' || (savedBarcode && food.unit === 'g')
   return {
     household_id: householdId,
     source: food.source,
@@ -46,9 +50,8 @@ export function foodRow(food: FoodResult, householdId: string): FoodRow {
     ...(food.recipe ? { recipe: food.recipe } : {}),
     // Only a household's own saved barcode food sends the barcode column, so other foods don't depend on the barcode migration.
     ...(food.source === 'custom' && food.barcode ? { barcode: food.barcode } : {}),
-    // Only saved barcode foods send unit and image_url, so other foods don't depend on this migration.
-    ...(food.source === 'custom' && food.barcode && food.unit === 'ml' ? { unit: 'ml' } : {}),
-    ...(food.source === 'custom' && food.barcode && food.imageUrl ? { image_url: food.imageUrl } : {}),
+    ...(shouldSendUnit ? { unit: food.unit } : {}),
+    ...(food.imageUrl ? { image_url: food.imageUrl } : {}),
   }
 }
 

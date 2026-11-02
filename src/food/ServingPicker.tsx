@@ -102,6 +102,14 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
     setUnit(next)
   }
 
+  // Switch how this food is measured ('g' | 'ml'), for example when Open Food Facts has no size
+  // for a drink and it defaults to grams. Tapping sets the other unit and counts as an edit, so the
+  // screen changes to that word and 'Save for this barcode' can store the chosen unit.
+  const toggleMeasuredIn = (next: 'g' | 'ml') => {
+    if (shown.unit === next) return
+    setEdited({ ...shown, unit: next })
+  }
+
   const saveServing = (e: FormEvent) => {
     e.preventDefault()
     const g = Number(servingGrams.replace(',', '.'))
@@ -160,6 +168,14 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
       )}
 
       <div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-muted text-sm">Measured in:</span>
+          <button type="button" aria-pressed={shown.unit === 'g'} onClick={() => toggleMeasuredIn('g')}
+            className={`text-sm font-semibold px-3 py-1 rounded ${shown.unit === 'g' ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-link hover:bg-coral-light'}`}>g</button>
+          <button type="button" aria-pressed={shown.unit === 'ml'} onClick={() => toggleMeasuredIn('ml')}
+            className={`text-sm font-semibold px-3 py-1 rounded ${shown.unit === 'ml' ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-link hover:bg-coral-light'}`}>ml</button>
+        </div>
+
         {editingServing ? (
           <form onSubmit={saveServing} className="space-y-2">
             <label htmlFor="serving-text" className="block text-muted text-sm">Serving name (for example 1 cup)</label>

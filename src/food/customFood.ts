@@ -3,6 +3,7 @@ import type { FoodResult } from './types'
 export interface CustomFoodInput {
   name: string; servingLabel: string; servingG: string
   kcal: string; protein: string; carbs: string; fat: string   // all per serving, as typed
+  unit?: 'g' | 'ml'   // default 'g'
 }
 export type CustomFoodField = keyof CustomFoodInput
 export type CustomFoodResult =
@@ -82,7 +83,7 @@ export function parseCustomFood(input: CustomFoodInput, id: string): CustomFoodR
       brand: null,
       servingG: servingGNum,
       servingLabel: label,
-      unit: 'g',
+      unit: input.unit ?? 'g',
       kcal100g: r(kcalNum / servingGNum * 100),
       protein100g: r((numMap.protein ?? 0) / servingGNum * 100),
       carbs100g: r((numMap.carbs ?? 0) / servingGNum * 100),

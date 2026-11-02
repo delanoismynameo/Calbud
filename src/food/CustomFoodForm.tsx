@@ -36,6 +36,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
   const [mode, setMode] = useState<'numbers' | 'ingredients'>('numbers')
   const [recipe, setRecipe] = useState<Recipe>({ ingredients: [], yield: { kind: 'servings', servings: 1 } })
   const [recipeErr, setRecipeErr] = useState<string>('')
+  const [unit, setUnit] = useState<'g' | 'ml'>('g')
   const { profile } = useProfile()
   const householdId = profile?.household_id
 
@@ -51,6 +52,13 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     if (extraErrors[key]) {
       setExtraErrors({ ...extraErrors, [key]: undefined })
     }
+  }
+
+  // Switch the unit the food is measured in (grams by default, ml for a drink).
+  const toggleUnit = (next: 'g' | 'ml') => {
+    if (unit === next) return
+    setUnit(next)
+    setInput(prev => ({ ...prev, unit: next }))
   }
 
   const handleSubmit = async () => {
@@ -91,9 +99,10 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     onSaved(food)
   }
 
+  const chip = (on: boolean) => `text-sm font-semibold px-3 py-1 rounded ${on ? 'bg-coral-deep text-white' : 'bg-coral-light/50 text-link hover:bg-coral-light'}`
   const fieldClass = 'w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral'
 
-  const preview = previewLabel(input, extraInputs)
+  const preview = previewLabel({ ...input, unit }, extraInputs)
 
   // The ingredients-mode label preview, when the recipe can be saved.
   const err = recipeError(recipe)
@@ -162,6 +171,15 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
       <p className="text-muted text-xs">Per serving. An estimate is fine.</p>
 
       <ExtrasFields values={extraInputs} errors={extraErrors} onChange={changeExtra} />
+
+      {/* Pick ml for a drink so the label and logs say ml. */}
+      <div className="flex items-center gap-2">
+        <span className="text-muted text-sm">Measured in:</span>
+        <button type="button" aria-pressed={unit === 'g'} onClick={() => toggleUnit('g')}
+          className={chip(unit === 'g')}>g</button>
+        <button type="button" aria-pressed={unit === 'ml'} onClick={() => toggleUnit('ml')}
+          className={chip(unit === 'ml')}>ml</button>
+      </div>
 
       {preview && (
         <div>
