@@ -18,6 +18,8 @@ export default function ExportButton({
   const { profile, partner } = useProfile()
   const [message, setMessage] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
+  const [showPanel, setShowPanel] = useState(false)
+  const [showLinks, setShowLinks] = useState(false)
 
   if (!profile) return null
 
@@ -34,7 +36,9 @@ export default function ExportButton({
     url: toGoogleCalendarUrl(event, profile.timezone),
   }))
 
-  const handleClick = async () => {
+  const handleExportAll = async () => {
+    setShowPanel(false)
+    setShowLinks(false)
     setMessage(null)
     setFailed(false)
     try {
@@ -55,45 +59,73 @@ export default function ExportButton({
     }
   }
 
+  const handleButtonClick = () => {
+    setShowPanel((open) => !open)
+    setShowLinks(false)
+  }
+
   return (
     <div className="px-3 py-3 text-center">
       <button
         type="button"
         disabled={items.length === 0}
-        onClick={handleClick}
+        onClick={handleButtonClick}
         className="bg-coral-light text-link rounded-2xl font-semibold py-2 px-4 text-xs inline-block disabled:opacity-40 hover:bg-coral-deeper"
       >
         Export week
       </button>
       <p className="text-xs text-muted mt-1">
-        On a phone, use the share sheet to import into Calendar. On a computer, import the downloaded file in Google Calendar's web Settings.
+        Choose how to add this week's activities to your calendar.
       </p>
       {message && (
         <p className={`text-xs mt-1 ${failed ? 'text-danger' : 'text-muted'}`}>
           {message}
         </p>
       )}
-      
-      {items.length > 0 && (
-        <div className="mt-3 px-3">
-          <p className="text-xs text-muted mb-2">
-            Tap each activity to add it to Google Calendar.
-          </p>
-          <ul className="space-y-1">
-            {googleLinks.map((link, index) => (
-              <li key={events[index].uid}>
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener"
-                  className="text-xs text-link hover:underline block truncate"
-                  title={link.title}
-                >
-                  {link.title}
-                </a>
-              </li>
-            ))}
-          </ul>
+
+      {showPanel && items.length > 0 && (
+        <div
+          className="bg-card border border-line rounded-xl p-3 mt-2"
+        >
+          {!showLinks ? (
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleExportAll}
+                className="w-full bg-coral-light text-link rounded-2xl font-semibold py-2 text-xs hover:bg-coral-deeper"
+              >
+                Add all to my calendar
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLinks(true)}
+                className="w-full text-link underline text-xs hover:text-coral-deeper"
+              >
+                Add one by one
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-xs text-muted mb-2">
+                Tap an activity to add it to Google Calendar.
+              </p>
+              <ul className="space-y-1 max-h-48 overflow-y-auto">
+                {googleLinks.map((link, index) => (
+                  <li key={events[index].uid}>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener"
+                      className="text-xs text-link hover:underline block truncate"
+                      title={link.title}
+                    >
+                      {link.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>
