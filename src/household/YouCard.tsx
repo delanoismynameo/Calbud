@@ -1,18 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useProfile } from './useProfile'
 import { useAuth } from '../auth/AuthProvider'
 import { supabase } from '../lib/supabase'
 import { COLORS } from './colors'
-import { parseProfileEdit, timeZones, zoneLabel, type ProfileInput } from './profileEdit'
+import { getPushStatus, subscribeToPush } from '../lib/notifications'
+import { 
+  parseProfileEdit, 
+  timeZones, 
+  zoneLabel, 
+  type ProfileInput,
+  formatTimeDisplay,
+} from './profileEdit'
 
 export default function YouCard() {
   const { profile, refresh } = useProfile()
   const { session } = useAuth()
   const [editing, setEditing] = useState(false)
-  const [input, setInput] = useState<ProfileInput>({ name: '', color: '', timezone: '' })
+  const [input, setInput] = useState<ProfileInput>({ 
+    name: '', 
+    color: '', 
+    timezone: '',
+    reminder_time: null 
+  })
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileInput, string>>>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [pushStatus, setPushStatus] = useState<'unsupported' | 'denied' | 'on' | 'off'>('unsupported')
+  const [pushBusy, setPushBusy] = useState(false)
+
+  useEffect(() => {
+    getPushStatus().then(setPushStatus).catch(() => setPushStatus('unsupported'))
+  }, [])
+
+  const turnOnPush = async () => {
+    setPushBusy(true)
+    const endpoint = await subscribeToPush(session!.user.id).catch(() => null)
+    setPushStatus(endpoint ? 'on' : await getPushStatus().catch(() => 'unsupported' as const))
+    setPushBusy(false)
+  }
 
   if (!profile) return null
 
@@ -22,7 +47,12 @@ export default function YouCard() {
 
   const openEdit = () => {
     setEditing(true)
-    setInput({ name: profile.display_name, color: profile.color, timezone: profile.timezone })
+    setInput({ 
+      name: profile.display_name, 
+      color: profile.color, 
+      timezone: profile.timezone,
+      reminder_time: profile.reminder_time ?? '07:30'  // Default to breakfast time if not set
+    })
     setErrors({})
     setSaveError(null)
   }
@@ -43,6 +73,7 @@ export default function YouCard() {
           display_name: result.changes.display_name,
           color: result.changes.color,
           timezone: result.changes.timezone,
+          reminder_time: result.changes.reminder_time,
         })
         .eq('id', session!.user.id)
       if (updErr) {
@@ -75,6 +106,23 @@ export default function YouCard() {
         <p className="text-sm text-muted">Time zone: {zoneLabel(profile.timezone)}</p>
         {deviceZone !== profile.timezone && (
           <p className="text-xs text-warn">This phone is set to {zoneLabel(deviceZone)}.</p>
+        )}
+        {profile.reminder_time && (
+          <p className="text-xs text-muted mt-1">
+            Meal reminder: {formatTimeDisplay(profile.reminder_time)}
+          </p>
+        )}
+        {profile.reminder_time && pushStatus === 'off' && (
+          <button onClick={turnOnPush} disabled={pushBusy}
+            className="text-sm text-link underline font-semibold mt-2 disabled:opacity-50">
+            Also remind me when my phone is locked
+          </button>
+        )}
+        {profile.reminder_time && pushStatus === 'on' && (
+          <p className="text-xs text-muted mt-1">Phone reminders are on.</p>
+        )}
+        {profile.reminder_time && pushStatus === 'denied' && (
+          <p className="text-xs text-warn mt-1">Notifications are blocked in this browser&apos;s settings.</p>
         )}
       </div>
     )
@@ -122,12 +170,22 @@ export default function YouCard() {
           )}
           {errors.timezone && <p className="text-danger text-xs mt-1">{errors.timezone}</p>}
         </div>
+        <div>
+          <label htmlFor="reminder-time" className="block text-sm text-muted mb-1">Meal reminder time</label>
+          <input id="reminder-time" type="time" 
+            value={input.reminder_time ?? ''}
+            onChange={(e) => setInput((prev) => ({ ...prev, reminder_time: e.target.value || null }))}
+            className="w-full bg-card border border-line rounded-2xl text-ink px-4 py-3 focus:outline-none focus:ring-2 focus:ring-coral" />
+          <p className="text-xs text-muted mt-1">
+            We&apos;ll remind you to log meals at this time
+          </p>
+        </div>
       </div>
       {saveError && <p className="text-danger text-sm">{saveError}</p>}
       <div className="flex gap-3">
         <button onClick={save} disabled={saving}
           className="flex-1 py-3 rounded-2xl bg-coral-deep hover:bg-coral-deeper disabled:cursor-not-allowed disabled:opacity-50 text-white font-bold">
-          {saving ? 'Saving\u2026' : 'Save'}
+          {saving ? 'Saving…' : 'Save'}
         </button>
         <button onClick={() => setEditing(false)} disabled={saving}
           className="flex-1 py-3 rounded-2xl bg-coral-light text-link font-semibold hover:bg-coral-deeper">

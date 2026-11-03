@@ -12,6 +12,8 @@ import { useProfile } from './household/useProfile'
 import Setup from './household/Setup'
 import UpdatePrompt from './pwa/UpdatePrompt'
 import OfflineBanner from './pwa/OfflineBanner'
+import NotificationToast from './components/NotificationToast'
+import { useNotifications } from './lib/useNotifications'
 
 const tabs = [
   { to: '/', label: 'Today' },
@@ -55,6 +57,7 @@ export default function App() {
 function SignedInApp() {
   const { profile, loading, error, refresh } = useProfile()
   const { pathname } = useLocation()
+  const { messages, onDismissed } = useNotifications()
 
   if (loading) {
     return (
@@ -113,6 +116,9 @@ function SignedInApp() {
         ))}
       </nav>
       <UpdatePrompt />
+      {messages.length > 0 && (
+        <NotificationToast messages={messages} onRemove={onDismissed} />
+      )}
     </div>
   )
 }

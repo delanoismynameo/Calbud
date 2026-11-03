@@ -79,7 +79,7 @@ if (process.argv.includes('--with-logs')) {
   slot(day(0), 'breakfast', 'OYO')
   slot(day(0), 'dinner', 'Curry', curryId)
 }
-const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone']
+const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone', 'reminder_time']
 const code8 = () => Math.random().toString(16).slice(2, 10)
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Expose-Headers': '*' }
