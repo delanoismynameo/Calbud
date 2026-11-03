@@ -5,15 +5,15 @@ import { useDebouncedValue } from '../lib/useDebouncedValue'
 
 type QueryResult = { results: FoodResult[]; errors: string[] }
 
-export function useFoodSearch(query: string) {
+export function useFoodSearch(query: string, brand?: string) {
   const trimmed = query.trim()
   const debounced = useDebouncedValue(trimmed, 400)
   const tooShort = trimmed.length < 2
 
   const result = useQuery<QueryResult>({
-    queryKey: ['food-search', debounced],
-    queryFn: ({ signal }) => searchFoods(debounced, { apiKey: usdaApiKey(), signal }),
-    enabled: debounced.length >= 2,
+    queryKey: ['food-search', debounced, brand],
+    queryFn: ({ signal }) => searchFoods(debounced, { apiKey: usdaApiKey(), signal, brand }),
+    enabled: !!(debounced.length >= 2 || !!brand) && (debounced.length > 0 || !!brand),
     staleTime: 5 * 60_000,
     retry: false,
     placeholderData: keepPreviousData,

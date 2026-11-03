@@ -295,3 +295,95 @@ describe('usdaApiKey', () => {
     expect(key.length).toBeGreaterThan(0)
   })
 })
+
+describe('searchFoods with brand', () => {
+  it('with brand, only branded search is made (no generic search)', async () => {
+    let searchType: string[] = []
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.body) {
+        const body = JSON.parse(String(init.body))
+        searchType.push(body.dataType[0])
+      }
+      return makeUsdaResponse([])
+    }) as unknown as typeof fetch
+
+    await searchFoods('greek yogurt', { fetchFn: mockFetch, brand: 'Chobani' })
+
+    expect(searchType.length).toBe(1)
+    expect(searchType[0]).toBe('Branded')
+  })
+
+  it('with brand, sends brandOwner filter to USDA', async () => {
+    let capturedBody: Record<string, unknown> | undefined
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.body) {
+        capturedBody = JSON.parse(String(init.body))
+      }
+      return makeUsdaResponse([])
+    }) as unknown as typeof fetch
+
+    await searchFoods('greek yogurt', { fetchFn: mockFetch, brand: 'Chobani' })
+
+    expect(capturedBody).toBeDefined()
+    expect(capturedBody!.brandOwner).toBe('Chobani')
+  })
+
+  it('with brand, filters results by brand', async () => {
+    const usdaBrandedFood1 = {
+      fdcId: 20001,
+      description: 'Greek Yogurt',
+      brandOwner: 'Chobani',
+      foodNutrients: [
+        { nutrientId: 1008, value: 100 },
+        { nutrientId: 1003, value: 10 },
+        { nutrientId: 1004, value: 0 },
+        { nutrientId: 1005, value: 9 },
+      ],
+    }
+
+    const usdaBrandedFood2 = {
+      fdcId: 20002,
+      description: 'Greek Yogurt',
+      brandOwner: 'Fage',
+      foodNutrients: [
+        { nutrientId: 1008, value: 95 },
+        { nutrientId: 1003, value: 9 },
+        { nutrientId: 1004, value: 0 },
+        { nutrientId: 1005, value: 10 },
+      ],
+    }
+
+    const mockFetch = vi.fn(async (_url: string) => {
+      return makeUsdaResponse([usdaBrandedFood1, usdaBrandedFood2])
+    }) as unknown as typeof fetch
+
+    const results = await searchFoods('greek yogurt', { fetchFn: mockFetch, brand: 'Chobani' })
+
+    expect(results.results.length).toBe(1)
+    expect(results.results[0].brand).toBe('Chobani')
+  })
+
+  it('with brand alone (empty food query), searches for brand products', async () => {
+    const mockFetch = vi.fn(async (url: string) => {
+      // Return empty response to avoid errors
+      return makeUsdaResponse([])
+    }) as unknown as typeof fetch
+
+    await searchFoods('', { fetchFn: mockFetch, brand: 'Chobani' })
+
+    // Should have made a fetch with the brandOwner filter
+    expect(mockFetch).toHaveBeenCalled()
+  })
+
+  it('without brand, searches both generic and branded', async () => {
+    let searchType: string[] = []
+    const mockFetch = vi.fn(async () => {
+      return makeUsdaResponse([])
+    }) as unknown as typeof fetch
+
+    await searchFoods('oatmeal', { fetchFn: mockFetch })
+
+    // Count how many times we called fetch
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
+})
