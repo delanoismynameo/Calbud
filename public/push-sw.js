@@ -2,35 +2,16 @@
 
 // Handle push events
 self.addEventListener('push', (event) => {
-  let data = {}
-  if (event.data) {
-    try {
-      data = event.data.json()
-    } catch (e) {
-      console.error('Error parsing push data:', e)
-      data = {
-        title: 'Meal Reminder',
-        body: 'Time to log your meal!',
-      }
-    }
-  } else {
-    data = {
-      title: 'Meal Reminder',
-      body: 'Time to log your meal!',
-    }
-  }
-
   const options = {
-    body: data.body || 'New notification from Calbud',
-    icon: data.icon || 'icon-192.png',
-    badge: data.badge || 'icon-192.png',
+    body: 'Time to log your meal!',
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
     data: {
-      ...data,
       url: self.registration.scope, // the app lives under a base path, so ignore any absolute url sent
     },
   }
 
-  event.waitUntil(self.registration.showNotification(data.title || 'Calbud', options))
+  event.waitUntil(self.registration.showNotification('Meal Reminder', options))
 })
 
 // Handle notification click

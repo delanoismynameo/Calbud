@@ -38,9 +38,41 @@ function localNow(timeZone: string, now: Date): { day: string; minutes: number }
   return { day: `${parts.year}-${parts.month}-${parts.day}`, minutes: Number(parts.hour) * 60 + Number(parts.minute) }
 }
 
+// Hosts that are legitimate push-notification services.
+const KNOWN_HOSTS = [
+  'fcm.googleapis.com',
+  'web.push.apple.com',
+  'push.user.apns.push.apple.com',
+  'other.push.services.mozilla.com',
+  'notify.notify.windows.com',
+]
+
+function isValidEndpoint(endpoint: string): boolean {
+  const protoSlashHost = endpoint.slice(0, endpoint.indexOf('/', 8)) // everything up to "https://host"
+  // Must start with https://
+  if (protoSlashHost.length < 9 || protoSlashHost.slice(0, 8) !== 'https:/') return false
+  const host = protoSlashHost.slice(8)
+  if (!host) return false
+  // Check exact match or wildcard prefix against known push services.
+  for (const known of KNOWN_HOSTS) {
+    if (host === known || host.endsWith('.' + known)) return true
+  }
+  return false
+}
+
+/** Constant-time comparison: accumulate XOR across all bytes, never short-circuit. */
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let acc = 0
+  for (let i = 0; i < a.length; i++) {
+    acc |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return acc === 0
+}
+
 Deno.serve(async (req) => {
   const secret = Deno.env.get('CRON_SECRET')
-  if (!secret || req.headers.get('x-cron-secret') !== secret) {
+  if (!secret || !constantTimeEqual(req.headers.get('x-cron-secret') ?? '', secret)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
   }
 
@@ -58,6 +90,8 @@ Deno.serve(async (req) => {
   const sent: string[] = []
 
   for (const row of (data ?? []) as unknown as Row[]) {
+    const ep = row.subscription?.endpoint as string | undefined
+    if (!ep || !isValidEndpoint(ep)) continue
     const reminder = row.profiles?.reminder_time
     if (!reminder) continue
     const [h, m] = reminder.split(':').map(Number)
