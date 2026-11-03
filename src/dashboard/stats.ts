@@ -10,8 +10,8 @@ export function kcalByUserDay(rows: KcalRow[]): Record<string, ByDay> {
     const days = (result[row.user_id] ??= {})
     days[row.logged_on] = (days[row.logged_on] ?? 0) + row.kcal
   }
-  for (const vof of Object.values(result)) {
-    for (const date in vof) vof[date] = Math.round(vof[date])
+  for (const days of Object.values(result)) {
+    for (const date in days) days[date] = Math.round(days[date])
   }
   return result
 }
@@ -33,7 +33,7 @@ export function averageKcal(byDay: ByDay | undefined, dates: string[]): number |
   let count = 0
 
   for (const date of dates) {
-    const kcal = byDay?.[date]
+    const kcal = byDay[date]
     if (kcal !== undefined) {
       sum += kcal
       count++
@@ -51,25 +51,15 @@ export function onTarget(kcal: number | undefined, goal: number, tolerance = 0.1
   return Math.abs(kcal - goal) <= goal * tolerance
 }
 
-// Streak: number of consecutive days in which every person has at least one food entry for the day.
-export function streak(people: { byDay: ByDay | undefined; goal: number }[], today: string, maxDays: number): number {
-  if (people.length === 0) return 0;
-
-  // Helper deciding whether *each* person has a logged food entry for `day`.
-  const loggedDay = (day: string): boolean =>
-    people.every(p => p.byDay?.[day] !== undefined);
-
-  const everyoneToday = loggedDay(today);
-  let startDate: string;
-  if (everyoneToday) {
-    startDate = today;
-  } else {
-    startDate = addDays(today, -1);
-  }
-
-  let count = 0;
-  while (count < maxDays && loggedDay(addDays(startDate, -count))) {
-    count++;
-  }
-  return count;
+// Days in a row, counting back, on which every person logged at least one food (any calories, even 0).
+// Start at `today` if everyone has logged today; otherwise start at addDays(today, -1), because today isn't over yet.
+// Stop at the first day on which someone logged nothing, or once maxDays days have been counted.
+// An empty `people` list gives 0.
+export function streak(people: { byDay: ByDay | undefined }[], today: string, maxDays: number): number {
+  if (people.length === 0) return 0
+  const everyone = (date: string) => people.every((p) => p.byDay?.[date] !== undefined)
+  const start = everyone(today) ? today : addDays(today, -1)
+  let count = 0
+  while (count < maxDays && everyone(addDays(start, -count))) count++
+  return count
 }

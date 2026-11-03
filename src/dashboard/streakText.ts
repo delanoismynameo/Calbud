@@ -1,14 +1,13 @@
 export function streakText(n: number, together: boolean): string {
   if (n === 0) {
-    return together ? 'No streak yet. Both people logged food today to start one.' : 'No streak yet. Someone or people logged food today to start one.'
+    if (together) return 'No streak yet. Both log some food on the same day to start one.'
+    return 'No streak yet. Log some food today to start one.'
   }
 
+  const display = n >= 60 ? '60+' : String(n)
   const unit = n === 1 ? 'day' : 'days'
-  const suffix = n >= 60 ? '+' : ''
-  const display = `${String(n)}${suffix} ${unit} in a row`
-
   if (together) {
-    return `${display}, both people logged food today.`
+    return `${display} ${unit} in a row, both of you logged food.`
   }
-  return `${display}, someone logged food today.`
+  return `${display} ${unit} in a row with food logged.`
 }
