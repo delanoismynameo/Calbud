@@ -108,9 +108,17 @@ Before sending a task to the harness in the web UI:
 | 48 | Offline banner | [48](review/48-offline-banner.md) |
 | 49 | Install app button, PNG icons | [49](review/49-install-button.md) |
 | 75 | Send the grocery list straight to one saved Keep note | [75](review/75-keep-note.md) |
+| 76 | Security check (Claude and the 27B, merged findings) | [76](review/76-security-check.md) |
 
 ## Next, in order
-1. **Next, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
+0. **The user's list of 2026-11-02, in this order** (short plain prompts, one per run):
+   - 76 **Security check**: done ([76](review/76-security-check.md)). **76b next:** check the push endpoint host (DB constraint + the function), revoke anon on `push_subscriptions` and `handle_new_user` from authenticated, longer crypto invite codes, hard-coded push text in the service worker, constant-time secret compare. The user: delete `.env.push-secrets` after the phone test, and turn on leaked password protection in Supabase Auth
+   - 77 **Streak = both of you logged food that day** (the shared streak on Us no longer looks at the 10% goal window)
+   - 78 **See and edit the Nutrition Facts of a food already logged on Today** (per log, like the food screen's tap-to-correct)
+   - 79 **A brand search box** next to the food search, on Add food and in the prep dish builder (USDA branded `brandOwner`/`brandName`)
+   - 80 **Water** in fluid ounces: quick-add buttons (8, 16, 24 oz) on Today and a daily oz goal on Us (new table, needs a migration)
+   - 81 **Your own photos**: a photo of the finished dish on prep dishes (used as the food's photo when logging) and an optional photo of the recipe; your own photo on custom foods too (Supabase Storage bucket with household-only policies, needs a migration)
+1. **Then, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
    - the game plan's build items are done; left are 14 (optional offline write queue) and 16 (testing on both phones)
    - drinks in millilitres: a food gets a unit (g or ml); the amount box, label ("per 100 ml") and serving show it; treat 1 ml as 1 g, no density; scanned drinks first (Open Food Facts), then custom drinks and the dish builder; shipped: scanned drinks, a g/ml switch, saved foods keeping unit and photo, photos on Today, custom drinks and the dish builder (needs a real-phone check with the OKF aloe drink)
    - food photos, follow-ups: scans show the photo and saved foods keep it (shipped). **Open Food Facts in text search can't be built from the app as it is** (checked 2026-11-02 from a real browser page): the old search address (`world.openfoodfacts.org/cgi/search.pl`) answers 503 "temporarily unavailable", and the new one (`search.openfoodfacts.org/search`) sends no CORS header so browsers block it; only the barcode lookup (`/api/v2/product/<code>`) works from a page. To do it, search through a small Supabase Edge Function that calls the new address and returns the results (needs a deploy, so ask first); until then text search stays USDA only and photos come from scans

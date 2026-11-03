@@ -149,6 +149,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 48 | Offline banner | 35B (High), headless, no npm | Usable as delivered. ~1.5 min |
 | 49 | Install app button (beforeinstallprompt) | 35B (High), headless, no npm | Usable after small fixes (an unawaited async test; added the button but didn't replace the text). ~2 min |
 | 75 | Send the grocery list straight to one saved Keep note | Laguna XS 2.1 (High), web UI, Full access | Usable as delivered (I removed 3 needless casts in its tests). ~18 min; last exact brief, plain prompts from 76 on |
+| 76 | Security check (read only; Claude did one separately) | qwen3.8 27B tuned (High), web UI, Workspace Write | Careful, changed nothing, 1 h 7 min; missed the push-endpoint SSRF and two advisor items, wrong about anon grants. Fixes in 76b |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
