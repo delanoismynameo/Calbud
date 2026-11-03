@@ -153,6 +153,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 76b | Security fixes from 76 | qwen3.6 35B (High), web UI, Full access | Unusable: rewrote join_household without its checks, faked the DB tests with md5 copies, endpoint check rejected everything, edited node_modules. Rewritten by hand |
 | 77 | Streak counts days both logged food | LFM 3 (5070, High), web UI, Full access | Core rule right; broke the card layout, tsc and the wording, and claimed checks it never ran. Rewritten by hand, 12 min |
 | 78 | Edit the Nutrition Facts of a logged food | Laguna XS 2.1 (Default), web UI, Full access | Usable after one fix (calories per 100 g rounded, so saving could change them). Reused the label helpers; honest report. 27 min |
+| 79 | Brand search box | Laguna XS 2.1 (Medium), web UI, Full access | Not usable as delivered: USDA brandOwner filter (from my prompt) misses Kirkland, two inputs instead of one moving box, brand alone didn't search, `any`. Plumbing kept, search and layout rewritten. 23 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.

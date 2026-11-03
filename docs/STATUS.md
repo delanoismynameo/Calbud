@@ -46,7 +46,7 @@
 
   | Command | Result |
   |---|---|
-  | `npm test` | 625 passing |
+  | `npm test` | 635 passing |
   | `npm run test:db` | 63 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -112,13 +112,14 @@ Before sending a task to the harness in the web UI:
 | 76b | Security fixes (push endpoint rule, revokes, 32-hex invite codes, fixed push text) | [76](review/76-security-check.md#76b-security-fixes) |
 | 77 | Streak counts days you both logged food | [77](review/77-streak-logged.md) |
 | 78 | Edit the Nutrition Facts of a logged food | [78](review/78-edit-log-label.md) |
+| 79 | Brand search box | [79](review/79-brand-search.md) |
 
 ## Next, in order
 0. **The user's list of 2026-11-02, in this order** (short plain prompts, one per run):
    - 76 **Security check**: done ([76](review/76-security-check.md)). **76b is live** (deploy run 41698465982, 2026-11-03): migration `20261103000001_security_fixes.sql` applied and `meal-reminder-scheduler` v4 deployed through the connector, both checked live. The user: delete `.env.push-secrets` after the phone test, and turn on leaked password protection in Supabase Auth
    - 77 **Streak = both of you logged food that day**: done ([77](review/77-streak-logged.md)), live (deploy run 41703051871)
    - 78 **See and edit the Nutrition Facts of a logged food**: done ([78](review/78-edit-log-label.md)), live (deploy run 41720963289)
-   - 79 **A brand search box** next to the food search, on Add food and in the prep dish builder (USDA branded `brandOwner`/`brandName`)
+   - 79 **A brand search box** beside the food search, on Add food and in the prep dish builder: done ([79](review/79-brand-search.md)), in main, not pushed
    - 80 **Water** in fluid ounces: quick-add buttons (8, 16, 24 oz) on Today and a daily oz goal on Us (new table, needs a migration)
    - 81 **Your own photos**: a photo of the finished dish on prep dishes (used as the food's photo when logging) and an optional photo of the recipe; your own photo on custom foods too (Supabase Storage bucket with household-only policies, needs a migration)
 1. **Then, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
