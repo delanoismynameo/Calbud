@@ -37,3 +37,12 @@ Models are registered in the harness web profile and `calbud-local.yml` (Ornith,
 
 Process lesson: commit the brief before the builder runs, so the reviewer's diff holds only the builder's work.
 | Brief 75: save one Keep note link, Send to Keep copies the list and opens it (3 files, full code given), web UI, Full access | Laguna XS 2.1 High | ~18 min, 29 steps, 922K tokens, 29 falling to 12 tok/s | PASS. All edits exactly as given, report matches the diff, its tsc/520-tests claim was true; only extra was 3 needless `as never` casts in its tests (removed). Mock: every path works (share fallback, bad link refused, save, copy then open, Share instead, Change, Remove, survives reload). Slow: it read ~120K tokens before the first edit, and speed fell as the context grew | none | n/a | The last exact-brief run. From 76 the user wants short plain prompts so models have to reason, which also keeps the context small |
+
+**Meal reminders (2026-11-02), the same task given to three local models:**
+| Run | Model | Result |
+|---|---|---|
+| Attempt 1 | Ornith 1.5 35B | Stopped by me. A CRLF/LF mismatch broke `App.tsx` (`<ToastHostProvider>>`), and it drifted into a hand-rolled VAPID implementation. Branch `attempt/meal-reminder-ornith-1.5` kept as a record. |
+| Attempt 2 | Laguna XS 2.1 High, 2 rounds | `tsc` and tests passed, but the in-app toast was not wired, push sent unsigned JSON to the push endpoint, and the Edge Functions trusted a body `userId`. |
+| Attempt 3 | Qwopus (stalled twice, planning only), then qwen3.6 35B High with "Start editing files right away." | Claimed the toast worked; it never set state and had no UI. Fixed by hand: the toast hook, push opt-in on the You card, the push service worker loaded into the PWA worker, and a rewritten single scheduler function. |
+
+Lessons: re-run `tsc` and the tests yourself; "works" reports about UI wiring were false twice. Read every backend function for auth and for what it really sends. `AGENTS.md` is the user's local harness rules file and stays out of the repo.

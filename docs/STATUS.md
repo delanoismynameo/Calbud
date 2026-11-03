@@ -1,6 +1,6 @@
 # Calbud status: start here
 
-*Last updated 2026-11-01. Update this file at the end of every task.*
+*Last updated 2026-11-02. Update this file at the end of every task.*
 
 ## Where things stand
 - **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
@@ -39,13 +39,14 @@
   - **Save for this barcode:** after a correction, saves the food as the household's own custom food with the barcode (`foods.barcode`, one per household; saving again replaces it), so the next scan of that barcode finds it first.
   - Built by several local models, bench log in `docs/review/model-bench.md` (briefs and exact-instruction prompts, with each model's result).
 - **Task 75 is live** (deploy run 41336304990, 2026-11-01; no migration): on the Grocery list, save your Keep grocery note's link once per phone ("Send to one note every time"); then **Send to Keep** copies the list and opens that note to paste into, with **Share instead** for the old share sheet. Not tested on a phone: whether a keep.google.com link opens the Keep app.
+- **Meal reminders are live** (deploy run 41581440079, 2026-11-02; migrations `20261102000000`–`20261102000003` applied and the `meal-reminder-scheduler` Edge Function deployed through the Supabase connector). Each person sets a reminder time on the You card (Us). An **in-app toast** shows once a day at that time while the app is open (no permission needed). **Phone push** is an opt-in on the You card: it subscribes the phone (VAPID, `VITE_VAPID_KEY` repo variable) and saves it in `push_subscriptions` (row security, own row only). A pg_cron job calls the function every 10 minutes with `x-cron-secret` (the secret is in Vault and as an Edge Function secret); it signs the push with `web-push`, uses each person's time zone, sends at most once a day (`last_sent_on`) and forgets dead subscriptions. `public/push-sw.js` is loaded into the generated PWA worker through `workbox.importScripts`. **Not tested on a real phone yet.** Built by three local models plus a hand fix, bench log in `docs/review/model-bench.md`.
 - **Database:** Supabase project `zwhwgerfzrqnlyirdpek`. All nine migrations in `supabase/migrations/` have been applied through the SQL Editor (the last four on 2026-10-29, `food_barcode` on 2026-11-01, `foods_image_url_and_unit` on 2026-11-02). "Confirm email" is **off**.
 - **Real users:** the owner and partner have accounts and share one household. It was merged by hand with `supabase/snippets/move-partner-into-household.sql` after an accidental second household.
 - **Checks on `main`:**
 
   | Command | Result |
   |---|---|
-  | `npm test` | 520 passing |
+  | `npm test` | 611 passing |
   | `npm run test:db` | 48 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
@@ -117,6 +118,7 @@ Before sending a task to the harness in the web UI:
 2. **On a phone:** build a food from ingredients with the barcode camera; check the "new version is ready" bar appears and Reload works; on Android tap the "Add to Google Calendar" links under Export week (the share sheet and the downloaded .ics did not work with Google Calendar), and on iPhone check Export week opens in Apple Calendar, and try Send to Keep from the Grocery list (the real share sheet, and with a saved note link: does it open the Keep app?). **Shipped 2026-11-01 without a phone check:** Export week now uses the share sheet on phones and tablets (download on computers), and the help text changed: try it on Android and Apple, and tell me the exact message if it still fails; tap the serving line on the food label to edit it; the grocery list's single list, Add plan button and Bought section with Delete all; the Workout tab name; an editable Nutrition Facts label on each ingredient in the dish builder. **On two phones:** try the barcode camera, and check that a prep or menu change on one phone shows up on the other without a refresh.
 
 ## Waiting on the user
+- **Test meal reminders on both phones:** install to the Home Screen (iPhone), set a reminder time a few minutes ahead, turn on phone notifications on the You card, lock the phone and wait up to 10 minutes. Delete `.env.push-secrets` (gitignored, holds the VAPID private key and `CRON_SECRET`) once it works.
 - **Ask the partner** what her phone showed when "Join with a code" seemed missing.
 - **Password reset can't be tested live yet:** Supabase's built-in email sender is heavily rate-limited, so a free SMTP provider (e.g. Resend) is needed before relying on it.
 
