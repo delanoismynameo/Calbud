@@ -3,8 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { useLocalDate } from '../lib/useLocalDate'
 import type { Profile } from '../lib/types'
 import { fetchMealLogs } from '../today/mealLogApi'
+import { useQuery as useWaterQuery } from '@tanstack/react-query'
+import { fetchWaterLogs } from '../today/waterLogApi'
 import { sumLogs, groupByMeal } from '../today/totals'
 import { dayTitle } from '../today/day'
+import { ringDash } from '../today/ringMath'
 import KcalRing from '../today/KcalRing'
 import DayStrip from '../today/DayStrip'
 import MealSection from '../today/MealSection'
@@ -20,8 +23,16 @@ export default function PersonDay({ person, onBack }: { person: Profile; onBack:
     queryFn: () => fetchMealLogs(person.id, date)
   })
 
+  const waterLogs = useWaterQuery({
+    queryKey: ['water-logs', person.id, date],
+    queryFn: () => fetchWaterLogs(person.id, date)
+  })
+
   const total = sumLogs(logs.data ?? [])
   const groups = groupByMeal(logs.data ?? [])
+
+  const waterTotal = waterLogs.data?.reduce((sum, log) => sum + log.amount_oz, 0) ?? 0
+  const waterGoal = person.goal_water_oz ?? 64
 
   const goals = {
     kcal: person.goal_calories ?? 0,
@@ -51,6 +62,25 @@ export default function PersonDay({ person, onBack }: { person: Profile; onBack:
         <>
           <KcalRing consumed={total.kcal} goal={goals.kcal} />
           <DayStrip selected={date} today={today} onPick={setDate} />
+
+          {/* Water indicator for partner (read only) */}
+          <div className="px-4">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">Water</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-ink">
+                {waterTotal} / {waterGoal} fl oz
+              </span>
+              <div className="w-16 h-2 bg-line rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500"
+                  style={{ width: `${Math.min(100, (waterTotal / waterGoal) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
           {groups.map((g) =>
             g.meal === 'snack' && g.logs.length === 0 ? null : (
               <MealSection key={g.meal} meal={g.meal} logs={g.logs} readOnly />

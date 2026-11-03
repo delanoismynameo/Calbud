@@ -56,6 +56,9 @@ await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '202611020000
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261102000003_push_last_sent.sql'), 'utf8'));
 // Replaces join_household, so every join test below runs against this version.
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261103000001_security_fixes.sql'), 'utf8'));
+// Water tracking migration
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000000_water.sql'), 'utf8'));
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000001_water_security.sql'), 'utf8'));
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:
@@ -547,6 +550,64 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
   ok('anon cannot read push_subscriptions', anonPush.error !== undefined, 'anon read it');
   const trigCall = await as(ALICE, 'select handle_new_user()');
   ok('authenticated cannot call handle_new_user', /permission denied/.test(trigCall.error ?? ''), `error: ${trigCall.error ?? 'none'}`);
+}
+
+// ---- Task 80: water tracking ----------------------------------------------------
+{
+  // Test water goal default (64 oz) for new profiles
+  const checkDefault = (await db.query('select goal_water_oz from profiles where id = $1', [ALICE])).rows[0]?.goal_water_oz;
+  ok('water goal defaults to 64 oz for new profiles', Number(checkDefault) === 64, `goal: ${checkDefault}`);
+
+  // Test inserting water logs
+  const ins = await as(ALICE,
+    `insert into water_logs (user_id, logged_on, amount_oz) values ($1, '2026-10-27', 32)`,
+    [ALICE]);
+  const waterId = (await db.query(`select id from water_logs where user_id = $1 and amount_oz = 32`, [ALICE])).rows[0]?.id;
+  ok('can log own water', ins.error === undefined && ins.affected === 1 && waterId !== undefined,
+     ins.error ? `error: ${ins.error}` : `affected ${ins.affected}; water id ${waterId}`);
+
+  // Test inserting water logs as partner (should fail)
+  const asPartner = await as(ALICE,
+    `insert into water_logs (user_id, logged_on, amount_oz) values ($1, '2026-10-27', 16)`,
+    [BOB]);
+  const partnerRows = (await db.query(`select id from water_logs where user_id = $1 and amount_oz = 16`, [BOB])).rows;
+  ok('cannot log as partner', asPartner.error !== undefined && partnerRows.length === 0,
+     `error: ${asPartner.error ?? 'none'}; rows for Bob: ${partnerRows.length}`);
+
+  // Test partner can read
+  const bobReads = await as(BOB, 'select id from water_logs where id = $1', [waterId]);
+  ok('partner can read water log', bobReads.error === undefined && bobReads.rows.length === 1,
+     bobReads.error ? `error: ${bobReads.error}` : `Bob saw ${bobReads.rows.length} rows (want 1)`);
+
+  // Test outsider cannot read
+  const carolReads = await as(CAROL, 'select id from water_logs where id = $1', [waterId]);
+  ok('outsider cannot read water log', carolReads.error === undefined && carolReads.rows.length === 0,
+     carolReads.error ? `error: ${carolReads.error}` : `Carol saw ${carolReads.rows.length} rows (want 0)`);
+
+  // Test partner cannot change or delete
+  const upd = await as(BOB, 'update water_logs set amount_oz = 100 where id = $1', [waterId]);
+  const del = await as(BOB, 'delete from water_logs where id = $1', [waterId]);
+  const still = (await db.query('select id, amount_oz from water_logs where id = $1', [waterId])).rows;
+  ok('partner cannot change or delete water log', still.length === 1 && Number(still[0].amount_oz) === 32,
+     `update: ${upd.error ?? `affected ${upd.affected}`}; delete: ${del.error ?? `affected ${del.affected}`}; now ${JSON.stringify(still)}`);
+
+  // Test editing water goal
+  const editGoal = await as(ALICE, 'update profiles set goal_water_oz = $1 where id = $2', [80, ALICE]);
+  const newGoal = (await db.query('select goal_water_oz from profiles where id = $1', [ALICE])).rows[0].goal_water_oz;
+  ok('can edit own water goal', editGoal.error === undefined && Number(newGoal) === 80,
+     editGoal.error ? `error: ${editGoal.error}` : `goal is now ${newGoal}, want 80`);
+
+  // Test cannot edit partner's water goal
+  const badEdit = await as(ALICE, 'update profiles set goal_water_oz = $1 where id = $2', [100, BOB]);
+  const bobGoal = (await db.query('select goal_water_oz from profiles where id = $1', [BOB])).rows[0].goal_water_oz;
+  ok('cannot edit partner water goal', badEdit.error === undefined && badEdit.affected === 0 && Number(bobGoal) === 64,
+     badEdit.error ? `error: ${badEdit.error}` : `affected ${badEdit.affected}; Bob's goal is now ${bobGoal}, want 64`);
+
+  // Test summing water for a day
+  const waterSum = (await db.query(`
+    select sum(amount_oz) as total from water_logs where user_id = $1 and logged_on = '2026-10-27'
+  `, [ALICE])).rows[0]?.total;
+  ok('can sum water for a day', Number(waterSum) === 32, `total: ${waterSum}, want 32`);
 }
 
 // ---- summary ----------------------------------------------------------------

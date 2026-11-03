@@ -9,13 +9,14 @@ const FIELDS: { key: keyof GoalInput; id: string; label: string }[] = [
   { key: 'protein', id: 'goal-protein', label: 'Protein (g)' },
   { key: 'carbs', id: 'goal-carbs', label: 'Carbs (g)' },
   { key: 'fat', id: 'goal-fat', label: 'Fat (g)' },
+  { key: 'water', id: 'goal-water', label: 'Water (fl oz)' },
 ]
 
 export default function GoalsCard() {
   const { profile, refresh } = useProfile()
   const { session } = useAuth()
   const [editing, setEditing] = useState(false)
-  const [input, setInput] = useState<GoalInput>({ calories: '', protein: '', carbs: '', fat: '' })
+  const [input, setInput] = useState<GoalInput>({ calories: '', protein: '', carbs: '', fat: '', water: '' })
   const [errors, setErrors] = useState<Partial<Record<keyof GoalInput, string>>>({})
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -29,6 +30,7 @@ export default function GoalsCard() {
       protein: String(profile.goal_protein_g ?? ''),
       carbs: String(profile.goal_carbs_g ?? ''),
       fat: String(profile.goal_fat_g ?? ''),
+      water: String(profile.goal_water_oz ?? ''),
     })
     setErrors({})
     setSaveError(null)
@@ -63,6 +65,7 @@ export default function GoalsCard() {
           goal_protein_g: result.goals.goal_protein_g,
           goal_carbs_g: result.goals.goal_carbs_g,
           goal_fat_g: result.goals.goal_fat_g,
+          goal_water_oz: result.goals.goal_water_oz,
         })
         .eq('id', session!.user.id)
       if (updErr) {
@@ -88,7 +91,9 @@ export default function GoalsCard() {
             Edit
           </button>
         </div>
-        <p className="text-sm text-ink">{profile.goal_calories} cal · {profile.goal_protein_g} g protein · {profile.goal_carbs_g} g carbs · {profile.goal_fat_g} g fat</p>
+        <p className="text-sm text-ink">
+          {profile.goal_calories} cal · {profile.goal_protein_g} g protein · {profile.goal_carbs_g} g carbs · {profile.goal_fat_g} g fat · {profile.goal_water_oz} fl oz water
+        </p>
       </div>
     )
   }

@@ -2,11 +2,13 @@ import { Link, useSearchParams } from 'react-router'
 import { useState } from 'react'
 import { useLocalDate } from '../lib/useLocalDate'
 import { useMealLogs } from '../today/useMealLogs'
+import { useWaterLogs } from '../today/useWaterLogs'
 import { useProfile } from '../household/useProfile'
 import { sumLogs, groupByMeal } from '../today/totals'
 import { addDays, dayLabel } from '../prep/week'
 import { validDayParam, dayTitle, copyRows } from '../today/day'
 import { insertMealLogs } from '../today/mealLogApi'
+import WaterCard from '../today/WaterCard'
 import { useMutation } from '@tanstack/react-query'
 import { queryClient } from '../lib/queryClient'
 import TodayMenu from '../menu/TodayMenu'
@@ -26,9 +28,11 @@ export default function Today() {
   const isToday = date === today
 
   const logs = useMealLogs(date)
+  const waterLogs = useWaterLogs(date)
   const { profile } = useProfile()
 
   const total = logs.isPending ? null : sumLogs(logs.data ?? [])
+  const waterGoal = profile?.goal_water_oz ?? 64
   const goals = {
     kcal: (profile?.goal_calories ?? 0),
     protein_g: (profile?.goal_protein_g ?? 0),
@@ -96,6 +100,15 @@ export default function Today() {
               <KcalRing consumed={total.kcal} goal={goals.kcal} />
               <DayStrip selected={date} today={today} onPick={goTo} />
             </div>
+          )}
+
+          {!logs.isPending && !logs.isError && (
+            <WaterCard
+              userId={profile?.id ?? ''}
+              date={date}
+              goal={waterGoal}
+              logs={waterLogs.data ?? []}
+            />
           )}
 
 

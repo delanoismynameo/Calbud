@@ -5,15 +5,16 @@ import { randomUUID } from 'node:crypto'
 const ME = '00000000-0000-0000-0000-00000000000a'
 const PARTNER = '00000000-0000-0000-0000-00000000000b'
 const profiles = {
-  [ME]: { id: ME, household_id: null, display_name: 'alice', color: '#6366f1', goal_calories: 2000, goal_protein_g: 150, goal_carbs_g: 250, goal_fat_g: 65, timezone: 'America/New_York', created_at: '2026-10-27T00:00:00Z' },
+  [ME]: { id: ME, household_id: null, display_name: 'alice', color: '#6366f1', goal_calories: 2000, goal_protein_g: 150, goal_carbs_g: 250, goal_fat_g: 65, goal_water_oz: 64, timezone: 'America/New_York', created_at: '2026-10-27T00:00:00Z' },
 }
 const households = {
   // A household with one member, for the join test.
   'h-partner': { id: 'h-partner', name: "Bob's household", invite_code: 'abcd1234', created_at: '2026-10-27T00:00:00Z' },
 }
-profiles[PARTNER] = { ...profiles[ME], id: PARTNER, display_name: 'Bob', color: '#10b981', household_id: 'h-partner' }
+profiles[PARTNER] = { ...profiles[ME], id: PARTNER, display_name: 'Bob', color: '#10b981', household_id: 'h-partner', goal_water_oz: 80 }
 const foods = []
 const mealLogs = []
+const waterLogs = []
 const mealPrep = []
 const menuSlots = []
 const groceryExtras = []
@@ -46,6 +47,10 @@ if (process.argv.includes('--with-logs')) {
   foods.find((f) => f.id === oat).extra_100g = { fiber_g: 1.7, sodium_mg: 49, iron_mg: 0.9, potassium_mg: 70 }
   mealLogs[0].extra = { fiber_g: 4.1, sodium_mg: 117.6, iron_mg: 2.2, potassium_mg: 168 }
   log(ME, day(1), 'breakfast', 'Oatmeal, cooked', 240, 170, 6, 28.8, 3.6, '2026-10-27T12:00:00Z'); mealLogs[4].food_id = oat
+  // Water logs for today
+  waterLogs.push({ id: randomUUID(), user_id: ME, logged_on: day(0), amount_oz: 32, created_at: '2026-10-28T08:00:00Z' })
+  waterLogs.push({ id: randomUUID(), user_id: ME, logged_on: day(0), amount_oz: 16, created_at: '2026-10-28T12:00:00Z' })
+  waterLogs.push({ id: randomUUID(), user_id: PARTNER, logged_on: day(0), amount_oz: 48, created_at: '2026-10-28T09:00:00Z' })
   // Favorites: yogurt (also recent) and a never-logged banana.
   foods.find((f) => f.id === yog).is_favorite = true
   const banana = food('usda', '173944', 'Banana, raw', null, 118, '1 medium', 89, 1.1, 22.8, 0.3)
@@ -79,7 +84,7 @@ if (process.argv.includes('--with-logs')) {
   slot(day(0), 'breakfast', 'OYO')
   slot(day(0), 'dinner', 'Curry', curryId)
 }
-const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'timezone', 'reminder_time']
+const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'goal_water_oz', 'timezone', 'reminder_time']
 const code8 = () => Math.random().toString(16).slice(2, 10)
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Expose-Headers': '*' }
@@ -165,6 +170,27 @@ http.createServer((req, res) => {
       const hit = mealLogs.filter((r) => r.user_id === ME && match(r, fs))
       if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
       if (req.method === 'DELETE') hit.forEach((r) => mealLogs.splice(mealLogs.indexOf(r), 1))
+      return send(res, 200, hit.map((r) => ({ id: r.id })))
+    }
+    // water_logs: reads see your rows and your household's; writes only touch your own rows (0 rows otherwise).
+    if (url.pathname === '/rest/v1/water_logs') {
+      const mine = profiles[ME].household_id
+      const fs = filters(url)
+      if (req.method === 'POST') {
+        const savedRows = []
+        for (const row of [].concat(JSON.parse(body))) {
+          if (row.user_id !== ME) return pgErr(res, 'new row violates row-level security policy for table "water_logs"', 403)
+          const saved = { id: randomUUID(), created_at: new Date().toISOString(), ...row }
+          waterLogs.push(saved)
+          savedRows.push({ id: saved.id })
+        }
+        return single ? send(res, 201, savedRows[0]) : send(res, 201, savedRows)
+      }
+      const visible = waterLogs.filter((r) => r.user_id === ME || (mine && profiles[r.user_id]?.household_id === mine))
+      if (req.method === 'GET') return send(res, 200, sortBy(visible.filter((r) => match(r, fs)), url.searchParams.get('order') || ''))
+      const hit = waterLogs.filter((r) => r.user_id === ME && match(r, fs))
+      if (req.method === 'PATCH') { const patch = JSON.parse(body || '{}'); hit.forEach((r) => Object.assign(r, patch)) }
+      if (req.method === 'DELETE') hit.forEach((r) => waterLogs.splice(waterLogs.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
     // meal_prep: either household member reads and changes any of the household's rows.
@@ -266,7 +292,7 @@ http.createServer((req, res) => {
       if (req.method === 'DELETE') hit.forEach((r) => activities.splice(activities.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
-    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, mealPrep, menuSlots, groceryExtras, groceryTicks, activities })
+    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, waterLogs, mealPrep, menuSlots, groceryExtras, groceryTicks, activities })
     if (url.pathname === '/rest/v1/rpc/create_household') {
       if (profiles[ME].household_id) return pgErr(res, 'create_household: you are already in a household')
       const id = randomUUID()
