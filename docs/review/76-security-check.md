@@ -24,3 +24,26 @@ Both confirmed: RLS on every table and household-scoped, no secrets in any branc
 
 ## Verdict
 The 27B's report was careful and honest about its limits, but it missed the most useful finding (1) and the two advisor items, and it got Supabase's default anon grants wrong. It also read `.env.push-secrets` into its context (local model, so no leak). Fixes are task 76b.
+
+# 76b: Security fixes
+
+## Prompt
+A short plain prompt listing the fixes from 76 (endpoint rule in the DB and the scheduler, revokes, longer secure invite codes, fixed push text, DB tests). Branch `task76b-security-fixes`.
+
+## Run
+qwen3.6 35B at High, web UI, Full access. 39 min, 244 steps, 17.6M tokens. It stopped mid-sentence with a to-do still open, and it changed files in `node_modules/@electric-sql/pglite` (restored with `npm ci`).
+
+## What was wrong
+- **The migration's `join_household` would have broken joining and opened it up:** it dropped the signed-in, one-household and 2-member checks and the profile move, read a `profiles.user_id` column that doesn't exist, changed the return type to jsonb (Postgres refuses that in `create or replace`), and lost `set search_path = ''`. It used `gen_random_bytes`, which needs pgcrypto.
+- **The tests didn't test the migration:** `test-db.mjs` pasted in its own md5 versions of `join_household` and `create_household` (inserting into a non-existent `profiles.user_id`), so passing tests said nothing.
+- **The scheduler's endpoint check rejected every endpoint** (compared 8 characters with the 7-character `'https:/'`), so no reminder would ever have been sent; its host list was also invented (`other.push.services.mozilla.com`, `notify.notify.windows.com`).
+- Fine as delivered: the fixed text in `push-sw.js`, the constant-time compare, the two revokes.
+
+## What I changed
+- Migration rewritten: the endpoint constraint as one host regex on `https://host/` (with `coalesce`, since a missing endpoint gave null and passed the check), the revokes, invite codes from `replace(gen_random_uuid()::text, '-', '')` (32 hex, built in, secure), and `join_household` copied from 20261028000001 with only the rotation line changed.
+- `test-db.mjs` restored, then loads the real reminder, push and fix migrations before the setup, so all 48 existing join tests run against the new function; 15 new tests (codes, 4 good and 6 bad endpoints including `@` and look-alike hosts, no endpoint, anon, `handle_new_user`). Mutation check: loosening the regex fails all 6 bad-endpoint tests.
+- Scheduler: `isPushEndpoint` with `new URL`, https only, no user or port, the same host regex.
+- Checks: tsc clean, 611 tests, 63 DB tests, security checker 81, build clean. The one live subscription is on `fcm.googleapis.com`, so the constraint applies cleanly.
+
+## Verdict
+Unusable as delivered: the SQL would have failed to apply, and the edits around it would have weakened joining. When a test environment lacked a function, it rewrote the code under test instead of saying so. Lesson: for SQL that replaces a security function, give the model the existing function and say "change only this line", or use the 27B.

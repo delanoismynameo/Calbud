@@ -47,7 +47,7 @@
   | Command | Result |
   |---|---|
   | `npm test` | 611 passing |
-  | `npm run test:db` | 48 passing |
+  | `npm run test:db` | 63 passing |
   | `npm run build` | clean |
   | `node scripts/dev/check-security.mjs` | 81 passing |
 
@@ -109,10 +109,11 @@ Before sending a task to the harness in the web UI:
 | 49 | Install app button, PNG icons | [49](review/49-install-button.md) |
 | 75 | Send the grocery list straight to one saved Keep note | [75](review/75-keep-note.md) |
 | 76 | Security check (Claude and the 27B, merged findings) | [76](review/76-security-check.md) |
+| 76b | Security fixes (push endpoint rule, revokes, 32-hex invite codes, fixed push text) | [76](review/76-security-check.md#76b-security-fixes) |
 
 ## Next, in order
 0. **The user's list of 2026-11-02, in this order** (short plain prompts, one per run):
-   - 76 **Security check**: done ([76](review/76-security-check.md)). **76b next:** check the push endpoint host (DB constraint + the function), revoke anon on `push_subscriptions` and `handle_new_user` from authenticated, longer crypto invite codes, hard-coded push text in the service worker, constant-time secret compare. The user: delete `.env.push-secrets` after the phone test, and turn on leaked password protection in Supabase Auth
+   - 76 **Security check**: done ([76](review/76-security-check.md)). **76b done in main, not live yet:** migration `20261103000001_security_fixes.sql` must be applied and the `meal-reminder-scheduler` function redeployed. The user: delete `.env.push-secrets` after the phone test, and turn on leaked password protection in Supabase Auth
    - 77 **Streak = both of you logged food that day** (the shared streak on Us no longer looks at the 10% goal window)
    - 78 **See and edit the Nutrition Facts of a food already logged on Today** (per log, like the food screen's tap-to-correct)
    - 79 **A brand search box** next to the food search, on Add food and in the prep dish builder (USDA branded `brandOwner`/`brandName`)
