@@ -36,6 +36,7 @@ jobs:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_USDA_API_KEY: ${{ vars.VITE_USDA_API_KEY }}
+          VITE_VAPID_KEY: ${{ vars.VITE_VAPID_KEY }}
         run: npm run build
 
       - name: Configure Pages
