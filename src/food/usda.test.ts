@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { normalizeUsdaFood, searchUsda, titleCase, lookupUsdaBarcode, matchesBrand } from './usda'
+import { normalizeUsdaFood, searchUsda, titleCase, lookupUsdaBarcode } from './usda'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -290,37 +290,5 @@ describe('normalizeUsdaFood liquids', () => {
     expect(result!.unit).toBe('ml')
     expect(result!.servingG).toBe(355)
     expect(result!.servingLabel).toBe('1 can (355 ml)')
-  })
-})
-
-describe('matchesBrand', () => {
-  it('returns true for exact match (case-insensitive)', () => {
-    expect(matchesBrand('Kirkland', 'Kirkland')).toBe(true)
-    expect(matchesBrand('kirkland', 'KIRKLAND')).toBe(true)
-    expect(matchesBrand('KIRKLAND', 'kirkland')).toBe(true)
-  })
-
-  it('returns true when food brand starts with search brand', () => {
-    expect(matchesBrand('Kirkland', 'Kirkland Signature')).toBe(true)
-    expect(matchesBrand('Kirkland', 'Kirkland Signature Pro')).toBe(true)
-  })
-
-  it('returns true when search brand starts with food brand', () => {
-    expect(matchesBrand('Kirkland Signature', 'Kirkland')).toBe(true)
-    expect(matchesBrand('Kirkland Signature Pro', 'Kirkland')).toBe(true)
-  })
-
-  it('returns true when any word in search brand matches any word in food brand', () => {
-    expect(matchesBrand('Chobani', 'Chobani Greek Yogurt')).toBe(true)
-    expect(matchesBrand('Greek', 'Chobani Greek Yogurt')).toBe(true)
-  })
-
-  it('returns false when no match', () => {
-    expect(matchesBrand('Kirkland', 'Costco')).toBe(false)
-    expect(matchesBrand('Kirkland', 'generic food')).toBe(false)
-  })
-
-  it('returns false when food brand is null', () => {
-    expect(matchesBrand('Kirkland', null)).toBe(false)
   })
 })

@@ -161,52 +161,23 @@ export function normalizeUsdaFood(raw: unknown): FoodResult | null {
   }
 }
 
-/** Check if a brand name matches a food's brand (case-insensitive, loose matching).
- * "kirkland" matches "Kirkland Signature" or "Kirkland" or "Signature Kirkland".
- */
-export function matchesBrand(brand: string, foodBrand: string | null): boolean {
-  if (!foodBrand) return false
-  const brandLower = brand.toLowerCase().trim()
-  const foodBrandLower = foodBrand.toLowerCase().trim()
-  // Direct match or food brand starts with search brand
-  if (foodBrandLower === brandLower) return true
-  if (foodBrandLower.startsWith(brandLower + ' ')) return true
-  // Search brand starts with food brand (e.g., "Kirkland" matches "Kirkland Signature")
-  if (brandLower.startsWith(foodBrandLower + ' ')) return true
-  // Check if any word in brand appears in food brand
-  const brandWords = brandLower.split(/\s+/)
-  const foodWords = foodBrandLower.split(/\s+/)
-  return brandWords.some(bw => foodWords.includes(bw))
-}
-
 export async function searchUsda(
   query: string,
-  { apiKey, fetchFn = fetch, signal, kind, brandOwner }: {
-    apiKey: string
-    fetchFn?: typeof fetch
-    signal?: AbortSignal
-    kind?: 'generic' | 'branded'
-    brandOwner?: string
-  },
+  { apiKey, fetchFn = fetch, signal, kind }: { apiKey: string; fetchFn?: typeof fetch; signal?: AbortSignal; kind?: 'generic' | 'branded' },
 ): Promise<FoodResult[]> {
   const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${encodeURIComponent(apiKey)}`
 
   const dataType: string[] = kind === 'branded' ? ['Branded'] : ['Foundation', 'SR Legacy', 'Survey (FNDDS)']
 
-  const body: Record<string, unknown> = {
-    query,
-    dataType,
-    pageSize: 25,
-  }
-  if (brandOwner) {
-    body.brandOwner = brandOwner
-  }
-
   const res = await fetchFn(url, {
     method: 'POST',
     signal,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      query,
+      dataType,
+      pageSize: 25,
+    }),
   })
 
   if (!res.ok) {

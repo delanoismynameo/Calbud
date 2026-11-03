@@ -1,5 +1,6 @@
-import { searchUsda, matchesBrand } from './usda'
+import { searchUsda } from './usda'
 import { splitQuery, rankResults } from './rank'
+import { brandQuery, matchesBrand } from './brand'
 import type { FoodResult } from './types'
 
 export function usdaApiKey(): string {
@@ -20,60 +21,58 @@ export async function searchFoods(
     apiKey,
     fetchFn = fetch,
     signal,
-    brand,
+    brand = '',
   }: { apiKey?: string; fetchFn?: typeof fetch; signal?: AbortSignal; brand?: string },
 ): Promise<{ results: FoodResult[]; errors: string[] }> {
   const trimmed = query.trim()
-  if (trimmed.length < 2 && !brand) {
+  const key = apiKey ?? usdaApiKey()
+
+  // With a brand: only packaged foods from that brand, and a brand alone (no food words) lists its products.
+  if (brandQuery(brand, '') !== '') {
+    try {
+      const found = await searchUsda(brandQuery(brand, trimmed), { apiKey: key, fetchFn, signal, kind: 'branded' })
+      const seen = new Set<string>()
+      const results = found.filter((r) => {
+        const dk = dedupKey(r)
+        if (seen.has(dk) || !matchesBrand(brand, r)) return false
+        seen.add(dk)
+        return true
+      })
+      return { results: rankResults(results, trimmed || brand).slice(0, 30), errors: [] }
+    } catch (e) {
+      throw new Error(`Packaged foods: ${e instanceof Error ? e.message : 'USDA search failed'}`)
+    }
+  }
+
+  if (trimmed.length < 2) {
     return { results: [], errors: [] }
   }
 
-  const key = apiKey ?? usdaApiKey()
   const { core } = splitQuery(trimmed)
-  const brandTrimmed = brand?.trim()
 
-  // When brand is provided, only search branded foods (hide basic/generic foods)
-  // When brand is empty, search both generic and branded
-  const promises = brandTrimmed
-    ? [null, searchUsda(trimmed, {
-        apiKey: key,
-        fetchFn,
-        signal,
-        kind: 'branded',
-        brandOwner: brandTrimmed,
-      })]
-    : [
-        searchUsda(core, { apiKey: key, fetchFn, signal, kind: 'generic' }),
-        searchUsda(trimmed, { apiKey: key, fetchFn, signal, kind: 'branded' }),
-      ]
-
-  const [genericResult, brandedResult] = await Promise.allSettled(promises as Promise<any>[])
+  const [genericResult, brandedResult] = await Promise.allSettled([
+    searchUsda(core, { apiKey: key, fetchFn, signal, kind: 'generic' }),
+    searchUsda(trimmed, { apiKey: key, fetchFn, signal, kind: 'branded' }),
+  ])
 
   const results: FoodResult[] = []
   const errors: string[] = []
   const seen = new Set<string>()
 
-  if (brandTrimmed) {
-    // When brand is provided, generic results should not exist (we skip the search)
-    // But if somehow there are errors from generic, ignore them since we're not searching it
-  } else {
-    if (genericResult.status === 'fulfilled') {
-      for (const r of genericResult.value) {
-        const dk = dedupKey(r)
-        if (!seen.has(dk)) {
-          seen.add(dk)
-          results.push(r)
-        }
+  if (genericResult.status === 'fulfilled') {
+    for (const r of genericResult.value) {
+      const dk = dedupKey(r)
+      if (!seen.has(dk)) {
+        seen.add(dk)
+        results.push(r)
       }
-    } else {
-      errors.push(`Basic foods: ${genericResult.reason instanceof Error ? genericResult.reason.message : 'USDA search failed'}`)
     }
+  } else {
+    errors.push(`Basic foods: ${genericResult.reason instanceof Error ? genericResult.reason.message : 'USDA search failed'}`)
   }
 
   if (brandedResult.status === 'fulfilled') {
     for (const r of brandedResult.value) {
-      // When brand is provided, filter by brand using loose matching
-      if (brandTrimmed && !matchesBrand(brandTrimmed, r.brand)) continue
       const dk = dedupKey(r)
       if (!seen.has(dk)) {
         seen.add(dk)

@@ -1,14 +1,15 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useFoodSearch } from './useFoodSearch'
 import { useRecentFoods } from './useRecentFoods'
 import { useFavoriteFoods } from './useFavoriteFoods'
 import { withoutFavorites } from './favorites'
 import { useHouseholdFoods } from './useHouseholdFoods'
-import { householdMatches, withoutHousehold } from './householdFoods'
+import { householdMatches, matchesQuery, withoutHousehold } from './householdFoods'
 import BarcodeScanner from './BarcodeScanner'
 import { normalizeBarcode } from './barcode'
 import { lookupBarcode } from './off'
-import { lookupUsdaBarcode, matchesBrand } from './usda'
+import { lookupUsdaBarcode } from './usda'
+import { matchesBrand } from './brand'
 import { usdaApiKey } from './search'
 import { sourceMismatch } from './crossCheck'
 import { findHouseholdFoodByBarcode } from './householdBarcode'
@@ -28,15 +29,18 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   const { results, errors, isSearching, settled, failed, tooShort, refetch } = useFoodSearch(query, brand)
   const recents = useRecentFoods()
   const favorites = useFavoriteFoods()
-  const empty = query.trim() === ''
-  const brandEmpty = brand.trim() === ''
   const brandTrimmed = brand.trim()
+  const brandOn = brandTrimmed.length >= 2
+  // The brand box sits beside the search until it's tapped or has text, then takes its own line.
+  const brandOpen = brandFocused || brand !== ''
+  const empty = query.trim() === '' && !brandOn
   const household = useHouseholdFoods()
   const { profile } = useProfile()
-  // Filter Your foods by brand too
-  const yours = tooShort || empty ? [] : householdMatches(household.data ?? [], query).filter(
-    (f) => brandEmpty || !f.brand || matchesBrand(brand, f.brand)
-  )
+  const householdList = household.data ?? []
+  // With a brand, Your foods shows only that brand's foods (and only those matching the search, if any).
+  const yours = tooShort ? []
+    : brandOn ? householdList.filter((f) => matchesBrand(brand, f) && (query.trim() === '' || matchesQuery(f, query))).slice(0, 8)
+    : householdMatches(householdList, query)
   const usdaResults = withoutHousehold(results, yours)
   const favoriteList = favorites.data ?? []
   // A favorite is listed once, under Favorites.
@@ -51,37 +55,6 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
         <p className="text-sm text-muted mt-1">{Math.round(food.kcal100g)} cal / 100 {food.unit}</p>
       </div>
     </button>
-  )
-
-  // Brand input element - rendered once to preserve focus
-  const brandInput = (
-    <div className="relative">
-      <input
-        type="text"
-        aria-label="Search by brand"
-        placeholder="Brand, e.g. Chobani"
-        ref={brandInputRef}
-        value={brand}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBrand(e.target.value)}
-        onBlur={() => {
-          if (brand.trim() === '') {
-            setBrand('')
-          }
-          setBrandFocused(false)
-        }}
-        onFocus={() => setBrandFocused(true)}
-        className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-coral"
-      />
-      {brand.trim() !== '' && (
-        <button
-          type="button"
-          onClick={() => setBrand('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
-        >
-          ✕
-        </button>
-      )}
-    </div>
   )
 
   const onCode = useCallback(async (text: string) => {
@@ -135,39 +108,25 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
         </div>
       ) : (
         <>
-          {/* Food search row */}
-          <div className="flex flex-col gap-2">
-            {/* First row: food search (2/3) and brand area (1/3) */}
-            <div className="flex gap-2">
-              <div className="flex-2">
-                <input type="search" autoFocus aria-label="Search foods"
-                  placeholder="Search foods (e.g. banana, oatmeal)"
-                  value={query} onChange={(e) => setQuery(e.target.value)}
-                  className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-coral" />
-              </div>
-              {/* Brand wrapper - shows placeholder or input based on state */}
-              <div className="flex-1">
-                {/* Placeholder shown when empty and not focused */}
-                {brandEmpty && !brandFocused && (
-                  <div
-                    onClick={() => {
-                      setBrandFocused(true)
-                      // Focus the brand input after state update
-                      setTimeout(() => {
-                        brandInputRef.current?.focus()
-                      }, 0)
-                    }}
-                    className="h-full rounded-2xl px-4 py-3.5 flex items-center justify-between cursor-pointer
-                      bg-card border border-line hover:bg-coral-light/50 active:bg-coral-light min-w-[60px]"
-                  >
-                    <span className="text-muted text-sm">Brand</span>
-                  </div>
-                )}
-              </div>
+          <div className="grid grid-cols-3 gap-2">
+            <input type="search" autoFocus aria-label="Search foods"
+              placeholder={brandOpen ? "Search foods (e.g. banana, oatmeal)" : "Search foods"}
+              value={query} onChange={(e) => setQuery(e.target.value)}
+              className={`${brandOpen ? 'col-span-3' : 'col-span-2'} min-w-0 w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-coral`} />
+            {/* One input that changes place, so the keyboard and cursor stay put when it moves. */}
+            <div className={`${brandOpen ? 'col-span-3' : 'col-span-1'} relative min-w-0`}>
+              <input type="text" ref={brandInputRef} aria-label="Brand" enterKeyHint="search" autoCapitalize="none"
+                placeholder={brandOpen ? 'Brand, e.g. Chobani' : 'Brand'}
+                value={brand} onChange={(e) => setBrand(e.target.value)}
+                onFocus={() => setBrandFocused(true)} onBlur={() => setBrandFocused(false)}
+                className={`w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-coral ${brand !== '' ? 'pr-11' : ''}`} />
+              {brand !== '' && (
+                <button type="button" aria-label="Clear brand"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { setBrand(''); brandInputRef.current?.focus() }}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full text-muted hover:text-ink">✕</button>
+              )}
             </div>
-
-            {/* Brand input - rendered once below the search row when expanded */}
-            {!brandEmpty || brandFocused ? brandInput : null}
           </div>
 
           <div className={`grid ${onCreate ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
@@ -238,14 +197,14 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
           )}
           {settled && !failed && usdaResults.length === 0 && yours.length === 0 && (
             <div className="text-center py-6">
-              {brandTrimmed ? (
+              {brandOn ? (
                 <>
-                  <p className="text-muted text-sm">No {brandTrimmed} foods match "{query}".</p>
+                  <p className="text-muted">{query.trim() ? `No ${brandTrimmed} foods match "${query.trim()}".` : `No ${brandTrimmed} foods found.`}</p>
                   <button type="button" onClick={() => setBrand('')}
                     className="mt-2 px-4 py-2 bg-coral-light hover:bg-coral-deep/10 text-link rounded-2xl text-sm font-semibold">Clear brand</button>
                 </>
               ) : (
-                <p className="text-muted text-center py-6">No foods found.</p>
+                <p className="text-muted">No foods found.</p>
               )}
             </div>
           )}
