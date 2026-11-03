@@ -115,7 +115,7 @@ Before sending a task to the harness in the web UI:
 ## Next, in order
 0. **The user's list of 2026-11-02, in this order** (short plain prompts, one per run):
    - 76 **Security check**: done ([76](review/76-security-check.md)). **76b is live** (deploy run 41698465982, 2026-11-03): migration `20261103000001_security_fixes.sql` applied and `meal-reminder-scheduler` v4 deployed through the connector, both checked live. The user: delete `.env.push-secrets` after the phone test, and turn on leaked password protection in Supabase Auth
-   - 77 **Streak = both of you logged food that day**: done ([77](review/77-streak-logged.md)), in main, not pushed
+   - 77 **Streak = both of you logged food that day**: done ([77](review/77-streak-logged.md)), live (deploy run 41703051871)
    - 78 **See and edit the Nutrition Facts of a food already logged on Today** (per log, like the food screen's tap-to-correct)
    - 79 **A brand search box** next to the food search, on Add food and in the prep dish builder (USDA branded `brandOwner`/`brandName`)
    - 80 **Water** in fluid ounces: quick-add buttons (8, 16, 24 oz) on Today and a daily oz goal on Us (new table, needs a migration)
