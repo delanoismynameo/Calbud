@@ -4,12 +4,6 @@
 //
 // Usage: npm run test:db
 
-// test-db.mjs — loads the app's migrations into an in-memory PGlite
-// database (real Postgres compiled to WASM) and proves the security rules
-// work by acting as different users. Plain Node, no test framework.
-//
-// Usage: npm run test:db
-
 import { PGlite } from '@electric-sql/pglite';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -30,7 +24,7 @@ function ok(name, cond, detail = '') {
   }
 }
 
-const db = await PGlite.create();
+const db = new PGlite();
 
 // ---- Step 1: Supabase-like scaffolding (SQL exactly as given in the brief)
 await db.exec(`
@@ -49,94 +43,19 @@ alter default privileges in schema public grant all on sequences to anon, authen
 create publication supabase_realtime;
 `);
 
-// ---- Step 2: run all prior migrations that create the app tables and roles ----
+// Load the app's two migrations, in order (read with fs.readFileSync, run with db.exec).
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261027000001_tables.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261027000002_security.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000001_join_switch.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261028000002_prep_food.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261029000001_menu.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261029000002_extras.sql'), 'utf8'));
-
-// ---- Step 3: later migrations (reminder_time + push_subscriptions)
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261102000000_add_reminder_time.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261102000001_reminder_privileges.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261102000002_push_subscriptions.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261102000003_push_last_sent.sql'), 'utf8'));
-
-// Check what's available in this PGlite build before applying the full migration.
-let hasGenRandomBytes = true;
-try { await db.exec("SELECT length(gen_random_bytes(1))"); } catch { hasGenRandomBytes = false; }
-console.log('hasGenRandomBytes:', hasGenRandomBytes);
-
-// ---- Step 4: apply security fixes manually (no CREATE EXTENSION, no encode) ----
-
-await db.exec(`
-ALTER TABLE public.push_subscriptions
-    ADD CONSTRAINT push_subscriptions_endpoint_real_service
-        CHECK ((subscription ? 'endpoint')
-               AND (
-                   subscription->>'endpoint' LIKE 'https://fcm.googleapis.com/%'
-                   OR substring(subscription->>'endpoint' FROM '^https://([^/]+)') = 'web.push.apple.com'
-                   OR substring(subscription->>'endpoint' FROM '^https://([^/]+)') LIKE '%.push.services.mozilla.com'
-                   OR substring(subscription->>'endpoint' FROM '^https://([^/]+)') LIKE '%.notify.windows.com'
-               ));
-
-revoke all on public.push_subscriptions from anon, public;
-revoke execute on function public.handle_new_user() from authenticated;
-
--- invite_code default: md5 produces 32 hex chars directly; no encode in this PGlite build
-ALTER TABLE public.households
-    ALTER COLUMN invite_code SET DEFAULT md5(random()::text);
-
--- Recreate join_household with full-32-char code rotation (pgcrypto unavailable).
--- On production Supabase this is handled by 20261103000001 which uses encode(gen_random_bytes(16), 'hex').
-create or replace function public.join_household(p_code text)
-returns jsonb
-language plpgsql
-security definer
-as $$
-declare
-    target_id uuid;
-    h_row households%rowtype;
-begin
-    if auth.uid() is null then
-        raise exception 'join_household: you must be signed in';
-    end if;
-
-    select into h_row * from households where invite_code = p_code limit 1;
-    if not found then
-        raise exception 'join_household: invalid code for %', p_code;
-    end if;
-
-    target_id := h_row.id;
-
-    -- Rotate the invite-code column in-place with a 32-char value.
-    update households set invite_code = md5(random()::text) where id = target_id;
-
-    insert into profiles (user_id, display_name, household_id, created_at)
-        values (auth.uid(), null, h_row.id, now())
-        on conflict (user_id) do nothing;
-
-    return jsonb_build_object(
-        'household_id', target_id,
-        'new_invite_code', (select invite_code from households where id = target_id)
-    );
-end;
-$$;
-
--- Also update create_household to use the long default for consistency.
-create or replace function public.create_household()
-returns uuid
-language plpgsql
-security definer
-as $$
-declare
-    new_id uuid;
-begin
-    insert into households (invite_code) values (md5(random()::text)) returning id into new_id;
-    return new_id;
-end;
-$$;
+// Replaces join_household, so every join test below runs against this version.
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261103000001_security_fixes.sql'), 'utf8'));
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:
@@ -588,51 +507,46 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
      `error: ${ginaOwn.error ?? 'none'}; Gina household now ${ginaHhStill3}, want ${ginaHh}; household rows: ${ginaHhRows3.length} (want 1)`);
 }
 
-// ---- Push subscriptions endpoint constraint + invite code length ---------------------------------
+// ---- Task 76b: invite codes, push endpoints, privileges ---------------------
 {
-  // Alice has a household — use it for the push subscription tests.
-  const aliceHh = (await db.query('select household_id from profiles where id = $1', [ALICE])).rows[0].household_id;
+  const hex32 = /^[0-9a-f]{32}$/;
+  const carolCode = (await db.query('select invite_code from households where id = $1', [carolHouseholdId])).rows[0].invite_code;
+  ok('new household gets a 32-hex invite code', hex32.test(carolCode), `code ${carolCode}`);
+  ok('code rotated by a join is 32 hex', hex32.test(aliceCurrentCode) && aliceCurrentCode !== bobUsedCode, `code ${aliceCurrentCode}`);
 
-  // Inserting with an invalid endpoint must fail.
-  const invalidEp = await as(ALICE,
-    `insert into public.push_subscriptions (user_id, subscription) values ($1, $2)`,
-    [ALICE, '{"endpoint":"https://evil.example.com/xxx","keys":{"p256dh":"x","auth":"y"}}']
-  );
-  ok('rejects non-push-service endpoint', invalidEp.error !== undefined,
-     `error: ${invalidEp.error ?? 'accepted'}`);
+  const sub = (endpoint) => JSON.stringify({ endpoint, keys: { p256dh: 'x', auth: 'y' } });
+  const tryEndpoint = async (endpoint) => {
+    const r = await as(ALICE, 'insert into push_subscriptions (user_id, subscription) values ($1, $2)', [ALICE, sub(endpoint)]);
+    if (!r.error) await as(ALICE, 'delete from push_subscriptions where user_id = $1', [ALICE]);
+    return r.error;
+  };
+  for (const good of [
+    'https://fcm.googleapis.com/fcm/send/abc',
+    'https://web.push.apple.com/QGz9',
+    'https://updates.push.services.mozilla.com/wpush/v2/abc',
+    'https://wns2-par02p.notify.windows.com/w/?token=abc',
+  ]) {
+    const err = await tryEndpoint(good);
+    ok(`push endpoint accepted: ${new URL(good).hostname}`, err === undefined, `error: ${err}`);
+  }
+  for (const bad of [
+    'https://evil.example.com/fcm.googleapis.com/x',
+    'http://fcm.googleapis.com/fcm/send/abc',
+    'https://fcm.googleapis.com.evil.com/x',
+    'https://fcm.googleapis.com@evil.com/x',
+    'https://evilpush.apple.com/x',
+    'https://127.0.0.1/x',
+  ]) {
+    const err = await tryEndpoint(bad);
+    ok(`push endpoint rejected: ${bad}`, err !== undefined, 'accepted');
+  }
+  const noEndpoint = await as(ALICE, 'insert into push_subscriptions (user_id, subscription) values ($1, $2)', [ALICE, '{}']);
+  ok('push subscription without an endpoint rejected', noEndpoint.error !== undefined, 'accepted');
 
-  // Inserting with a valid FCM endpoint must succeed.
-  const validFcm = await as(ALICE,
-    `insert into public.push_subscriptions (user_id, subscription) values ($1, $2)`,
-    [ALICE, '{"endpoint":"https://fcm.googleapis.com/fcm/send/abc","keys":{"p256dh":"x","auth":"y"}}']
-  );
-  ok('accepts valid https push-service endpoint', invalidEp.error !== undefined && validFcm.error === undefined);
-
-  // Create a new household to verify invite-code length (should be ≥32 hex chars).
-  const daveNew = await as(DAVE, "select create_household('DaveTest')");
-  const daveHhId = (await db.query('select household_id from profiles where id = $1', [DAVE])).rows[0].household_id;
-
-  // Read the new invite code to verify its format.
-  const newCode = (await db.query('select invite_code from households where id = $1', [daveHhId])).rows[0].invite_code;
-  ok('create_household produces long secure invite code (≥32 hex chars)',
-     newCode.length >= 32 && /^[0-9a-f]+$/.test(newCode),
-     `code ${JSON.stringify(newCode)} length=${newCode.length}`);
-
-  // Verify the household wasn't deleted (it's fine, create_household should succeed).
-  ok('create_household created a valid household', daveNew.error === undefined && daveNew.rows?.length === 1);
-
-  // Bob joins Dave's household; verify the new invite_code is also long.
-  const bobJoinCode = (await db.query('select invite_code from households where id = $1', [daveHhId])).rows[0].invite_code;
-  const bobJoinResult = await as(BOB, 'select join_household($1)', [bobJoinCode]);
-
-  const postJoinCode = (await db.query('select invite_code from households where id = $1', [daveHhId])).rows[0].invite_code;
-  ok('join_household rotates to long secure invite code',
-     bobJoinResult.error === undefined && /* join succeeded */
-       postJoinCode.length >= 32 && /^[0-9a-f]+$/.test(postJoinCode),
-     `post-join code: ${JSON.stringify(postJoinCode)} len=${postJoinCode.length}`);
-
-  const daveHhCount = await db.query('select count(*)::int as n from households where id = $1', [daveHhId]);
-  ok('two-member household survives join', daveHhCount.rows[0].n === 1, 'household vanished');
+  const anonPush = await as(null, 'select count(*) from push_subscriptions');
+  ok('anon cannot read push_subscriptions', anonPush.error !== undefined, 'anon read it');
+  const trigCall = await as(ALICE, 'select handle_new_user()');
+  ok('authenticated cannot call handle_new_user', /permission denied/.test(trigCall.error ?? ''), `error: ${trigCall.error ?? 'none'}`);
 }
 
 // ---- summary ----------------------------------------------------------------
