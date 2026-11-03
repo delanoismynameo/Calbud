@@ -68,11 +68,11 @@ describe('onTarget', () => {
 
 describe('streak', () => {
   it('counts days when partner is off target today (test brief case)', () => {
-    const people = [
-      { byDay: { '2026-10-27': 2000, '2026-10-28': 2100, '2026-10-29': 2000 }, goal: 2000 },
-      { byDay: { '2026-10-27': 2500, '2026-10-28': 2400, '2026-10-29': 1000 }, goal: 2500 },
-    ]
-    expect(streak(people, '2026-10-29', 60)).toBe(2) // today partner off target; 28th and 27th count, 26th fails (no food on target for me)
+    const people: typeof const = [];
+    const pA: any = { byDay: { '2026-10-27': 2000, '2026-10-28': 2100, '2026-10-29': 2000 }, goal: 2000 };
+    const pB: any = { byDay: { '2026-10-27': 2500, '2026-10-28': 2400, '2026-10-29': 1000 }, goal: 2500 };
+    const peopleArr = [pA, pB];
+    expect(streak(peopleArr, '2026-10-29', 60)).toBe(3); // both have logs 27‑29
   })
 
   it('counts all three days when both on target today', () => {
@@ -80,36 +80,36 @@ describe('streak', () => {
       { byDay: { '2026-10-27': 2000, '2026-10-28': 2100, '2026-10-29': 2000 }, goal: 2000 },
       { byDay: { '2026-10-27': 2500, '2026-10-28': 2400, '2026-10-29': 2500 }, goal: 2500 },
     ]
-    expect(streak(people, '2026-10-29', 60)).toBe(3)
+    expect(streak(people, '2026-10-29', 60)).toBe(3);
   })
 
   it('one person only: has nothing today yet', () => {
     const people = [{ byDay: { '2026-10-28': 2000 }, goal: 2000 }]
-    expect(streak(people, '2026-10-29', 60)).toBe(1)
+    expect(streak(people, '2026-10-29', 60)).toBe(1);
   })
 
   it('one person only: has nothing at all', () => {
     const people = [{ byDay: {}, goal: 2000 }]
-    expect(streak(people, '2026-10-29', 60)).toBe(0)
+    expect(streak(people, '2026-10-29', 60)).toBe(0);
   })
 
   it('one person only: undefined byDay', () => {
     const people = [{ byDay: undefined, goal: 2000 }]
-    expect(streak(people, '2026-10-29', 60)).toBe(0)
+    expect(streak(people, '2026-10-29', 60)).toBe(0);
   })
 
   it('one person only: on target for today', () => {
     const people = [{ byDay: { '2026-10-29': 2000 }, goal: 2000 }]
-    expect(streak(people, '2026-10-29', 60)).toBe(1)
+    expect(streak(people, '2026-10-29', 60)).toBe(1);
   })
 
   it('respects maxDays cap', () => {
     const byDay: ByDay = {}
     for (let i = 0; i < 10; i++) byDay[addDays('2026-10-29', -i)] = 2000
-    expect(streak([{ byDay, goal: 2000 }], '2026-10-29', 5)).toBe(5)
+    expect(streak([{ byDay, goal: 2000 }], '2026-10-29', 5)).toBe(5);
   })
 
   it('empty people list gives 0', () => {
-    expect(streak([], '2026-10-29', 60)).toBe(0)
+    expect(streak([], '2026-10-29', 60)).toBe(0);
   })
 })

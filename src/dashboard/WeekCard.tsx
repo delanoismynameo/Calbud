@@ -11,32 +11,37 @@ export default function WeekCard() {
 
   if (!profile) return null
 
+  const data = kcal.data
+  const week = lastWeek(today)
   const people = partner ? [profile, partner] : [profile]
-  let body
+  const peopleArr = people.map((p) => ({ byDay: data?.[p.id] ?? {}, goal: p.goal_calories }))
+  const n = streak(peopleArr, today, 60)
+  const together = people.every((p) => data?.[p.id] && (data?.[p.id]?.[today] ?? undefined) !== undefined)
+
+  let body: React.ReactNode
   if (kcal.isPending) {
     body = <p className="text-muted text-sm">Loading…</p>
   } else if (kcal.isError) {
     body = <p className="text-danger text-sm">{kcal.error.message}</p>
   } else {
-    const data = kcal.data
-    const week = lastWeek(today)
-    const n = streak(people.map((p) => ({ byDay: data[p.id], goal: p.goal_calories })), today, 60)
-    body = (
+    return (
       <>
         {people.map((p) => {
-          const avg = averageKcal(data[p.id], week)
+          const byDay = data?.[p.id] ?? {}
+          const avg = averageKcal(byDay, week)
           return (
             <div key={p.id}>
               <p>
                 <span className="w-3 h-3 rounded-full inline-block mr-2" style={{ backgroundColor: p.color }} />
-                <span className="font-semibold text-ink">{p.display_name}</span>
+                <span className="font-semibold text-ink">({p.display_name})</span>
               </p>
-              <p className="text-sm text-ink">Today: {data[p.id]?.[today] ?? 0} / {p.goal_calories} cal</p>
+              <p className="text-sm text-ink">Today: {byDay?.[today] ?? 0} / {p.goal_calories} cal</p>
               <p className="text-sm text-muted">{avg !== null ? `7-day average: ${avg} cal` : 'No food logged this week'}</p>
             </div>
           )
         })}
-        <p className="text-sm">{streakText(n, people.length > 1)}</p>
+
+        <p className="text-sm">{streakText(n, together)}</p>
       </>
     )
   }
