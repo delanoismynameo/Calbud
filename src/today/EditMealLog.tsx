@@ -32,7 +32,7 @@ export function logToVirtualFood(log: MealLog): FoodResult {
     servingG: null,
     servingLabel: null,
     unit: 'g',
-    kcal100g: Math.round(log.kcal / q * 100),
+    kcal100g: log.kcal * 100 / q,
     protein100g: log.protein_g * 100 / q,
     carbs100g: log.carbs_g * 100 / q,
     fat100g: log.fat_g * 100 / q,

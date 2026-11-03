@@ -179,6 +179,14 @@ describe('computeNutrition', () => {
 })
 
 describe('logToVirtualFood and computeNutrition integration', () => {
+  it('saving without edits keeps the logged numbers', () => {
+    const log = mealLog({ quantity_g: 1000, kcal: 1234, protein_g: 33.3, carbs_g: 7.7, fat_g: 0.4 })
+    const back = computeNutrition(logToVirtualFood(log), 1000)
+    expect(back).toMatchObject({ kcal: 1234, protein_g: 33.3, carbs_g: 7.7, fat_g: 0.4 })
+    const small = computeNutrition(logToVirtualFood(mealLog({ quantity_g: 3, kcal: 10 })), 3)
+    expect(small?.kcal).toBe(10)
+  })
+
   it('correctly converts and scales throughout the workflow', () => {
     // Simulate: log 200g with 500 kcal
     const log = mealLog({
