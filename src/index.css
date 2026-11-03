@@ -9,6 +9,7 @@
   --c-rose-soft: #fff1f2; --c-rose-ink: #be123c;
   --c-amber-soft: #fefce8; --c-amber-ink: #854d0e;
   --c-green-soft: #f0fdf4; --c-green-ink: #166534;
+  --c-water: #0284c7;
   --card-shadow: 0 2px 8px rgba(61, 44, 44, 0.05);
 }
 :root.dark {
@@ -20,6 +21,7 @@
   --c-rose-soft: #3a1d24; --c-rose-ink: #fda4af;
   --c-amber-soft: #352b12; --c-amber-ink: #fde047;
   --c-green-soft: #14301f; --c-green-ink: #86efac;
+  --c-water: #38bdf8;
   --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
@@ -38,6 +40,7 @@
   --color-danger: var(--c-danger);
   --color-warn: var(--c-warn);
   --color-ring: var(--c-ring);
+  --color-water: var(--c-water);
   --color-ring-track: var(--c-ring-track);
   --color-kcal: var(--c-kcal);
   --color-rose-soft: var(--c-rose-soft);

@@ -608,6 +608,19 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
     select sum(amount_oz) as total from water_logs where user_id = $1 and logged_on = '2026-10-27'
   `, [ALICE])).rows[0]?.total;
   ok('can sum water for a day', Number(waterSum) === 32, `total: ${waterSum}, want 32`);
+
+  const anonRead = await as(null, 'select id from water_logs');
+  ok('anon cannot read water logs', anonRead.error !== undefined, anonRead.error ? `error: ${anonRead.error}` : `anon saw ${anonRead.rows.length} rows`);
+
+  const tooMuch = await as(ALICE, `insert into water_logs (user_id, logged_on, amount_oz) values ($1, '2026-10-27', 500)`, [ALICE]);
+  const none = await as(ALICE, `insert into water_logs (user_id, logged_on, amount_oz) values ($1, '2026-10-27', 0)`, [ALICE]);
+  ok('water adds must be 1 to 200 oz', tooMuch.error !== undefined && none.error !== undefined, `500: ${tooMuch.error ?? 'saved'}; 0: ${none.error ?? 'saved'}`);
+
+  const hugeGoal = await as(ALICE, 'update profiles set goal_water_oz = 5000 where id = $1', [ALICE]);
+  ok('water goal must be at most 500 oz', hugeGoal.error !== undefined, hugeGoal.error ?? 'saved');
+
+  const ownDelete = await as(ALICE, 'delete from water_logs where id = $1', [waterId]);
+  ok('can undo (delete) own water add', ownDelete.error === undefined && ownDelete.affected === 1, ownDelete.error ?? `affected ${ownDelete.affected}`);
 }
 
 // ---- summary ----------------------------------------------------------------

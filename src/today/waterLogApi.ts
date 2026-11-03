@@ -13,17 +13,6 @@ export async function fetchWaterLogs(userId: string, date: string): Promise<Wate
   return data ?? []
 }
 
-export async function fetchWaterLogsSum(userId: string, date: string): Promise<number> {
-  const { data, error } = await supabase
-    .from('water_logs')
-    .select('amount_oz')
-    .eq('user_id', userId)
-    .eq('logged_on', date)
-
-  if (error) throw new Error(error.message)
-  return (data as { amount_oz: number }[]).reduce((sum, row) => sum + row.amount_oz, 0)
-}
-
 export async function insertWaterLog(userId: string, loggedOn: string, amountOz: number): Promise<void> {
   const { error } = await supabase.from('water_logs').insert({
     user_id: userId,

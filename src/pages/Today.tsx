@@ -2,7 +2,6 @@ import { Link, useSearchParams } from 'react-router'
 import { useState } from 'react'
 import { useLocalDate } from '../lib/useLocalDate'
 import { useMealLogs } from '../today/useMealLogs'
-import { useWaterLogs } from '../today/useWaterLogs'
 import { useProfile } from '../household/useProfile'
 import { sumLogs, groupByMeal } from '../today/totals'
 import { addDays, dayLabel } from '../prep/week'
@@ -28,11 +27,9 @@ export default function Today() {
   const isToday = date === today
 
   const logs = useMealLogs(date)
-  const waterLogs = useWaterLogs(date)
   const { profile } = useProfile()
 
   const total = logs.isPending ? null : sumLogs(logs.data ?? [])
-  const waterGoal = profile?.goal_water_oz ?? 64
   const goals = {
     kcal: (profile?.goal_calories ?? 0),
     protein_g: (profile?.goal_protein_g ?? 0),
@@ -102,14 +99,7 @@ export default function Today() {
             </div>
           )}
 
-          {!logs.isPending && !logs.isError && (
-            <WaterCard
-              userId={profile?.id ?? ''}
-              date={date}
-              goal={waterGoal}
-              logs={waterLogs.data ?? []}
-            />
-          )}
+          {!logs.isPending && profile && <WaterCard userId={profile.id} date={date} goal={profile.goal_water_oz ?? 64} />}
 
 
           {logs.data && logs.data.length === 0 && prevLogs.data && prevLogs.data.length > 0 && (

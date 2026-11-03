@@ -23,6 +23,7 @@ export async function fetchAllData(userId: string): Promise<Record<string, unkno
     exported_at: new Date().toISOString(),
     profile,
     meal_logs: await allRows('meal_logs', 'logged_on', 'user_id', userId),
+    water_logs: await allRows('water_logs', 'logged_on', 'user_id', userId),
     activities: await allRows('activities', 'scheduled_date', 'user_id', userId),
     foods: await allRows('foods', 'created_at'),
     meal_prep: await allRows('meal_prep', 'scheduled_date'),

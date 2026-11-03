@@ -30,6 +30,7 @@ create policy water_logs_delete_own
 
 -- Grant table privileges for the client role (RLS still applies on top of these).
 grant select, insert, update, delete on public.water_logs to authenticated;
+revoke all on public.water_logs from anon, public;
 
 -- Grant update on goal_water_oz for profiles (water goal is editable by the user).
 grant update (goal_water_oz) on public.profiles to authenticated;

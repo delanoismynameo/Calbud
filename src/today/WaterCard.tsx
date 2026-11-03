@@ -1,108 +1,63 @@
-import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchWaterLogs, insertWaterLog, deleteWaterLog } from './waterLogApi'
-import type { WaterLog } from './waterTypes'
+import { insertWaterLog, deleteWaterLog } from './waterLogApi'
+import { useWaterLogs } from './useWaterLogs'
+import { WATER_ADDS, waterProgress, lastAdd } from './water'
 
-interface WaterCardProps {
-  userId: string
-  date: string
-  goal: number
-  logs: WaterLog[]
-}
-
-export default function WaterCard({ userId, date, goal, logs }: WaterCardProps) {
-  const [lastAdded, setLastAdded] = useState<WaterLog | null>(null)
+// The day's water: total against the goal, a bar, and quick adds. readOnly is for a household member's day.
+export default function WaterCard({ userId, date, goal, readOnly = false }: { userId: string; date: string; goal: number; readOnly?: boolean }) {
   const queryClient = useQueryClient()
+  const logs = useWaterLogs(userId, date)
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['water-logs', userId, date] })
 
-  const total = logs.reduce((sum, log) => sum + Number(log.amount_oz), 0)
+  const add = useMutation({ mutationFn: (oz: number) => insertWaterLog(userId, date, oz), onSettled: refresh })
+  const undo = useMutation({ mutationFn: (id: string) => deleteWaterLog(id), onSettled: refresh })
 
-  const addWaterMutation = useMutation({
-    mutationFn: async (amount: number) => {
-      await insertWaterLog(userId, date, amount)
-      // Fetch the newly created log for undo functionality
-      const newLog = (await fetchWaterLogs(userId, date)).slice(-1)[0]
-      setLastAdded(newLog || null)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['water-logs', userId, date] })
-    },
-  })
-
-  const removeLastMutation = useMutation({
-    mutationFn: async () => {
-      if (lastAdded) {
-        await deleteWaterLog(lastAdded.id)
-      }
-    },
-    onSuccess: () => {
-      setLastAdded(null)
-      queryClient.invalidateQueries({ queryKey: ['water-logs', userId, date] })
-    },
-  })
-
-  const isPast = date < new Date().toISOString().split('T')[0]
-  const exceeded = total >= goal
-
-  const percentage = goal > 0 ? Math.min(100, (total / goal) * 100) : 0
+  const { total, percent, reached } = waterProgress(logs.data ?? [], goal)
+  const last = lastAdd(logs.data ?? [])
+  const busy = add.isPending || undo.isPending || logs.isFetching
+  const failed = add.error ?? undo.error
 
   return (
-    <section className="bg-card rounded-3xl shadow-card p-4 mb-3">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">Water</span>
-        {isPast && (
-          <button
-            type="button"
-            onClick={() => removeLastMutation.mutate()}
-            disabled={removeLastMutation.isPending || logs.length === 0}
-            className="text-sm text-muted hover:text-ink disabled:cursor-not-allowed"
-            aria-label="Undo last water addition"
-          >
-            Undo
-          </button>
+    <section className="bg-card rounded-3xl shadow-card p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">Water</h2>
+        {!readOnly && last && (
+          <button type="button" onClick={() => undo.mutate(last.id)} disabled={busy}
+            aria-label={`Undo the last add (${last.amount_oz} oz)`}
+            className="text-sm font-semibold text-link disabled:text-muted">↶ Undo</button>
         )}
       </div>
-      
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-base font-bold text-ink">
-          {total.toLocaleString()} / {goal} fl oz
-        </span>
-        <span className={`text-sm font-semibold ${exceeded ? 'text-success' : 'text-muted'}`}>
-          {exceeded ? 'Goal reached' : `${Math.round(goal - total)} left`}
-        </span>
-      </div>
 
-      {/* Progress bar */}
-      <div className="h-2 bg-line rounded-full overflow-hidden mb-3">
-        <div
-          className={`h-full transition-all duration-300 ${exceeded ? 'bg-success' : 'bg-blue-500'}`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-
-      {/* Buttons */}
-      <div className="grid grid-cols-3 gap-2">
-        {[8, 16, 24].map((amount) => (
-          <button
-            key={amount}
-            type="button"
-            onClick={() => addWaterMutation.mutate(amount)}
-            disabled={addWaterMutation.isPending || isPast}
-            className={`py-2 rounded-2xl text-sm font-semibold ${
-              isPast
-                ? 'bg-line text-muted cursor-not-allowed'
-                : 'bg-coral-deep hover:bg-coral-deeper text-white'
-            } disabled:cursor-not-allowed`}
-          >
-            +{amount} oz
-          </button>
-        ))}
-      </div>
-
-      {lastAdded && (
-        <p className="text-xs text-muted mt-2">
-          Added {lastAdded.amount_oz} fl oz
-        </p>
+      {logs.isPending ? (
+        <p className="text-muted text-sm">Loading…</p>
+      ) : logs.isError ? (
+        <p className="text-danger text-sm">Couldn't load water. {logs.error.message}</p>
+      ) : (
+        <>
+          <div className="flex items-baseline justify-between">
+            <span className="text-base font-bold text-ink">{total} / {goal} fl oz</span>
+            <span className={`text-sm font-semibold ${reached ? 'text-water' : 'text-muted'}`}>
+              {reached ? 'Goal reached 💧' : `${goal - total} oz to go`}
+            </span>
+          </div>
+          <div className="h-2.5 bg-line rounded-full overflow-hidden" role="progressbar" aria-label="Water"
+            aria-valuemin={0} aria-valuemax={goal} aria-valuenow={total}>
+            <div className="h-full bg-water rounded-full transition-[width] duration-300" style={{ width: `${percent}%` }} />
+          </div>
+        </>
       )}
+
+      {!readOnly && (
+        <div className="grid grid-cols-3 gap-2">
+          {WATER_ADDS.map((oz) => (
+            <button key={oz} type="button" onClick={() => add.mutate(oz)} disabled={busy || logs.isError}
+              className="py-2.5 rounded-2xl border border-line bg-card text-sm font-bold text-water hover:bg-coral-light/50 active:bg-coral-light disabled:opacity-50">
+              +{oz} oz
+            </button>
+          ))}
+        </div>
+      )}
+      {failed && <p className="text-danger text-sm">{failed.message}</p>}
     </section>
   )
 }

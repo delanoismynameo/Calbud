@@ -1,18 +1,17 @@
 -- Migration 20261104000000: add water tracking table and goal column.
 --
 -- 1. water_logs: one row per water addition (who, which day, how many fl oz, when).
--- 2. profiles: add water_goal column defaulting to 64 fl oz.
+-- 2. profiles: add goal_water_oz defaulting to 64 fl oz.
 
--- Add water_goal column to profiles
 alter table public.profiles
-    add column goal_water_oz int not null default 64 check (goal_water_oz > 0);
+    add column goal_water_oz int not null default 64 check (goal_water_oz between 1 and 500);
 
 -- Create water_logs table
 create table public.water_logs (
     id uuid primary key default gen_random_uuid(),
     user_id uuid not null references public.profiles(id) on delete cascade,
     logged_on date not null,
-    amount_oz numeric not null check (amount_oz > 0),
+    amount_oz int not null check (amount_oz between 1 and 200),
     created_at timestamptz not null default now()
 );
 

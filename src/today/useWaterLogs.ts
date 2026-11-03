@@ -1,11 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '../auth/AuthProvider'
 import { fetchWaterLogs } from './waterLogApi'
 
-export function useWaterLogs(date: string) {
-  const { session } = useAuth()
-  const userId = session?.user.id
-
+// One person's water adds for one day (yours, or a household member's, read only).
+export function useWaterLogs(userId: string | undefined, date: string) {
   return useQuery({
     queryKey: ['water-logs', userId, date],
     enabled: !!userId,
