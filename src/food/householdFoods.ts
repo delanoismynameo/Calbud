@@ -25,3 +25,15 @@ export function withoutHousehold(results: FoodResult[], household: FoodResult[])
   const keys = new Set(household.map(foodKey))
   return results.filter((f) => !keys.has(foodKey(f)))
 }
+
+// Search results that are foods the household already saved with its own photo get that photo,
+// so a USDA food you photographed on Today shows your photo in the next search.
+export function withSavedPhotos(results: FoodResult[], household: FoodResult[]): FoodResult[] {
+  const photos = new Map<string, string>()
+  for (const f of household) if (f.photoUrl) photos.set(foodKey(f), f.photoUrl)
+  if (photos.size === 0) return results
+  return results.map((f) => {
+    const photo = photos.get(foodKey(f))
+    return photo && !f.photoUrl ? { ...f, photoUrl: photo } : f
+  })
+}

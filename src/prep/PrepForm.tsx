@@ -18,9 +18,14 @@ import NutritionLabel from '../food/NutritionLabel'
 import { cleanRecipe, recipeError, recipeFood } from '../food/recipe'
 import { builtLabel } from '../food/builtLabel'
 import type { Recipe } from '../food/types'
+import PhotoField from '../food/PhotoField'
+import { deletePhotoIfUnused } from '../food/storage'
 
 const toggle = (on: boolean) =>
   `flex-1 py-2.5 px-3 rounded-xl text-sm ${on ? 'bg-card text-ink shadow-card font-bold' : 'text-muted font-semibold'}`
+
+// The dish photo is saved on the dish food, so it needs the dish's nutrition.
+const NEEDS_DISH = 'Add the nutrition per serving below to save the dish photo (it is saved with the dish).'
 
 const emptyInput: PrepFormInput = { title: '', date: '', startTime: '', duration: '', servings: '', recipeUrl: '', ingredients: '', notes: '' }
 
@@ -52,6 +57,20 @@ export default function PrepForm({
   )
   const [dishExtraErrors, setDishExtraErrors] = useState<Partial<Record<ExtraKey, string>>>({})
 
+  // Photos: the dish photo is saved on the dish food (so it shows when the dish is logged), the recipe photo on
+  // this session. Each upload happens when picked; files no longer used are deleted after Save, on Cancel, and
+  // when a photo picked in this form is replaced (deletePhotoIfUnused keeps any file something still uses).
+  const startDishPhoto = prep?.foods?.photo_url ?? null
+  const startRecipePhoto = prep?.photo_url ?? null
+  const [dishPhoto, setDishPhoto] = useState<string | null>(startDishPhoto)
+  const [recipePhoto, setRecipePhoto] = useState<string | null>(startRecipePhoto)
+  const [photoErr, setPhotoErr] = useState('')
+  const swapPhoto = (current: string | null, start: string | null, set: (p: string | null) => void) => (next: string | null) => {
+    if (current && current !== start) void deletePhotoIfUnused(current)
+    set(next)
+    setPhotoErr('')
+  }
+
   const { profile } = useProfile()
   const savedDishes = useDishFoods()
 
@@ -74,13 +93,16 @@ export default function PrepForm({
       const householdId = profile.household_id
       const foodId = inputData.dishFood ? await saveDishFood(inputData.dishFood, householdId) : null
 
+      const fields = { ...inputData.fields, photo_url: recipePhoto }
       if (prep) {
-        await updatePrep(prep.id, { ...inputData.fields, food_id: foodId })
+        await updatePrep(prep.id, { ...fields, food_id: foodId })
       } else {
-        await insertPrep(householdId, profile.id, inputData.fields, foodId)
+        await insertPrep(householdId, profile.id, fields, foodId)
       }
     },
     onSuccess: async () => {
+      if (startDishPhoto !== dishPhoto) await deletePhotoIfUnused(startDishPhoto)
+      if (startRecipePhoto !== recipePhoto) await deletePhotoIfUnused(startRecipePhoto)
       await queryClient.invalidateQueries({ queryKey: ['meal-prep'] })
       await queryClient.invalidateQueries({ queryKey: ['custom-foods'] })
       await queryClient.invalidateQueries({ queryKey: ['recent-foods'] })
@@ -92,6 +114,10 @@ export default function PrepForm({
   const deleteMutation = useMutation({
     mutationFn: () => deletePrep(prep!.id),
     onSuccess: async () => {
+      // The session's recipe photo goes with it, unless a repeated session still uses it. The dish photo stays on the dish food.
+      await deletePhotoIfUnused(startRecipePhoto)
+      if (recipePhoto !== startRecipePhoto) await deletePhotoIfUnused(recipePhoto)
+      if (dishPhoto !== startDishPhoto) await deletePhotoIfUnused(dishPhoto)
       await queryClient.invalidateQueries({ queryKey: ['meal-prep'] })
       onClose()
     },
@@ -111,8 +137,9 @@ export default function PrepForm({
           setRecipeErr(err)
           return
         }
-        dishFood = recipeFood(recipe, input.title.trim(), dishSourceId ?? crypto.randomUUID())
+        dishFood = { ...recipeFood(recipe, input.title.trim(), dishSourceId ?? crypto.randomUUID()), photoUrl: dishPhoto }
       }
+      if (dishPhoto && !dishFood) { setPhotoErr(NEEDS_DISH); return }
       if (!parsed.ok) return
 
       saveMutation.mutate({ fields: parsed.fields, dishFood })
@@ -125,13 +152,14 @@ export default function PrepForm({
     if (!isDishBlank(dish)) {
       const parsedDish = parseDish(input.title.trim(), dish, dishSourceId ?? crypto.randomUUID())
       if (parsedDish.ok) {
-        dishFood = parsedDish.food
+        dishFood = { ...parsedDish.food, photoUrl: dishPhoto }
       } else {
         Object.assign(tempDishErrors, parsedDish.errors)
       }
     }
 
     setDishErrors(tempDishErrors)
+    if (dishPhoto && isDishBlank(dish)) { setPhotoErr(NEEDS_DISH); return }
 
     if (!parsed.ok || Object.keys(tempDishErrors).length > 0) return
 
@@ -150,6 +178,13 @@ export default function PrepForm({
   }
 
   const anyPending = saveMutation.isPending || deleteMutation.isPending
+
+  // Cancel drops photos picked in this form.
+  const cancel = () => {
+    if (dishPhoto !== startDishPhoto) void deletePhotoIfUnused(dishPhoto)
+    if (recipePhoto !== startRecipePhoto) void deletePhotoIfUnused(recipePhoto)
+    onClose()
+  }
   const isSaveLoading = saveMutation.isPending
   const isDeleteLoading = deleteMutation.isPending
 
@@ -207,6 +242,13 @@ export default function PrepForm({
         </div>
       </div>
 
+      {/* Dish photo */}
+      <div>
+        <PhotoField label="Dish photo" hint="Optional: shows when you log this dish" path={dishPhoto} householdId={profile?.household_id}
+          onChange={swapPhoto(dishPhoto, startDishPhoto, setDishPhoto)} disabled={anyPending} />
+        {photoErr && <p className="text-danger text-sm mt-1">{photoErr}</p>}
+      </div>
+
       {/* Nutrition per serving (optional) */}
       <div>
         <h3 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section mb-2 px-1">Nutrition per serving (optional)</h3>
@@ -230,6 +272,7 @@ export default function PrepForm({
                   else { setRecipe(null); setDishMode('numbers') }
                   setDish(dishFromFood(food))
                   setDishSourceId(food.source_id)
+                  swapPhoto(dishPhoto, startDishPhoto, setDishPhoto)(food.photo_url ?? null)
                   setDishExtras(food.serving_g != null ? extrasPerServing(cleanExtras(food.extra_100g), Number(food.serving_g)) : {})
                   setDishExtraErrors({})
                   if (!input.title.trim()) setInput({ ...input, title: food.name })
@@ -322,6 +365,10 @@ export default function PrepForm({
         {errors.recipeUrl && <p className="text-danger text-sm mt-1">{errors.recipeUrl}</p>}
       </div>
 
+      {/* Recipe photo: a cookbook page or a handwritten card */}
+      <PhotoField label="Recipe photo" hint="Optional: a cookbook page or recipe card" path={recipePhoto} householdId={profile?.household_id}
+        onChange={swapPhoto(recipePhoto, startRecipePhoto, setRecipePhoto)} disabled={anyPending} />
+
       {/* Ingredients */}
       <div>
         <label htmlFor="prep-ingredients" className="block text-sm text-muted mb-1">Ingredients</label>
@@ -357,7 +404,7 @@ export default function PrepForm({
           </button>
         )}
 
-        <button type="button" onClick={onClose} disabled={anyPending}
+        <button type="button" onClick={cancel} disabled={anyPending}
           className="py-3 rounded-2xl bg-coral-light text-link font-semibold px-4 hover:bg-coral-light/70">
           Cancel
         </button>

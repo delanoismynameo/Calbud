@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
+import FoodImage from '../food/FoodImage'
+import PhotoViewer from '../food/PhotoViewer'
+import { usePhotoUrl } from '../food/usePhotoUrl'
 import { useAllPreps } from './useAllPreps'
 import { recipesFrom } from './recipes'
 import { dayLabel } from './week'
@@ -68,14 +71,17 @@ export default function RecipeList({ weekStart }: { weekStart: string }) {
                   type="button"
                   aria-expanded={isOpen}
                   onClick={() => setOpenKey(isOpen ? null : r.key)}
-                  className="w-full text-left"
+                  className="w-full text-left flex items-center gap-3"
                 >
-                  <p className="font-bold text-ink">{r.title}</p>
-                  <p className="text-[13px] text-muted">
-                    {r.made > 0 ? `Made ${r.made}×` : 'Not made yet'}
-                    {' · last '}
-                    {dayLabel(r.lastDate)}
-                  </p>
+                  <FoodImage photoPath={r.dishPhoto} alt={r.title} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-ink">{r.title}</p>
+                    <p className="text-[13px] text-muted">
+                      {r.made > 0 ? `Made ${r.made}×` : 'Not made yet'}
+                      {' · last '}
+                      {dayLabel(r.lastDate)}
+                    </p>
+                  </div>
                 </button>
 
                 {isOpen && (
@@ -108,6 +114,8 @@ export default function RecipeList({ weekStart }: { weekStart: string }) {
 
                     {r.notes && <p className="text-muted">{r.notes}</p>}
 
+                    {r.recipePhoto && <RecipePhoto path={r.recipePhoto} title={r.title} />}
+
                     {r.recipeUrl && (
                       <a href={r.recipeUrl} target="_blank" rel="noopener noreferrer" className="text-link underline">Open recipe</a>
                     )}
@@ -119,5 +127,23 @@ export default function RecipeList({ weekStart }: { weekStart: string }) {
         </div>
       )}
     </div>
+  )
+}
+
+// The recipe photo as a small thumbnail; tap it to read the recipe full screen.
+function RecipePhoto({ path, title }: { path: string; title: string }) {
+  const url = usePhotoUrl(path)
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button type="button" onClick={() => url && setOpen(true)} aria-label={`Open the recipe photo for ${title}`}
+        className="flex items-center gap-3 text-link font-semibold">
+        <span className="h-16 w-16 rounded-2xl bg-cream overflow-hidden shrink-0">
+          {url && <img src={url} alt="" className="h-full w-full object-cover" />}
+        </span>
+        Recipe photo
+      </button>
+      {open && url && <PhotoViewer url={url} alt={`Recipe photo for ${title}`} onClose={() => setOpen(false)} />}
+    </>
   )
 }

@@ -59,27 +59,23 @@ await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '202611030000
 // Water tracking migration
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000000_water.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000001_water_security.sql'), 'utf8'));
-// Photos migration: load column additions from migration file
-// Note: Storage bucket creation is skipped (requires real Supabase service)
-const photosMigration = readFileSync(resolve(root, 'supabase', 'migrations', '20261105000000_photos.sql'), 'utf8');
-// Extract and run only the ALTER TABLE statements (skip the storage bucket creation)
-const migrationLines = photosMigration.split('\n');
-const sqlParts = [];
-let inAlterTable = false;
-for (const line of migrationLines) {
-  if (line.trim().startsWith('alter table')) {
-    inAlterTable = true;
-  }
-  if (inAlterTable) {
-    sqlParts.push(line);
-    if (line.trim().endsWith(';')) {
-      inAlterTable = false;
-    }
-  }
-}
-if (sqlParts.length > 0) {
-  await db.exec(sqlParts.join('\n'));
-}
+// Photos migration. PGlite has no Storage service, so a minimal storage schema stands in for Supabase's:
+// the buckets and objects tables (with row security on, as in Supabase) and storage.foldername(),
+// which returns the folder parts of a path ('h/x.jpg' -> {h}), the same as Supabase's.
+await db.exec(`
+create schema storage;
+create table storage.buckets (id text primary key, name text not null, public boolean default false,
+  file_size_limit bigint, allowed_mime_types text[]);
+create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id),
+  name text not null, owner uuid default auth.uid(), unique (bucket_id, name));
+alter table storage.objects enable row level security;
+create function storage.foldername(name text) returns text[] language sql immutable as
+  $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
+grant usage on schema storage to anon, authenticated;
+grant select, insert, update, delete on storage.objects to authenticated;
+grant select on storage.buckets to authenticated;
+`);
+await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261105000000_photos.sql'), 'utf8'));
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:
@@ -642,6 +638,44 @@ const carolHouseholdId = (await db.query('select household_id from profiles wher
 
   const ownDelete = await as(ALICE, 'delete from water_logs where id = $1', [waterId]);
   ok('can undo (delete) own water add', ownDelete.error === undefined && ownDelete.affected === 1, ownDelete.error ?? `affected ${ownDelete.affected}`);
+}
+
+// ---- Task 81: own photos -----------------------------------------------------
+{
+  const bucket = (await db.query("select public, allowed_mime_types from storage.buckets where id = 'household_photos'")).rows[0];
+  ok('photo bucket exists and is private', bucket !== undefined && bucket.public === false, JSON.stringify(bucket));
+
+  const own = `${aliceHouseholdId}/dish.jpg`;
+  const up = await as(ALICE, "insert into storage.objects (bucket_id, name) values ('household_photos', $1)", [own]);
+  ok('can upload a photo to own household folder', up.error === undefined && up.affected === 1, up.error ?? '');
+
+  const bobSees = await as(BOB, "select name from storage.objects where bucket_id = 'household_photos'");
+  ok('partner can read household photos', bobSees.error === undefined && bobSees.rows.length === 1, bobSees.error ?? `saw ${bobSees.rows.length}`);
+
+  const carolSees = await as(CAROL, "select name from storage.objects where bucket_id = 'household_photos'");
+  ok('another household cannot read the photos', carolSees.error === undefined && carolSees.rows.length === 0, carolSees.error ?? `saw ${carolSees.rows.length}`);
+
+  const carolInto = await as(CAROL, "insert into storage.objects (bucket_id, name) values ('household_photos', $1)", [`${aliceHouseholdId}/sneaky.jpg`]);
+  ok("cannot upload into another household's folder", carolInto.error !== undefined, carolInto.error ?? 'saved');
+
+  const rootFile = await as(ALICE, "insert into storage.objects (bucket_id, name) values ('household_photos', 'loose.jpg')");
+  ok('cannot upload outside a household folder', rootFile.error !== undefined, rootFile.error ?? 'saved');
+
+  const carolDelete = await as(CAROL, "delete from storage.objects where name = $1", [own]);
+  ok("cannot delete another household's photo", carolDelete.error === undefined && carolDelete.affected === 0, carolDelete.error ?? `affected ${carolDelete.affected}`);
+
+  const daveSees = await as(DAVE, "select name from storage.objects where bucket_id = 'household_photos'");
+  ok('someone with no household sees no photos', daveSees.error === undefined && daveSees.rows.length === 0, daveSees.error ?? `saw ${daveSees.rows.length}`);
+
+  const anonSees = await as(null, "select name from storage.objects");
+  ok('anon cannot read photos', anonSees.error !== undefined || anonSees.rows.length === 0, `saw ${anonSees.rows?.length}`);
+
+  const bobDelete = await as(BOB, "delete from storage.objects where name = $1", [own]);
+  ok('partner can delete a household photo', bobDelete.error === undefined && bobDelete.affected === 1, bobDelete.error ?? `affected ${bobDelete.affected}`);
+
+  const foodCol = await as(ALICE, "select photo_url from foods limit 1");
+  const prepCol = await as(ALICE, "select photo_url from meal_prep limit 1");
+  ok('foods and meal_prep have photo_url', foodCol.error === undefined && prepCol.error === undefined, `${foodCol.error ?? ''} ${prepCol.error ?? ''}`);
 }
 
 // ---- summary ----------------------------------------------------------------

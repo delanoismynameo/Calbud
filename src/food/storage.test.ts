@@ -1,44 +1,44 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { photoPath, extractStoragePath, isOfflinePhoto } from './storage'
+import { describe, it, expect } from 'vitest'
+import { newPhotoPath, isPhotoPath, shrunkSize } from './storage'
 
-describe('photoPath', () => {
-  it('generates correct path for a food photo', () => {
-    expect(photoPath('household-1', 'food-2')).toBe('household-1/food-2.jpg')
+const H = '11111111-2222-3333-4444-555555555555'
+const ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+
+describe('newPhotoPath', () => {
+  it('puts the photo in the household folder as a jpg', () => {
+    expect(newPhotoPath(H, ID)).toBe(`${H}/${ID}.jpg`)
   })
 
-  it('uses custom file extension when provided', () => {
-    expect(photoPath('household-1', 'food-2', 'png')).toBe('household-1/food-2.png')
-  })
-})
-
-describe('extractStoragePath', () => {
-  it('returns the path unchanged if it is a relative path', () => {
-    expect(extractStoragePath('household-1/food-2.jpg')).toBe('household-1/food-2.jpg')
-  })
-
-  it('extracts path from a full URL with signed parameters', () => {
-    const url = 'https://xyz.supabase.co/storage/v1/object/sign/household_photos/household-1/food-2.jpg?expires=60&token=mock'
-    expect(extractStoragePath(url)).toBe('household-1/food-2.jpg')
-  })
-
-  it('returns null for non-household URLs', () => {
-    expect(extractStoragePath('https://images.openfoodfacts.org/images/products/abc.jpg')).toBeNull()
+  it('makes a new name each time', () => {
+    expect(newPhotoPath(H)).not.toBe(newPhotoPath(H))
   })
 })
 
-describe('isOfflinePhoto', () => {
-  it('returns true for Open Food Facts URLs', () => {
-    expect(isOfflinePhoto('https://images.openfoodfacts.org/images/products/abc.jpg')).toBe(true)
-    expect(isOfflinePhoto('https://images.openfoodfacts.org/images/products/123/456/789/12345.jpg')).toBe(true)
+describe('isPhotoPath', () => {
+  it('accepts a path made by newPhotoPath', () => {
+    expect(isPhotoPath(newPhotoPath(H))).toBe(true)
   })
 
-  it('returns false for null/undefined', () => {
-    expect(isOfflinePhoto(null as unknown as string)).toBe(false)
-    expect(isOfflinePhoto(undefined as unknown as string)).toBe(false)
+  it('rejects web addresses, empty values and other shapes', () => {
+    expect(isPhotoPath('https://images.openfoodfacts.org/images/products/123/front.jpg')).toBe(false)
+    expect(isPhotoPath(null)).toBe(false)
+    expect(isPhotoPath(undefined)).toBe(false)
+    expect(isPhotoPath('')).toBe(false)
+    expect(isPhotoPath(`${H}/../${ID}.jpg`)).toBe(false)
+    expect(isPhotoPath(`${ID}.jpg`)).toBe(false)
+  })
+})
+
+describe('shrunkSize', () => {
+  it('shrinks a large landscape photo to 1200 px wide', () => {
+    expect(shrunkSize(4032, 3024)).toEqual({ width: 1200, height: 900 })
   })
 
-  it('returns false for other URLs', () => {
-    expect(isOfflinePhoto('https://example.com/photo.jpg')).toBe(false)
-    expect(isOfflinePhoto('household-1/food-2.jpg')).toBe(false)
+  it('shrinks a large portrait photo to 1200 px tall', () => {
+    expect(shrunkSize(3024, 4032)).toEqual({ width: 900, height: 1200 })
+  })
+
+  it('never makes a small photo bigger', () => {
+    expect(shrunkSize(800, 600)).toEqual({ width: 800, height: 600 })
   })
 })

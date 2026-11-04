@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { FoodResult } from './types'
-import { matchesQuery, householdMatches, withoutHousehold } from './householdFoods'
+import { matchesQuery, householdMatches, withoutHousehold, withSavedPhotos } from './householdFoods'
 
 function food(
   name: string,
@@ -64,5 +64,26 @@ describe('householdMatches', () => {
 describe('withoutHousehold', () => {
   it('removes foods that have the same foodKey', () => {
     expect(withoutHousehold([food('A', null, '1'), food('B', null, '2')], [food('A', null, '1')]).map(f => f.name)).toEqual(['B'])
+  })
+})
+
+describe('withSavedPhotos', () => {
+  const P = '11111111-2222-3333-4444-555555555555/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg'
+
+  it('gives a search result the photo of the same saved food', () => {
+    const saved = { ...food('Banana, raw', null, '173944'), photoUrl: P }
+    const [banana, apple] = withSavedPhotos([food('Banana, raw', null, '173944'), food('Apple', null, '1')], [saved])
+    expect(banana.photoUrl).toBe(P)
+    expect(apple.photoUrl).toBeUndefined()
+  })
+
+  it('leaves results alone when no saved food has a photo', () => {
+    const results = [food('Banana, raw', null, '173944')]
+    expect(withSavedPhotos(results, [food('Banana, raw', null, '173944')])).toBe(results)
+  })
+
+  it('matches on source and id, not name', () => {
+    const saved = { ...food('Banana, raw', null, '999'), photoUrl: P }
+    expect(withSavedPhotos([food('Banana, raw', null, '173944')], [saved])[0].photoUrl).toBeUndefined()
   })
 })

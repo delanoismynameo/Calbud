@@ -10,6 +10,9 @@ import { scaleExtras, type Extras, type ExtraKey } from '../food/extras'
 import { applyLabelEdit } from '../food/labelEdit'
 import { servingLine } from '../food/label'
 import type { EditKey } from '../food/labelEdit'
+import PhotoField from '../food/PhotoField'
+import { setFoodPhoto, deletePhotoIfUnused } from '../food/storage'
+import { useProfile } from '../household/useProfile'
 
 // Create a virtual FoodResult from a MealLog for use with NutritionLabel
 // The virtual food has per-100g values computed from the log's per-log values
@@ -66,6 +69,8 @@ export default function EditMealLog({ log, onClose }: {
   const [mealType, setMealType] = useState<MealType>(log.meal_type)
   const [deleteStep, setDeleteStep] = useState(0)
   const [virtualFood, setVirtualFood] = useState<FoodResult>(() => logToVirtualFood(log))
+  const [photo, setPhoto] = useState<string | null>(log.photo_url ?? null)
+  const { profile } = useProfile()
 
   const n = Number(grams)
   const isValid = Number.isFinite(n) && n > 0 && n <= 5000
@@ -98,7 +103,26 @@ export default function EditMealLog({ log, onClose }: {
     },
   })
 
-  const anyPending = saveMutation.isPending || deleteMutation.isPending
+  // The photo is saved on the food right away (not with Save), so every log of this food shows it.
+  const photoMutation = useMutation({
+    mutationFn: async (path: string | null) => {
+      if (!log.food_id) throw new Error("This entry isn't linked to a saved food, so it can't have a photo.")
+      try {
+        await setFoodPhoto(log.food_id, path, photo)
+      } catch (err) {
+        if (path) await deletePhotoIfUnused(path)
+        throw err
+      }
+      return path
+    },
+    onSuccess: async (path) => {
+      setPhoto(path)
+      await Promise.all(['meal-logs', 'recent-foods', 'favorite-foods', 'custom-foods', 'household-foods', 'meal-prep']
+        .map((key) => queryClient.invalidateQueries({ queryKey: [key] })))
+    },
+  })
+
+  const anyPending = saveMutation.isPending || deleteMutation.isPending || photoMutation.isPending
 
   // Handle nutrition label edits
   const handleEdit = (key: EditKey, value: number) => {
@@ -136,6 +160,15 @@ export default function EditMealLog({ log, onClose }: {
 
   return (
     <div className="bg-card rounded-3xl shadow-card p-4 border border-line space-y-4">
+      {log.food_id && (
+        <div>
+          <PhotoField label="Photo" hint="Add your own photo of this food" path={photo} householdId={profile?.household_id}
+            onChange={(path) => photoMutation.mutate(path)} disabled={anyPending} />
+          {photoMutation.isPending && <p className="text-muted text-xs mt-1">Saving photo…</p>}
+          {photoMutation.isError && <p className="text-danger text-sm mt-1">{photoMutation.error.message}</p>}
+        </div>
+      )}
+
       {/* Nutrition Facts Label */}
       {isValid && nutrition && (
         <NutritionLabel

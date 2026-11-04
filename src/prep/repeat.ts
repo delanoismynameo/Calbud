@@ -15,6 +15,7 @@ export function repeatPrepRows(lastWeek: MealPrep[], thisWeek: MealPrep[]): (Pre
       duration_min: s.duration_min,
       servings: s.servings,
       recipe_url: s.recipe_url,
+      photo_url: s.photo_url ?? null,
       ingredients: s.ingredients,
       notes: s.notes,
       food_id: s.food_id,

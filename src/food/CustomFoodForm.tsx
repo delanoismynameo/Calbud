@@ -14,6 +14,8 @@ import { builtLabel } from './builtLabel'
 import { recipeFood, recipeError } from './recipe'
 import RecipeBuilder from './RecipeBuilder'
 import type { Recipe } from './types'
+import PhotoField from './PhotoField'
+import { deletePhotoIfUnused } from './storage'
 
 const modeToggle = (active: boolean) => active
   ? 'flex-1 rounded-xl bg-card text-ink shadow-card font-bold py-2'
@@ -37,6 +39,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
   const [recipe, setRecipe] = useState<Recipe>({ ingredients: [], yield: { kind: 'servings', servings: 1 } })
   const [recipeErr, setRecipeErr] = useState<string>('')
   const [unit, setUnit] = useState<'g' | 'ml'>('g')
+  const [photo, setPhoto] = useState<string | null>(null)
   const { profile } = useProfile()
   const householdId = profile?.household_id
 
@@ -73,7 +76,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
         setRecipeErr(err)
         return
       }
-      const food = recipeFood(recipe, input.name, crypto.randomUUID())
+      const food = { ...recipeFood(recipe, input.name, crypto.randomUUID()), photoUrl: photo }
       if (!householdId) { setSaveError('Join or create a household first.'); return }
       setSaving(true)
       const { error } = await supabase.from('foods').insert(foodRow(food, householdId))
@@ -89,7 +92,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
     setErrors(result.ok ? {} : result.errors)
     setExtraErrors(extras && !extras.ok ? extras.errors : {})
     if (!result.ok || !extras?.ok) return
-    const food = { ...result.food, extras100g: extras.extras100g }
+    const food = { ...result.food, extras100g: extras.extras100g, photoUrl: photo }
     if (!householdId) { setSaveError('Join or create a household first.'); return }
     setSaving(true)
     // Supabase reports failures in `error`; it doesn't throw.
@@ -124,6 +127,9 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
           className={fieldClass} />
         {errors.name && <p className="text-danger text-xs">{errors.name}</p>}
       </div>
+
+      <PhotoField label="Photo" hint="Optional: take or choose a photo" path={photo} householdId={householdId}
+        onChange={(path) => { void deletePhotoIfUnused(photo); setPhoto(path) }} disabled={saving} />
 
       {mode === 'numbers' && (
         <>
@@ -213,7 +219,7 @@ export default function CustomFoodForm({ onSaved, onCancel }: CustomFoodFormProp
           className="w-full py-3 bg-coral-deep hover:bg-coral-deeper disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl text-white font-bold">
           {saving ? 'Saving…' : 'Save'}
         </button>
-        <button type="button" onClick={onCancel} disabled={saving}
+        <button type="button" onClick={() => { void deletePhotoIfUnused(photo); onCancel() }} disabled={saving}
           className="w-full py-3 bg-coral-light hover:bg-coral-deep/10 text-link rounded-2xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
           Cancel
         </button>

@@ -10,7 +10,8 @@ export interface Recipe {
   ingredients: Ingredient[]
   notes: string | null
   recipeUrl: string | null
-  photoUrl: string | null   // optional recipe photo
+  recipePhoto: string | null  // storage path of a photo of the recipe (cookbook page, card), newest session first
+  dishPhoto: string | null    // storage path of the finished dish's photo (on its dish food), newest session first
 }
 
 /** Compare by (scheduled_date, created_at) for ordering. */
@@ -28,7 +29,8 @@ export function recipesFrom(preps: MealPrep[]): Recipe[] {
     ingredients: Ingredient[]
     notes: string | null
     recipeUrl: string | null
-    photoUrl: string | null
+    recipePhoto: string | null
+    dishPhoto: string | null
     newestKey: [string, number]
   }
 
@@ -41,7 +43,7 @@ export function recipesFrom(preps: MealPrep[]): Recipe[] {
 
     let g = groups.get(key)
     if (!g) {
-      g = { sessions: 0, made: 0, lastDate: '', title: '', servings: 0, ingredients: [], notes: null, recipeUrl: null, photoUrl: null, newestKey: ['', 0] }
+      g = { sessions: 0, made: 0, lastDate: '', title: '', servings: 0, ingredients: [], notes: null, recipeUrl: null, recipePhoto: null, dishPhoto: null, newestKey: ['', 0] }
       groups.set(key, g)
     }
 
@@ -66,12 +68,13 @@ export function recipesFrom(preps: MealPrep[]): Recipe[] {
       if (prep.recipe_url != null) {
         g.recipeUrl = prep.recipe_url
       }
-      if (prep.photo_url != null) {
-        g.photoUrl = prep.photo_url
-      }
-    } else if (prep.recipe_url != null && g.recipeUrl == null) {
-      // First non-null url encountered from an older session
-      g.recipeUrl = prep.recipe_url
+      if (prep.photo_url != null) g.recipePhoto = prep.photo_url
+      if (prep.foods?.photo_url != null) g.dishPhoto = prep.foods.photo_url
+    } else {
+      // Older sessions fill in what the newest one doesn't have.
+      if (prep.recipe_url != null && g.recipeUrl == null) g.recipeUrl = prep.recipe_url
+      if (prep.photo_url != null && g.recipePhoto == null) g.recipePhoto = prep.photo_url
+      if (prep.foods?.photo_url != null && g.dishPhoto == null) g.dishPhoto = prep.foods.photo_url
     }
   }
 
@@ -88,7 +91,8 @@ export function recipesFrom(preps: MealPrep[]): Recipe[] {
       ingredients: g.ingredients,
       notes: g.notes,
       recipeUrl: g.recipeUrl,
-      photoUrl: g.photoUrl,
+      recipePhoto: g.recipePhoto,
+      dishPhoto: g.dishPhoto,
     })
   }
 

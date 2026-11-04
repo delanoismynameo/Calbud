@@ -53,7 +53,8 @@ export function foodRow(food: FoodResult, householdId: string): FoodRow {
     ...(food.source === 'custom' && food.barcode ? { barcode: food.barcode } : {}),
     ...(shouldSendUnit ? { unit: food.unit } : {}),
     ...(food.imageUrl ? { image_url: food.imageUrl } : {}),
-    ...(food.photoUrl ? { photo_url: food.photoUrl } : {}),
+    // Sent only when the caller set it (a string, or null to clear), so re-logging a food never clears its photo.
+    ...(food.photoUrl !== undefined ? { photo_url: food.photoUrl } : {}),
   }
 }
 

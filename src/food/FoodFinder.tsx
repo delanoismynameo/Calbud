@@ -4,7 +4,7 @@ import { useRecentFoods } from './useRecentFoods'
 import { useFavoriteFoods } from './useFavoriteFoods'
 import { withoutFavorites } from './favorites'
 import { useHouseholdFoods } from './useHouseholdFoods'
-import { householdMatches, matchesQuery, withoutHousehold } from './householdFoods'
+import { householdMatches, matchesQuery, withoutHousehold, withSavedPhotos } from './householdFoods'
 import BarcodeScanner from './BarcodeScanner'
 import { normalizeBarcode } from './barcode'
 import { lookupBarcode } from './off'
@@ -41,14 +41,14 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   const yours = tooShort ? []
     : brandOn ? householdList.filter((f) => matchesBrand(brand, f) && (query.trim() === '' || matchesQuery(f, query))).slice(0, 8)
     : householdMatches(householdList, query)
-  const usdaResults = withoutHousehold(results, yours)
+  const usdaResults = withSavedPhotos(withoutHousehold(results, yours), householdList)
   const favoriteList = favorites.data ?? []
   // A favorite is listed once, under Favorites.
   const recentList = withoutFavorites(recents.data ?? [], favoriteList)
   const quickPick = (food: FoodResult) => (
     <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
       className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
-      <FoodImage imageUrl={food.photoUrl ?? food.imageUrl} alt={food.name} />
+      <FoodImage imageUrl={food.imageUrl} photoPath={food.photoUrl} alt={food.name} />
       <div className="flex-1">
         <span className="font-bold text-ink">{food.name}</span>
         {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
@@ -182,7 +182,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
               {usdaResults.map((food) => (
                 <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
                   className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
-                  <FoodImage imageUrl={food.photoUrl ?? food.imageUrl} alt={food.name} />
+                  <FoodImage imageUrl={food.imageUrl} photoPath={food.photoUrl} alt={food.name} />
                   <div className="flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-ink">{food.name}</span>

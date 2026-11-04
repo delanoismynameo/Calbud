@@ -16,7 +16,7 @@ describe('repeatPrepRows', () => {
     const result = repeatPrepRows([prep()], [])
     expect(result).toEqual([{
       title: 'Curry', scheduled_date: '2026-03-08', start_time: '17:00:00',
-      duration_min: 60, servings: 4, recipe_url: null,
+      duration_min: 60, servings: 4, recipe_url: null, photo_url: null,
       ingredients: [{ name: 'rice', qty: 2, unit: 'cup' }], notes: null, food_id: 'f1',
     }])
   })
@@ -41,5 +41,10 @@ describe('repeatPrepRows', () => {
   it("test 8: month boundary — 2026-02-27 becomes 2026-03-06", () => {
     const result = repeatPrepRows([prep({ scheduled_date: '2026-02-27' })], [])
     expect(result[0].scheduled_date).toBe('2026-03-06')
+  })
+
+  it('keeps the recipe photo, so the repeated session shows it too', () => {
+    const path = '11111111-2222-3333-4444-555555555555/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg'
+    expect(repeatPrepRows([prep({ photo_url: path })], [])[0].photo_url).toBe(path)
   })
 })

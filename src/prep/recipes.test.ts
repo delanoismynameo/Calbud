@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import type { MealPrep } from './types'
 import { recipesFrom } from './recipes'
+import type { FoodRowFromDb } from '../food/recents'
+
+const dishFood = (photo_url: string | null): FoodRowFromDb => ({
+  id: 'food-1', household_id: 'house-1', source: 'custom', source_id: 'dish-1', name: 'Curry', brand: null,
+  serving_g: 350, serving_label: '1 serving', kcal_100g: 150, protein_100g: 8, carbs_100g: 16, fat_100g: 6,
+  fiber_100g: null, sugar_100g: null, sodium_mg_100g: null, is_favorite: false, photo_url,
+})
 
 function h(partial: Partial<MealPrep>): MealPrep {
   return {
@@ -19,6 +26,7 @@ function h(partial: Partial<MealPrep>): MealPrep {
     created_at: partial.created_at ?? '2026-01-01T00:00:00Z',
     food_id: partial.food_id ?? null,
     foods: partial.foods ?? null,
+    photo_url: partial.photo_url ?? null,
   }
 }
 
@@ -104,5 +112,20 @@ describe('recipesFrom', () => {
       h({ title: ' curry ', scheduled_date: '2026-01-02', notes: 'old note' }),
     ])
     expect(result[0].notes).toBe('new note')
+  })
+
+  it('takes the recipe and dish photos from the newest session, and older ones fill in what it lacks', () => {
+    const [r] = recipesFrom([
+      h({ id: 'a', title: 'Curry', scheduled_date: '2026-01-01', photo_url: 'old-recipe', foods: dishFood('old-dish') }),
+      h({ id: 'b', title: 'Curry', scheduled_date: '2026-01-08', photo_url: 'new-recipe', foods: dishFood(null) }),
+    ])
+    expect(r.recipePhoto).toBe('new-recipe')
+    expect(r.dishPhoto).toBe('old-dish')
+  })
+
+  it('has no photos when no session has one', () => {
+    const [r] = recipesFrom([h({ title: 'Curry' })])
+    expect(r.recipePhoto).toBeNull()
+    expect(r.dishPhoto).toBeNull()
   })
 })

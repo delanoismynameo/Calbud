@@ -22,7 +22,7 @@ export interface FoodResult {
   crossCheck?: string   // a warning when another source disagrees with this one (set when scanning a barcode)
   recipe?: Recipe   // set on a food built from ingredients
   imageUrl?: string | null   // front-of-package photo from Open Food Facts (null if no image)
-  photoUrl?: string | null   // household's photo for custom foods (signed URL or storage path)
+  photoUrl?: string | null   // the household's own photo: a storage path (see storage.ts), shown before imageUrl
 }
 
 // One ingredient of a built food: a snapshot of the food as picked (per-100 g values, without its own recipe),

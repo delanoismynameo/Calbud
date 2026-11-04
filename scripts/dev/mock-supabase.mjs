@@ -15,6 +15,24 @@ profiles[PARTNER] = { ...profiles[ME], id: PARTNER, display_name: 'Bob', color: 
 const foods = []
 const mealLogs = []
 const waterLogs = []
+const photos = new Map() // task 81: storage path -> { bytes, type }
+// supabase-js uploads a Blob as multipart form data; take the file part out of it (or the raw body otherwise).
+const uploadedFile = (raw, contentType) => {
+  const boundary = contentType.match(/boundary=(.+)$/)?.[1]
+  if (!boundary) return { bytes: raw, type: contentType || 'image/jpeg' }
+  const sep = Buffer.from('--' + boundary)
+  let at = raw.indexOf(sep)
+  while (at >= 0) {
+    const next = raw.indexOf(sep, at + sep.length)
+    const part = raw.subarray(at + sep.length, next < 0 ? raw.length : next)
+    const headEnd = part.indexOf('\r\n\r\n')
+    const head = part.subarray(0, headEnd).toString()
+    const type = head.match(/content-type:\s*([^\r\n]+)/i)?.[1]
+    if (headEnd >= 0 && type && type.startsWith('image/')) return { bytes: part.subarray(headEnd + 4, part.length - 2), type }
+    at = next
+  }
+  return { bytes: raw, type: 'image/jpeg' }
+}
 const mealPrep = []
 const menuSlots = []
 const groceryExtras = []
@@ -87,7 +105,7 @@ if (process.argv.includes('--with-logs')) {
 const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'goal_water_oz', 'timezone', 'reminder_time']
 const code8 = () => Math.random().toString(16).slice(2, 10)
 
-const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Expose-Headers': '*' }
+const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,HEAD,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Expose-Headers': '*' }
 const send = (res, status, body) => { res.writeHead(status, { ...cors, 'Content-Type': 'application/json' }); res.end(body === undefined ? '' : JSON.stringify(body)) }
 const pgErr = (res, message, status = 400) => send(res, status, { code: 'P0001', message, details: null, hint: null })
 
@@ -107,9 +125,11 @@ const sortBy = (rows, order) => rows.sort((a, b) => {
 })
 
 http.createServer((req, res) => {
-  let body = ''
-  req.on('data', (c) => (body += c))
+  const chunks = []
+  req.on('data', (c) => chunks.push(c))
   req.on('end', () => {
+    const raw = Buffer.concat(chunks)
+    const body = (req.headers['content-type'] || '').startsWith('image/') ? '' : raw.toString()
     const url = new URL(req.url, 'http://x')
     console.log(req.method, url.pathname + url.search, body)
     if (req.method === 'OPTIONS') return send(res, 204)
@@ -130,6 +150,20 @@ http.createServer((req, res) => {
       }
       if (single) return rows.length === 1 ? send(res, 200, rows[0]) : send(res, 406, { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned', details: `The result contains ${rows.length} rows`, hint: null })
       return send(res, 200, rows)
+    }
+    // Counts (select with head: true), used to check whether a photo is still in use before deleting it.
+    if (req.method === 'HEAD' && ['/rest/v1/foods', '/rest/v1/meal_prep'].includes(url.pathname)) {
+      const store = url.pathname.endsWith('foods') ? foods : mealPrep
+      const n = store.filter((r) => r.household_id === profiles[ME].household_id && match(r, filters(url))).length
+      res.writeHead(200, { ...cors, 'Content-Range': `*/${n}` })
+      return res.end()
+    }
+    // foods update (a food's photo, from Today): your household's foods only.
+    if (url.pathname === '/rest/v1/foods' && req.method === 'PATCH') {
+      const hit = foods.filter((f) => f.household_id === profiles[ME].household_id && match(f, filters(url)))
+      const patch = JSON.parse(body || '{}')
+      hit.forEach((f) => Object.assign(f, patch))
+      return send(res, 200, hit.map((f) => ({ id: f.id })))
     }
     // foods read: your household's only, with eq/neq filters and order=name.
     if (url.pathname === '/rest/v1/foods' && req.method === 'GET') {
@@ -292,7 +326,7 @@ http.createServer((req, res) => {
       if (req.method === 'DELETE') hit.forEach((r) => activities.splice(activities.indexOf(r), 1))
       return send(res, 200, hit.map((r) => ({ id: r.id })))
     }
-    if (url.pathname === '/__state') return send(res, 200, { foods, mealLogs, waterLogs, mealPrep, menuSlots, groceryExtras, groceryTicks, activities })
+    if (url.pathname === '/__state') return send(res, 200, { photos: [...photos.keys()], foods, mealLogs, waterLogs, mealPrep, menuSlots, groceryExtras, groceryTicks, activities })
     if (url.pathname === '/rest/v1/rpc/create_household') {
       if (profiles[ME].household_id) return pgErr(res, 'create_household: you are already in a household')
       const id = randomUUID()
@@ -316,44 +350,33 @@ http.createServer((req, res) => {
     }
     if (url.pathname === '/__reset') { profiles[ME].household_id = null; return send(res, 200, { ok: true }) }
 
-    // Storage endpoints for photo uploads
-    if (url.pathname.startsWith('/storage/v1/object/')) {
-      const storageMatch = url.pathname.match(/^\/storage\/v1\/object\/(?:sign\/)?household_photos\/(.+)$/)
-      if (storageMatch) {
-        const filePath = storageMatch[1]
-        
-        // GET - download/get signed URL
-        if (req.method === 'GET') {
-          // For signed URLs, return a mock signed URL
-          // The actual signed URL would be used by the client to download the file
-          return send(res, 200, {})
-        }
-        
-        // POST - upload file
-        if (req.method === 'POST') {
-          // Store the file in memory (in production this would be persisted)
-          // For demo purposes, we just acknowledge the upload
-          return send(res, 200, {})
-        }
-        
-        // DELETE - delete file
-        if (req.method === 'DELETE') {
-          return send(res, 200, {})
-        }
+    // Storage (task 81): the private household_photos bucket, files kept in memory. Uploads must go in your
+    // household's folder; signed links are served from here.
+    const obj = url.pathname.match(/^\/storage\/v1\/object\/(sign\/)?household_photos\/(.+)$/)
+    if (obj) {
+      const [, sign, path] = obj
+      const name = decodeURIComponent(path)
+      const mine = profiles[ME].household_id
+      if (!sign && req.method === 'POST') {
+        if (!mine || name.split('/')[0] !== mine) return send(res, 403, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' })
+        photos.set(name, uploadedFile(raw, req.headers['content-type'] || ''))
+        return send(res, 200, { Key: 'household_photos/' + name, Id: randomUUID() })
       }
-      
-      // createSignedUrl endpoint
-      if (url.pathname.startsWith('/storage/v1/object/sign/household_photos/')) {
-        if (req.method === 'GET') {
-          const pathMatch = url.pathname.match(/^\/storage\/v1\/object\/sign\/household_photos\/(.+)$/)
-          if (pathMatch) {
-            const filePath = pathMatch[1]
-            // Return a mock signed URL
-            const signedUrl = `http://localhost:54321/storage/v1/object/sign/household_photos/${filePath}?expires=60&token=mock`
-            return send(res, 200, { signedUrl })
-          }
-        }
+      if (sign && req.method === 'POST') {
+        if (!photos.has(name) || name.split('/')[0] !== mine) return send(res, 400, { statusCode: '404', error: 'not_found', message: 'Object not found' })
+        return send(res, 200, { signedURL: '/object/sign/household_photos/' + name + '?token=mock' })
       }
+      if (sign && req.method === 'GET') {
+        const file = photos.get(name)
+        if (!file) return send(res, 400, { statusCode: '404', error: 'not_found', message: 'Object not found' })
+        res.writeHead(200, { ...cors, 'Content-Type': file.type })
+        return res.end(file.bytes)
+      }
+    }
+    if (url.pathname === '/storage/v1/object/household_photos' && req.method === 'DELETE') {
+      const mine = profiles[ME].household_id
+      const gone = (JSON.parse(body || '{}').prefixes ?? []).filter((n) => n.split('/')[0] === mine && photos.delete(n))
+      return send(res, 200, gone.map((n) => ({ name: n })))
     }
 
     send(res, 404, { message: 'not mocked: ' + url.pathname })
