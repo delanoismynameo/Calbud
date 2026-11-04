@@ -22,9 +22,10 @@ export interface MealPrep {
   created_at: string        // timestamptz as ISO string
   food_id: string | null
   foods: FoodRowFromDb | null
+  photo_url?: string | null  // optional recipe photo
 }
 
 export type PrepFields = Pick<
   MealPrep,
-  'title' | 'scheduled_date' | 'start_time' | 'duration_min' | 'servings' | 'recipe_url' | 'ingredients' | 'notes'
+  'title' | 'scheduled_date' | 'start_time' | 'duration_min' | 'servings' | 'recipe_url' | 'ingredients' | 'notes' | 'photo_url'
 >

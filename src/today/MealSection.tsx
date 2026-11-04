@@ -20,8 +20,10 @@ const MEAL_LABELS: Record<MealType, string> = {
 }
 
 // The food's photo when it has one, otherwise the meal's icon tile.
-function Thumb({ meal, imageUrl, name }: { meal: MealType; imageUrl?: string | null; name: string }) {
-  if (imageUrl) return <FoodImage imageUrl={imageUrl} alt={name} />
+function Thumb({ meal, imageUrl, photoUrl, name }: { meal: MealType; imageUrl?: string | null; photoUrl?: string | null; name: string }) {
+  // Use photoUrl (household photo) if available, otherwise use imageUrl (offline image)
+  const displayUrl = photoUrl ?? imageUrl ?? null
+  if (displayUrl) return <FoodImage imageUrl={displayUrl} alt={name} />
   return (
     <div aria-hidden className="h-14 w-14 shrink-0 rounded-2xl bg-coral-light flex items-center justify-center text-2xl">
       {MEAL_ICONS[meal]}
@@ -60,7 +62,7 @@ export default function MealSection({ meal, logs, emptyAddHref, readOnly = false
         logs.map((log) =>
           readOnly ? (
             <div key={log.id} className="w-full text-left bg-card rounded-3xl shadow-card p-4 flex items-center gap-3.5">
-              <Thumb meal={meal} imageUrl={log.image_url} name={log.name} />
+              <Thumb meal={meal} imageUrl={log.image_url} photoUrl={log.photo_url} name={log.name} />
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-base text-ink truncate">{log.name}</p>
                 <p className="text-[13px] text-muted">{log.quantity_g} g</p>
@@ -76,7 +78,7 @@ export default function MealSection({ meal, logs, emptyAddHref, readOnly = false
                 onClick={() => setEditingId(log.id)}
                 className="w-full text-left bg-card rounded-3xl shadow-card p-4 flex items-center gap-3.5 hover:bg-coral-light"
               >
-                <Thumb meal={meal} imageUrl={log.image_url} name={log.name} />
+                <Thumb meal={meal} imageUrl={log.image_url} photoUrl={log.photo_url} name={log.name} />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-base text-ink truncate">{log.name}</p>
                   <p className="text-[13px] text-muted">{log.quantity_g} g</p>

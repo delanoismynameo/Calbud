@@ -48,7 +48,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   const quickPick = (food: FoodResult) => (
     <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
       className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
-      <FoodImage imageUrl={food.imageUrl} alt={food.name} />
+      <FoodImage imageUrl={food.photoUrl ?? food.imageUrl} alt={food.name} />
       <div className="flex-1">
         <span className="font-bold text-ink">{food.name}</span>
         {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
@@ -182,7 +182,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
               {usdaResults.map((food) => (
                 <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
                   className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
-                  <FoodImage imageUrl={food.imageUrl} alt={food.name} />
+                  <FoodImage imageUrl={food.photoUrl ?? food.imageUrl} alt={food.name} />
                   <div className="flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-ink">{food.name}</span>

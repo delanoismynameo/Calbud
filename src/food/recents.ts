@@ -24,6 +24,7 @@ export type FoodRowFromDb = {
   is_favorite: boolean
   unit?: 'g' | 'ml'  // nullable, defaults to 'g'
   image_url?: string | null  // nullable, defaults to null
+  photo_url?: string | null  // household photo for custom foods
 }
 
 export type RecentLogRow = { food_id: string | null; foods: FoodRowFromDb | null }
@@ -47,6 +48,7 @@ export function foodResultFromRow(row: FoodRowFromDb): FoodResult {
     sodiumMg100g: row.sodium_mg_100g != null ? Number(row.sodium_mg_100g) : null,
     extras100g: cleanExtras(row.extra_100g),
     imageUrl: row.image_url ?? undefined,
+    photoUrl: row.photo_url ?? undefined,
     ...withRecipe(cleanRecipe(row.recipe)),
   }
 }

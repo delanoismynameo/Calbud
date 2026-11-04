@@ -59,6 +59,11 @@ await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '202611030000
 // Water tracking migration
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000000_water.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000001_water_security.sql'), 'utf8'));
+// Photos migration: add photo_url columns (storage bucket is separate service, not testable in PGlite)
+await db.exec(`
+  alter table public.foods add column photo_url text;
+  alter table public.meal_prep add column photo_url text;
+`);
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:

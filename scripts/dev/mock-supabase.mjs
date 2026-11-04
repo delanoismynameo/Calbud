@@ -315,6 +315,47 @@ http.createServer((req, res) => {
       return send(res, 200, h.id)
     }
     if (url.pathname === '/__reset') { profiles[ME].household_id = null; return send(res, 200, { ok: true }) }
+
+    // Storage endpoints for photo uploads
+    if (url.pathname.startsWith('/storage/v1/object/')) {
+      const storageMatch = url.pathname.match(/^\/storage\/v1\/object\/(?:sign\/)?household_photos\/(.+)$/)
+      if (storageMatch) {
+        const filePath = storageMatch[1]
+        
+        // GET - download/get signed URL
+        if (req.method === 'GET') {
+          // For signed URLs, return a mock signed URL
+          // The actual signed URL would be used by the client to download the file
+          return send(res, 200, {})
+        }
+        
+        // POST - upload file
+        if (req.method === 'POST') {
+          // Store the file in memory (in production this would be persisted)
+          // For demo purposes, we just acknowledge the upload
+          return send(res, 200, {})
+        }
+        
+        // DELETE - delete file
+        if (req.method === 'DELETE') {
+          return send(res, 200, {})
+        }
+      }
+      
+      // createSignedUrl endpoint
+      if (url.pathname.startsWith('/storage/v1/object/sign/household_photos/')) {
+        if (req.method === 'GET') {
+          const pathMatch = url.pathname.match(/^\/storage\/v1\/object\/sign\/household_photos\/(.+)$/)
+          if (pathMatch) {
+            const filePath = pathMatch[1]
+            // Return a mock signed URL
+            const signedUrl = `http://localhost:54321/storage/v1/object/sign/household_photos/${filePath}?expires=60&token=mock`
+            return send(res, 200, { signedUrl })
+          }
+        }
+      }
+    }
+
     send(res, 404, { message: 'not mocked: ' + url.pathname })
   })
 }).listen(54321, '127.0.0.1', () => console.log('mock supabase on 54321'))

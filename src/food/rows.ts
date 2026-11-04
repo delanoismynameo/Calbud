@@ -23,6 +23,7 @@ type FoodRow = {
   recipe?: Recipe
   unit?: 'g' | 'ml'  // nullable, default 'g'
   image_url?: string | null  // nullable, default null
+  photo_url?: string | null  // household photo for custom foods
 }
 
 export function foodRow(food: FoodResult, householdId: string): FoodRow {
@@ -52,6 +53,7 @@ export function foodRow(food: FoodResult, householdId: string): FoodRow {
     ...(food.source === 'custom' && food.barcode ? { barcode: food.barcode } : {}),
     ...(shouldSendUnit ? { unit: food.unit } : {}),
     ...(food.imageUrl ? { image_url: food.imageUrl } : {}),
+    ...(food.photoUrl ? { photo_url: food.photoUrl } : {}),
   }
 }
 

@@ -18,4 +18,5 @@ export interface MealLog {
   extra?: Extras
   created_at: string
   image_url?: string | null  // front-of-package photo from Open Food Facts
+  photo_url?: string | null  // household photo for custom foods
 }
