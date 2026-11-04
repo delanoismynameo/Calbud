@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { normalizeOffProduct, lookupBarcode, offServingLabel } from './off'
+import { describe, it, expect, vi } from 'vitest'
+import { normalizeOffProduct, lookupBarcode, offServingLabel, searchOff, offBrandTag } from './off'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -304,5 +304,99 @@ describe('liquid detection from the package quantity', () => {
     await lookupBarcode('5449000000996', { fetchFn: f })
     expect(url).toContain('quantity')
     expect(url).toContain('product_quantity_unit')
+  })
+})
+
+describe('offBrandTag', () => {
+  it('converts brand to lowercase with dashes between words', () => {
+    expect(offBrandTag('Kirkland Signature')).toBe('kirkland-signature')
+    expect(offBrandTag('Trader Joe\'s')).toBe('trader-joe-s')
+    expect(offBrandTag('Great Value')).toBe('great-value')
+  })
+
+  it('handles punctuation and multiple spaces', () => {
+    expect(offBrandTag('Kirkland  Signature')).toBe('kirkland-signature')
+    expect(offBrandTag('Ben & Jerry\'s')).toBe('ben-jerry-s')
+  })
+
+  it('trims whitespace', () => {
+    expect(offBrandTag('  Kirkland Signature  ')).toBe('kirkland-signature')
+  })
+
+  it('returns empty string for empty input', () => {
+    expect(offBrandTag('')).toBe('')
+    expect(offBrandTag('   ')).toBe('')
+  })
+})
+
+describe('searchOff', () => {
+  it('returns empty array for empty query', async () => {
+    const mockFetch = vi.fn()
+    const results = await searchOff('', { fetchFn: mockFetch })
+    expect(results).toEqual([])
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
+  it('calls the edge function with correct parameters', async () => {
+    let capturedUrl: string | undefined
+    let capturedBody: string | undefined
+    const mockFetch = vi.fn(async (url: string, init?: RequestInit) => {
+      capturedUrl = String(url)
+      capturedBody = init?.body as string
+      const data = { hits: [], count: 0 }
+      return new Response(JSON.stringify(data), { status: 200 })
+    }) as unknown as typeof fetch
+
+    await searchOff('oatmeal', { fetchFn: mockFetch })
+
+    expect(capturedUrl).toContain('/functions/v1/off-search')
+    expect(capturedBody).toContain('oatmeal')
+  })
+
+  it('includes brand parameter when provided', async () => {
+    let capturedBody: string | undefined
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      capturedBody = init?.body as string
+      const data = { hits: [], count: 0 }
+      return new Response(JSON.stringify(data), { status: 200 })
+    }) as unknown as typeof fetch
+
+    await searchOff('milk', { fetchFn: mockFetch, brand: 'Kirkland Signature' })
+
+    expect(capturedBody).toContain('kirkland-signature')
+  })
+
+  it('normalizes OFF hits into FoodResults', async () => {
+    const offHit = {
+      code: '1234567890123',
+      product_name: 'Test Food',
+      brands: ['Test Brand'],
+      nutriments: { 'energy-kcal_100g': 100, proteins_100g: 5, carbohydrates_100g: 10, fat_100g: 2 },
+    }
+    const mockFetch = vi.fn(() => {
+      const data = { hits: [offHit], count: 1 }
+      return Promise.resolve(new Response(JSON.stringify(data), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    const results = await searchOff('test', { fetchFn: mockFetch })
+    expect(results.length).toBe(1)
+    expect(results[0].name).toBe('Test Food')
+    expect(results[0].brand).toBe('Test Brand')
+    expect(results[0].source).toBe('off')
+  })
+
+  it('throws error when fetch fails', async () => {
+    const mockFetch = vi.fn(() => Promise.resolve(new Response('Error', { status: 500 })))
+    await expect(searchOff('test', { fetchFn: mockFetch })).rejects.toThrow('Open Food Facts search failed')
+  })
+
+  it('handles empty hits array', async () => {
+    const mockFetch = vi.fn(() => {
+      const data = { hits: [], count: 0 }
+      return Promise.resolve(new Response(JSON.stringify(data), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    const results = await searchOff('test', { fetchFn: mockFetch })
+    expect(results).toEqual([])
   })
 })

@@ -24,6 +24,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   const brandInputRef = useRef<HTMLInputElement>(null)
   const [scanning, setScanning] = useState(false)
   const [lookingUp, setLookingUp] = useState(false)
+  const [pickLookingUp, setPickLookingUp] = useState(false)
   const [scanError, setScanError] = useState<string | null>(null)
   const [scanKey, setScanKey] = useState(0)
   const { results, errors, isSearching, settled, failed, tooShort, refetch } = useFoodSearch(query, brand)
@@ -45,8 +46,33 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   const favoriteList = favorites.data ?? []
   // A favorite is listed once, under Favorites.
   const recentList = withoutFavorites(recents.data ?? [], favoriteList)
+
+  // Handle picking a food, with serving lookup for OFF results without serving info
+  const handlePickFood = useCallback(async (food: FoodResult) => {
+    if (pickLookingUp) return
+
+    // If OFF food without serving info, look up the full product
+    if (food.source === 'off' && !food.servingG && food.barcode) {
+      setPickLookingUp(true)
+      try {
+        const fullFood = await lookupBarcode(food.barcode)
+        if (fullFood) {
+          onPick(fullFood)
+        } else {
+          onPick(food)
+        }
+      } catch {
+        onPick(food)
+      } finally {
+        setPickLookingUp(false)
+      }
+    } else {
+      onPick(food)
+    }
+  }, [pickLookingUp, onPick])
+
   const quickPick = (food: FoodResult) => (
-    <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
+    <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => handlePickFood(food)}
       className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
       <FoodImage imageUrl={food.imageUrl} photoPath={food.photoUrl} alt={food.name} />
       <div className="flex-1">
@@ -180,7 +206,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
           {!tooShort && !failed && usdaResults.length > 0 && (
             <div className="space-y-2 pb-4">
               {usdaResults.map((food) => (
-                <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => onPick(food)}
+                <button key={`${food.source}:${food.sourceId}`} type="button" onClick={() => handlePickFood(food)}
                   className="w-full bg-card rounded-3xl shadow-card p-4 text-left hover:bg-coral-light/50 active:bg-coral-light flex items-center gap-3">
                   <FoodImage imageUrl={food.imageUrl} photoPath={food.photoUrl} alt={food.name} />
                   <div className="flex-1">
@@ -208,6 +234,13 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
               )}
             </div>
           )}
+
+          {/* Attribution line */}
+          <p className="text-xs text-muted text-center py-2">
+            Food data from USDA and{' '}
+            <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener noreferrer"
+              className="underline text-link hover:text-ink">Open Food Facts</a>
+          </p>
         </>
       )}
     </div>

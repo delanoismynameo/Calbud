@@ -5,6 +5,10 @@ function makeUsdaResponse(foods: unknown[]) {
   return new Response(JSON.stringify({ foods }), { status: 200 })
 }
 
+function makeOffResponse(hits: unknown[]) {
+  return new Response(JSON.stringify({ hits, count: hits.length }), { status: 200 })
+}
+
 describe('searchFoods', () => {
   it('a 1-character query makes no fetch', async () => {
     const mockFetch = vi.fn(async () => new Response('', { status: 200 }))
@@ -14,7 +18,7 @@ describe('searchFoods', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('searchFoods makes exactly two fetches, both to api.nal.usda.gov with different dataType', async () => {
+  it('searchFoods makes three fetches: USDA generic, USDA branded, and OFF', async () => {
     let capturedUrls: string[] = []
     const mockFetch = vi.fn(async (url) => {
       capturedUrls.push(String(url))
@@ -23,11 +27,10 @@ describe('searchFoods', () => {
 
     await searchFoods('oatmeal', { fetchFn: mockFetch })
 
-    expect(capturedUrls.length).toBe(2)
-    for (const u of capturedUrls) {
-      expect(u).toContain('api.nal.usda.gov')
-      expect(u).not.toContain('openfoodfacts')
-    }
+    expect(capturedUrls.length).toBe(3)
+    expect(capturedUrls[0]).toContain('api.nal.usda.gov')
+    expect(capturedUrls[1]).toContain('api.nal.usda.gov')
+    expect(capturedUrls[2]).toContain('functions/v1/off-search')
   })
 
   it('generic results come before branded ones', async () => {
@@ -54,11 +57,13 @@ describe('searchFoods', () => {
       ],
     }
 
-    let callCount = 0
-    const mockFetch = vi.fn(async (_url: string) => {
-      callCount++
-      if (callCount === 1) return makeUsdaResponse([usdaGenericFood])
-      return makeUsdaResponse([usdaBrandedFood])
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body))
+      const isGeneric = body.dataType?.includes('Foundation') || body.dataType?.includes('SR Legacy')
+      const isBranded = body.dataType?.includes('Branded')
+      if (isGeneric) return makeUsdaResponse([usdaGenericFood])
+      if (isBranded) return makeUsdaResponse([usdaBrandedFood])
+      return makeOffResponse([])
     }) as unknown as typeof fetch
 
     const results = await searchFoods('food', { fetchFn: mockFetch })
@@ -81,11 +86,13 @@ describe('searchFoods', () => {
       ],
     }
 
-    let callCount = 0
     const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
-      callCount++
-      if (callCount === 1) return new Response('Server Error', { status: 500 })
-      return makeUsdaResponse([usdaBrandedFood])
+      const body = JSON.parse(String(init?.body))
+      const isGeneric = body.dataType?.includes('Foundation') || body.dataType?.includes('SR Legacy')
+      const isBranded = body.dataType?.includes('Branded')
+      if (isGeneric) return new Response('Server Error', { status: 500 })
+      if (isBranded) return makeUsdaResponse([usdaBrandedFood])
+      return makeOffResponse([])
     }) as unknown as typeof fetch
 
     const results = await searchFoods('oatmeal', { fetchFn: mockFetch })
@@ -107,10 +114,10 @@ describe('searchFoods', () => {
       ],
     }
 
-    let callCount = 0
     const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
-      callCount++
-      if (callCount === 1) return makeUsdaResponse([usdaGenericFood])
+      const body = JSON.parse(String(init?.body))
+      const isGeneric = body.dataType?.includes('Foundation') || body.dataType?.includes('SR Legacy')
+      if (isGeneric) return makeUsdaResponse([usdaGenericFood])
       return new Response('Server Error', { status: 500 })
     }) as unknown as typeof fetch
 
@@ -122,8 +129,11 @@ describe('searchFoods', () => {
   })
 
   it('both failing throws', async () => {
-    const mockFetch = vi.fn(async () => new Response('Server Error', { status: 500 })) as unknown as typeof fetch
-    await expect(searchFoods('oatmeal', { fetchFn: mockFetch })).rejects.toThrow()
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      return new Response('Server Error', { status: 500 })
+    }) as unknown as typeof fetch
+
+    await expect(searchFoods('oatmeal', { fetchFn: mockFetch })).rejects.toThrow('Basic foods:')
   })
 
   it('results are capped at 30', async () => {
@@ -149,11 +159,13 @@ describe('searchFoods', () => {
       ],
     }))
 
-    let callCount = 0
-    const mockFetch = vi.fn(async (_url: string) => {
-      callCount++
-      if (callCount === 1) return makeUsdaResponse(usdaFoods)
-      return makeUsdaResponse(brandedFoods)
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body))
+      const isGeneric = body.dataType?.includes('Foundation') || body.dataType?.includes('SR Legacy')
+      const isBranded = body.dataType?.includes('Branded')
+      if (isGeneric) return makeUsdaResponse(usdaFoods)
+      if (isBranded) return makeUsdaResponse(brandedFoods)
+      return makeOffResponse([])
     }) as unknown as typeof fetch
 
     const results = await searchFoods('food', { fetchFn: mockFetch })
@@ -185,11 +197,13 @@ describe('searchFoods', () => {
       ],
     }
 
-    let callCount = 0
-    const mockFetch = vi.fn(async (_url: string) => {
-      callCount++
-      if (callCount === 1) return makeUsdaResponse([usdaGenericFood])
-      return makeUsdaResponse([usdaBrandedFood])
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body))
+      const isGeneric = body.dataType?.includes('Foundation') || body.dataType?.includes('SR Legacy')
+      const isBranded = body.dataType?.includes('Branded')
+      if (isGeneric) return makeUsdaResponse([usdaGenericFood])
+      if (isBranded) return makeUsdaResponse([usdaBrandedFood])
+      return makeOffResponse([])
     }) as unknown as typeof fetch
 
     const results = await searchFoods('milk', { fetchFn: mockFetch })
@@ -220,16 +234,20 @@ describe('searchFoods', () => {
       ],
     }
 
-    let callCount = 0
     const capturedQueries: string[] = []
     const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
-      callCount++
       if (init?.body) {
         const body = JSON.parse(String(init.body))
         capturedQueries.push(body.query)
       }
-      if (callCount === 1) return makeUsdaResponse([usdaGenericFood])
-      return makeUsdaResponse([usdaBrandedFood])
+      const isGeneric = init && (init.body ? JSON.parse(String(init.body)).dataType?.includes('Foundation') : false)
+      // Check body differently since init comes in as a property
+      const body = init?.body ? JSON.parse(String(init.body)) : null
+      const isGenericQuery = body?.dataType?.includes('Foundation') || body?.dataType?.includes('SR Legacy')
+      const isBrandedQuery = body?.dataType?.includes('Branded')
+      if (isGenericQuery) return makeUsdaResponse([usdaGenericFood])
+      if (isBrandedQuery) return makeUsdaResponse([usdaBrandedFood])
+      return makeOffResponse([])
     }) as unknown as typeof fetch
 
     await searchFoods('Steamed vegetables', { fetchFn: mockFetch })
@@ -273,11 +291,13 @@ describe('searchFoods', () => {
       ],
     }
 
-    let callCount = 0
-    const mockFetch = vi.fn(async (_url: string) => {
-      callCount++
-      if (callCount === 1) return makeUsdaResponse([usdaGenericFood, usdaGenericFood2])
-      return makeUsdaResponse([usdaBrandedFood])
+    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : null
+      const isGeneric = body?.dataType?.includes('Foundation') || body?.dataType?.includes('SR Legacy')
+      const isBranded = body?.dataType?.includes('Branded')
+      if (isGeneric) return makeUsdaResponse([usdaGenericFood, usdaGenericFood2])
+      if (isBranded) return makeUsdaResponse([usdaBrandedFood])
+      return makeOffResponse([])
     }) as unknown as typeof fetch
 
     const results = await searchFoods('steamed vegetables', { fetchFn: mockFetch })
@@ -305,19 +325,23 @@ describe('searchFoods with a brand', () => {
   function capture(foods: unknown[]) {
     const bodies: Record<string, unknown>[] = []
     const fetchFn = vi.fn(async (_url: string, init?: RequestInit) => {
-      bodies.push(JSON.parse(String(init?.body)))
+      if (init?.body) {
+        bodies.push(JSON.parse(String(init?.body)))
+      }
       return makeUsdaResponse(foods)
     }) as unknown as typeof fetch
     return { bodies, fetchFn }
   }
 
-  it('makes one packaged-food search with the brand words required, and no brandOwner filter', async () => {
+  it('makes two packaged-food searches: OFF and USDA branded', async () => {
     const { bodies, fetchFn } = capture([])
     await searchFoods('greek yogurt', { fetchFn, brand: 'Kirkland Signature' })
-    expect(bodies).toHaveLength(1)
-    expect(bodies[0].dataType).toEqual(['Branded'])
-    expect(bodies[0].query).toBe('+kirkland +signature greek yogurt')
-    expect(bodies[0]).not.toHaveProperty('brandOwner')
+    // Two searches: OFF and USDA branded
+    expect(bodies).toHaveLength(2)
+    expect(bodies[0]).not.toHaveProperty('dataType') // OFF doesn't have dataType
+    expect(bodies[1].dataType).toEqual(['Branded'])
+    expect(bodies[1].query).toBe('+kirkland +signature greek yogurt')
+    expect(bodies[1]).not.toHaveProperty('brandOwner')
   })
 
   it('keeps only foods of that brand', async () => {
@@ -326,14 +350,16 @@ describe('searchFoods with a brand', () => {
     expect(results.map((r) => r.brand)).toEqual(['Chobani'])
   })
 
-  it('a brand alone lists that brand’s foods', async () => {
+  it('a brand alone lists that brand\'s foods', async () => {
     const { bodies, fetchFn } = capture([food(1, 'Ultra-Filtered Milk', 'fairlife')])
     const { results } = await searchFoods('', { fetchFn, brand: 'fairlife' })
-    expect(bodies[0].query).toBe('+fairlife')
+    // OFF search sends q and brand in the body
+    expect(bodies[0].q).toBe('fairlife')
+    expect(bodies[0].brand).toBe('fairlife')
     expect(results).toHaveLength(1)
   })
 
-  it('a failed brand search throws', async () => {
+  it('a failed brand search throws when both sources fail', async () => {
     const fetchFn = vi.fn(async () => new Response('', { status: 500 })) as unknown as typeof fetch
     await expect(searchFoods('milk', { fetchFn, brand: 'fairlife' })).rejects.toThrow('Packaged foods')
   })
@@ -341,6 +367,7 @@ describe('searchFoods with a brand', () => {
   it('a 1-letter brand is ignored, so the search runs as usual', async () => {
     const { bodies, fetchFn } = capture([])
     await searchFoods('oatmeal', { fetchFn, brand: 'q' })
-    expect(bodies).toHaveLength(2)
+    // Now it runs as a normal search with 3 fetches
+    expect(bodies).toHaveLength(3)
   })
 })

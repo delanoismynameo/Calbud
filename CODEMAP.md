@@ -86,7 +86,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `logFood.ts`: logFood
 - `nativeBarcode.ts` (tested): browserDetector, startNativeReader, fallbackDetector; types: NativeDetector, DetectorClass. _Chrome on Android has the phone's own barcode reader (BarcodeDetector). It reads small codes, like an 8-digit gum barcode, that the zxing…_
 - `nutrition.ts` (tested): scaleNutrition
-- `off.ts` (tested): offServingLabel, normalizeOffProduct, lookupBarcode
+- `off.ts` (tested): offServingLabel, normalizeOffProduct, offBrandTag, searchOff, lookupBarcode
 - `rank.ts` (tested): COOKING_WORDS, words, splitQuery, matchScore, rankResults
 - `recents.ts` (tested): foodResultFromRow, recentFoods; types: FoodRowFromDb, RecentLogRow
 - `recipe.ts` (tested): ingredientGrams, recipeTotals, recipeError, recipeFood, cleanRecipe; types: RecipeTotals
