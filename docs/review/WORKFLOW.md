@@ -157,6 +157,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 80 | Water in fl oz | Laguna XS 2.1 (High), web UI, Full access | DB half close (missing anon revoke, no limits); card blocked adding on past days, undo only on past days and lost on reload, non-theme colors. Card rewritten, partner view reuses it, tests added. 22 min |
 | 81 | Your own photos | Laguna XS 2.1 (High), web UI, Full access, 2 turns | No screens in either turn (claimed they were deferred or out of scope), invented bucket SQL twice, policies on the wrong table, and it deleted the untracked scan-photos folder (restored from harness copies). Screens, migration, storage DB tests and mock built by hand. 36 min |
 | 82 | Back from a picked food returns to the search | Laguna XS 2.1 (High), web UI, Full access | Not usable: phone back still broken (`event.oldState` doesn't exist, hidden by a cast), raw `pushState` turned `/Calbud/#/add` into `/add`, tests checked nothing; never opened CODEMAP.md. Rewritten with router location state, 33 min |
+| 83 | Open Food Facts in the food text search (Edge Function `off-search`) | Laguna XS 2.1 (High), web UI, Full access | Found the right files at once (map auto-loaded), but not usable as is: no sign-in token sent, no CORS on the function, filters sent as ignored URL params, OFF results cut by the 30-cap. Fixed by hand; function not deployed yet, 31 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
