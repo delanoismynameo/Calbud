@@ -117,6 +117,7 @@ Before sending a task to the harness in the web UI:
 | 81 | Your own photos | [81](review/81-photos.md) |
 | 82 | Back from a picked food returns to the search | [82](review/82-add-food-back.md) |
 | 83 | Open Food Facts in the food text search | [83](review/83-off-text-search.md) |
+| 84 | Source label (USDA / Open Food Facts) on each search result | WORKFLOW row |
 
 ## Next, in order
 0. **The user's list of 2026-11-02, in this order** (short plain prompts, one per run):
@@ -128,6 +129,7 @@ Before sending a task to the harness in the web UI:
    - 81 **Your own photos**: dish photo and recipe photo in the prep form, photos on custom foods, and add, change or remove any logged food's photo on Today; private household-only Storage bucket: done ([81](review/81-photos.md)), live (deploy run 41789488780; migration `20261105000000_photos.sql` applied live and checked). Not tried on a real phone yet
    - 82 **Back from a picked food returns to the search** (phone back, Back link, Cancel; search text kept): done ([82](review/82-add-food-back.md)), live (deploy run 41887875481; the first two Pages deploys timed out on GitHub's side). Not tried on a real phone yet
    - 83 **Open Food Facts in the food text search** (Edge Function `off-search`, OFF results take turns with USDA's packaged ones, serving looked up by barcode on pick, credit line under the results): done ([83](review/83-off-text-search.md)), live (deploy run 41913753798; `off-search` v1 deployed with verify_jwt on, preflight and 401 checked live). Not tried signed in on the live site yet
+   - 84 **Source label on each search result** ("USDA" or "Open Food Facts", small muted text; Ornith 1.5 35B): done, committed, not pushed
 1. **Then, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
    - the game plan's build items are done; left are 14 (optional offline write queue) and 16 (testing on both phones)
    - drinks in millilitres: a food gets a unit (g or ml); the amount box, label ("per 100 ml") and serving show it; treat 1 ml as 1 g, no density; scanned drinks first (Open Food Facts), then custom drinks and the dish builder; shipped: scanned drinks, a g/ml switch, saved foods keeping unit and photo, photos on Today, custom drinks and the dish builder (needs a real-phone check with the OKF aloe drink)
