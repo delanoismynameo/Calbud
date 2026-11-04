@@ -74,7 +74,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `barcode.ts` (tested): normalizeBarcode, compressUpcE
 - `brand.ts` (tested): matchesBrand, brandQuery. _True when every word of `brand` starts a word of the food's brand or name, ignoring case: "kirkland" matches "Kirkland Signature", "great…_
 - `builtLabel.ts` (tested): builtLabel
-- `crossCheck.ts` (tested): sourceMismatch
+- `crossCheck.ts` (tested): sourceLabel, sourceMismatch
 - `customFood.ts` (tested): parseCustomFood; types: CustomFoodInput, CustomFoodField, CustomFoodResult
 - `extras.ts` (tested): EXTRAS, extrasFromUsda, extrasFromOff, cleanExtras, parseExtraInputs, extrasPerServing, scaleExtras, sumExtras, dvPercent; types: ExtraKey, Extras, ExtraInfo, ExtraInputs
 - `favorites.ts` (tested): foodKey, favoriteRow, withoutFavorites, setFavorite
