@@ -155,6 +155,7 @@ The current status and next steps are in [`docs/STATUS.md`](../STATUS.md). Each 
 | 78 | Edit the Nutrition Facts of a logged food | Laguna XS 2.1 (Default), web UI, Full access | Usable after one fix (calories per 100 g rounded, so saving could change them). Reused the label helpers; honest report. 27 min |
 | 79 | Brand search box | Laguna XS 2.1 (Medium), web UI, Full access | Not usable as delivered: USDA brandOwner filter (from my prompt) misses Kirkland, two inputs instead of one moving box, brand alone didn't search, `any`. Plumbing kept, search and layout rewritten. 23 min |
 | 80 | Water in fl oz | Laguna XS 2.1 (High), web UI, Full access | DB half close (missing anon revoke, no limits); card blocked adding on past days, undo only on past days and lost on reload, non-theme colors. Card rewritten, partner view reuses it, tests added. 22 min |
+| 81 | Your own photos | Laguna XS 2.1 (High), web UI, Full access, 2 turns | No screens in either turn (claimed they were deferred or out of scope), invented bucket SQL twice, policies on the wrong table, and it deleted the untracked scan-photos folder (restored from harness copies). Screens, migration, storage DB tests and mock built by hand. 36 min |
 
 ## Lessons That Change How Briefs Are Written
 These come from the review notes and override the earlier guesses above where they differ.
