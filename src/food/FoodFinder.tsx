@@ -11,7 +11,7 @@ import { lookupBarcode } from './off'
 import { lookupUsdaBarcode } from './usda'
 import { matchesBrand } from './brand'
 import { usdaApiKey } from './search'
-import { sourceMismatch } from './crossCheck'
+import { sourceMismatch, sourceLabel } from './crossCheck'
 import { findHouseholdFoodByBarcode } from './householdBarcode'
 import { useProfile } from '../household/useProfile'
 import type { FoodResult } from './types'
@@ -217,6 +217,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
                     </div>
                     {food.brand && <p className="text-sm text-muted">{food.brand}</p>}
                     <p className="text-sm text-muted mt-1">{Math.round(food.kcal100g)} cal / 100 {food.unit}</p>
+                    <p className="text-xs text-muted mt-1">{sourceLabel(food.source)}</p>
                   </div>
                 </button>
               ))}

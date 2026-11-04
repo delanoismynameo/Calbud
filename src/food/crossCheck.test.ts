@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { FoodResult, FoodSource } from './types'
-import { sourceMismatch } from './crossCheck'
+import { sourceMismatch, sourceLabel } from './crossCheck'
 
 const base: FoodResult = {
   source: 'off',
@@ -46,5 +46,12 @@ describe('sourceMismatch', () => {
 
   it('0 vs 0 gives null', () => {
     expect(sourceMismatch(override('off', 0), override('usda', 0))).toBe(null)
+  })
+})
+
+describe('sourceLabel', () => {
+  it('usda returns "USDA" and off returns "Open Food Facts"', () => {
+    expect(sourceLabel('usda')).toBe('USDA')
+    expect(sourceLabel('off')).toBe('Open Food Facts')
   })
 })

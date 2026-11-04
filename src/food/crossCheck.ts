@@ -1,6 +1,11 @@
-import type { FoodResult } from './types'
+import type { FoodResult, FoodSource } from './types'
 
 const SOURCE_NAME = { off: 'Open Food Facts', usda: 'USDA', custom: 'Your saved food' }
+
+// Small label under a searched food: where its data comes from, for the search results (USDA or Open Food Facts).
+export function sourceLabel(source: FoodSource): string {
+  return SOURCE_NAME[source]
+}
 
 // A plain-words warning when two sources disagree a lot about calories, or null when they agree.
 export function sourceMismatch(a: FoodResult, b: FoodResult): string | null {
