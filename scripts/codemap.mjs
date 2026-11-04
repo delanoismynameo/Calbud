@@ -99,21 +99,30 @@ function generate() {
   return lines.join('\n')
 }
 
-const current = existsSync(mapPath) ? readFileSync(mapPath, 'utf8').replace(/\r\n/g, '\n') : ''
-const at = current.indexOf(MARKER)
-if (at < 0) {
-  console.error('CODEMAP.md has no generated-section marker; add it at the end of the hand-written part.')
-  process.exit(1)
-}
-const next = current.slice(0, at + MARKER.length) + '\n\n' + generate()
-
-if (process.argv.includes('--check')) {
-  if (next !== current) {
-    console.error('CODEMAP.md is out of date. Run: node scripts/codemap.mjs')
-    process.exit(1)
+// Each target keeps everything up to its marker and gets the generated map after it.
+// AGENTS.md (local only, loaded into every harness session) is optional; CODEMAP.md is not.
+const generated = generate()
+const agentsPath = join(root, 'AGENTS.md')
+const targets = [{ path: mapPath, name: 'CODEMAP.md', required: true }, { path: agentsPath, name: 'AGENTS.md', required: false }]
+let stale = false
+for (const { path, name, required } of targets) {
+  if (!existsSync(path)) {
+    if (required) { console.error(`${name} is missing.`); process.exit(1) }
+    continue
   }
-  console.log('CODEMAP.md is up to date.')
-} else {
-  writeFileSync(mapPath, next)
-  console.log(`CODEMAP.md written (${Buffer.byteLength(next)} bytes).`)
+  const current = readFileSync(path, 'utf8').replace(/\r\n/g, '\n')
+  const at = current.indexOf(MARKER)
+  if (at < 0) {
+    if (required) { console.error(`${name} has no generated-section marker; add it at the end of the hand-written part.`); process.exit(1) }
+    continue
+  }
+  const next = current.slice(0, at + MARKER.length) + '\n\n' + generated
+  if (process.argv.includes('--check')) {
+    if (next !== current) { console.error(`${name} is out of date. Run: node scripts/codemap.mjs`); stale = true }
+    else console.log(`${name} is up to date.`)
+  } else {
+    writeFileSync(path, next)
+    console.log(`${name} written (${Buffer.byteLength(next)} bytes).`)
+  }
 }
+if (stale) process.exit(1)
