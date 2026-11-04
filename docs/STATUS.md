@@ -121,7 +121,7 @@ Before sending a task to the harness in the web UI:
    - 77 **Streak = both of you logged food that day**: done ([77](review/77-streak-logged.md)), live (deploy run 41703051871)
    - 78 **See and edit the Nutrition Facts of a logged food**: done ([78](review/78-edit-log-label.md)), live (deploy run 41720963289)
    - 79 **A brand search box** beside the food search, on Add food and in the prep dish builder: done ([79](review/79-brand-search.md)), live (deploy run 41730926805)
-   - 80 **Water** in fluid ounces: quick-add buttons (8, 16, 24 oz) on Today and a daily oz goal on Us: done ([80](review/80-water.md)), in main, not pushed; migrations `20261104000000`/`20261104000001` not applied live yet
+   - 80 **Water** in fluid ounces: quick-add buttons (8, 16, 24 oz) on Today and a daily oz goal on Us: done ([80](review/80-water.md)), live (deploy run 41776191816; migrations `20261104000000`/`20261104000001` applied live)
    - 81 **Your own photos**: a photo of the finished dish on prep dishes (used as the food's photo when logging) and an optional photo of the recipe; your own photo on custom foods too (Supabase Storage bucket with household-only policies, needs a migration)
 1. **Then, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
    - the game plan's build items are done; left are 14 (optional offline write queue) and 16 (testing on both phones)
