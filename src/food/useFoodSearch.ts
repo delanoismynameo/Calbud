@@ -2,6 +2,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import type { FoodResult } from './types'
 import { searchFoods, usdaApiKey } from './search'
 import { useDebouncedValue } from '../lib/useDebouncedValue'
+import { supabase } from '../lib/supabase'
 
 type QueryResult = { results: FoodResult[]; errors: string[] }
 
@@ -15,7 +16,11 @@ export function useFoodSearch(query: string, brand = '') {
 
   const result = useQuery<QueryResult>({
     queryKey: ['food-search', debounced, debouncedBrand],
-    queryFn: ({ signal }) => searchFoods(debounced, { apiKey: usdaApiKey(), signal, brand: debouncedBrand }),
+    queryFn: async ({ signal }) => {
+      // Open Food Facts goes through our Edge Function, which needs the signed-in user's token.
+      const { data } = await supabase.auth.getSession()
+      return searchFoods(debounced, { apiKey: usdaApiKey(), signal, brand: debouncedBrand, offToken: data.session?.access_token })
+    },
     enabled: debounced.length >= 2 || debouncedBrand.length >= 2,
     staleTime: 5 * 60_000,
     retry: false,

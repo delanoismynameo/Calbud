@@ -18,19 +18,42 @@ describe('searchFoods', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  it('searchFoods makes three fetches: USDA generic, USDA branded, and OFF', async () => {
-    let capturedUrls: string[] = []
-    const mockFetch = vi.fn(async (url) => {
-      capturedUrls.push(String(url))
-      return makeUsdaResponse([])
-    }) as unknown as typeof fetch
+  it('with a sign-in token it also asks Open Food Facts; without one, only USDA', async () => {
+    const urls: string[] = []
+    const fetchFn: typeof fetch = (url) => { urls.push(String(url)); return Promise.resolve(makeUsdaResponse([])) }
+    await searchFoods('oatmeal', { fetchFn })
+    expect(urls).toHaveLength(2)
+    expect(urls.every((u) => u.includes('api.nal.usda.gov'))).toBe(true)
+    urls.length = 0
+    await searchFoods('oatmeal', { fetchFn, offToken: 'tok' })
+    expect(urls).toHaveLength(3)
+    expect(urls.filter((u) => u.includes('/functions/v1/off-search'))).toHaveLength(1)
+  })
 
-    await searchFoods('oatmeal', { fetchFn: mockFetch })
+  it('Open Food Facts results join USDA ones; when it fails, USDA still shows with a note', async () => {
+    const usda = { fdcId: 1, description: 'Oatmeal Cookie', brandName: 'Tops', gtinUpc: '1', foodNutrients: [{ nutrientId: 1008, value: 450 }, { nutrientId: 1003, value: 5 }, { nutrientId: 1004, value: 20 }, { nutrientId: 1005, value: 60 }] }
+    const hit = { code: '2', product_name: 'Oatmeal Squares', brands: ['Quaker'], nutriments: { 'energy-kcal_100g': 380, proteins_100g: 10, carbohydrates_100g: 80, fat_100g: 5 } }
+    const routed = (offOk: boolean): typeof fetch => (url) => Promise.resolve(
+      String(url).includes('off-search') ? (offOk ? makeOffResponse([hit]) : new Response('', { status: 502 })) : makeUsdaResponse([usda]))
+    const both = await searchFoods('oatmeal', { fetchFn: routed(true), offToken: 'tok' })
+    expect(both.results.map((r) => r.source).sort()).toEqual(['off', 'usda'])
+    expect(both.errors).toEqual([])
+    const usdaOnly = await searchFoods('oatmeal', { fetchFn: routed(false), offToken: 'tok' })
+    expect(usdaOnly.results.map((r) => r.source)).toEqual(['usda'])
+    expect(usdaOnly.errors).toEqual(['Open Food Facts: search failed (HTTP 502)'])
+  })
 
-    expect(capturedUrls.length).toBe(3)
-    expect(capturedUrls[0]).toContain('api.nal.usda.gov')
-    expect(capturedUrls[1]).toContain('api.nal.usda.gov')
-    expect(capturedUrls[2]).toContain('functions/v1/off-search')
+  it('USDA packaged foods and Open Food Facts take turns, so equal matches from both make the 30', async () => {
+    const nutrients = [{ nutrientId: 1008, value: 100 }, { nutrientId: 1003, value: 5 }, { nutrientId: 1004, value: 1 }, { nutrientId: 1005, value: 10 }]
+    const branded = Array.from({ length: 40 }, (_, i) => ({ fdcId: 100 + i, description: `Greek Yogurt ${i}`, brandName: 'Chobani', gtinUpc: String(100 + i), foodNutrients: nutrients }))
+    const hits = Array.from({ length: 20 }, (_, i) => ({ code: String(900 + i), product_name: `Greek Yogurt Cup ${i}`, brands: ['Chobani'], nutriments: { 'energy-kcal_100g': 90, proteins_100g: 9, carbohydrates_100g: 5, fat_100g: 2 } }))
+    const fetchFn: typeof fetch = (url, init) => Promise.resolve(
+      String(url).includes('off-search') ? makeOffResponse(hits)
+        : makeUsdaResponse(String(init?.body).includes('Branded') ? branded : []))
+    const { results } = await searchFoods('chobani greek yogurt', { fetchFn, offToken: 'tok' })
+    expect(results).toHaveLength(30)
+    expect(results.slice(0, 4).map((r) => r.source)).toEqual(['usda', 'off', 'usda', 'off'])
+    expect(results.filter((r) => r.source === 'off')).toHaveLength(15)
   })
 
   it('generic results come before branded ones', async () => {
@@ -333,15 +356,16 @@ describe('searchFoods with a brand', () => {
     return { bodies, fetchFn }
   }
 
-  it('makes two packaged-food searches: OFF and USDA branded', async () => {
+  it('makes one USDA packaged-food search, plus Open Food Facts with a token', async () => {
     const { bodies, fetchFn } = capture([])
     await searchFoods('greek yogurt', { fetchFn, brand: 'Kirkland Signature' })
-    // Two searches: OFF and USDA branded
-    expect(bodies).toHaveLength(2)
-    expect(bodies[0]).not.toHaveProperty('dataType') // OFF doesn't have dataType
-    expect(bodies[1].dataType).toEqual(['Branded'])
-    expect(bodies[1].query).toBe('+kirkland +signature greek yogurt')
-    expect(bodies[1]).not.toHaveProperty('brandOwner')
+    expect(bodies).toHaveLength(1)
+    expect(bodies[0].dataType).toEqual(['Branded'])
+    expect(bodies[0].query).toBe('+kirkland +signature greek yogurt')
+    expect(bodies[0]).not.toHaveProperty('brandOwner')
+    bodies.length = 0
+    await searchFoods('greek yogurt', { fetchFn, brand: 'Kirkland Signature', offToken: 'tok' })
+    expect(bodies).toContainEqual({ q: 'greek yogurt', brand: 'Kirkland Signature' })
   })
 
   it('keeps only foods of that brand', async () => {
@@ -352,11 +376,9 @@ describe('searchFoods with a brand', () => {
 
   it('a brand alone lists that brand\'s foods', async () => {
     const { bodies, fetchFn } = capture([food(1, 'Ultra-Filtered Milk', 'fairlife')])
-    const { results } = await searchFoods('', { fetchFn, brand: 'fairlife' })
-    // OFF search sends q and brand in the body
-    expect(bodies[0].q).toBe('fairlife')
-    expect(bodies[0].brand).toBe('fairlife')
-    expect(results).toHaveLength(1)
+    const { results } = await searchFoods('', { fetchFn, brand: 'fairlife', offToken: 'tok' })
+    expect(bodies).toContainEqual({ q: '', brand: 'fairlife' })
+    expect(results.map((r) => r.name)).toEqual(['Ultra-Filtered Milk'])
   })
 
   it('a failed brand search throws when both sources fail', async () => {
@@ -367,7 +389,6 @@ describe('searchFoods with a brand', () => {
   it('a 1-letter brand is ignored, so the search runs as usual', async () => {
     const { bodies, fetchFn } = capture([])
     await searchFoods('oatmeal', { fetchFn, brand: 'q' })
-    // Now it runs as a normal search with 3 fetches
-    expect(bodies).toHaveLength(3)
+    expect(bodies).toHaveLength(2)
   })
 })

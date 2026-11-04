@@ -1,5 +1,6 @@
 import type { FoodResult } from './types'
 import { extrasFromOff } from './extras'
+import { supabaseUrl, supabaseKey } from '../lib/env'
 
 const gramRegex = /\d\s*(g|gr|grams?)\b/i
 const mlRegex = /\d\s*(ml|cl)\b/i
@@ -69,7 +70,6 @@ export function offServingLabel(sizeText: string, servingG: number, unit: 'g' | 
   return `${trimmed} (${servingG} ${unit})`
 }
 
-type OffSearchResponse = Record<string, unknown>
 type OffProductResponse = Record<string, unknown>
 
 function extractBrand(raw: unknown): string | null {
@@ -177,59 +177,35 @@ export function normalizeOffProduct(raw: unknown): FoodResult | null {
 
 type RequestOpts = { fetchFn?: typeof fetch; signal?: AbortSignal }
 
-type OffSearchOpts = { fetchFn?: typeof fetch; signal?: AbortSignal }
+type OffSearchOpts = RequestOpts & { brand?: string; token?: string; baseUrl?: string }
 
-// Convert brand name to OFF tags format: lowercase, spaces and punctuation to dashes
-export function offBrandTag(brand: string): string {
-  return brand
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
+/**
+ * Packaged foods from Open Food Facts, through the off-search Edge Function (OFF's search can't be
+ * called from a browser). Needs the signed-in user's access token; without one it finds nothing.
+ */
 export async function searchOff(
   query: string,
-  { brand = '', fetchFn = fetch, signal }: OffSearchOpts & { brand?: string } = {},
+  { brand = '', token, baseUrl = supabaseUrl, fetchFn = fetch, signal }: OffSearchOpts = {},
 ): Promise<FoodResult[]> {
-  const trimmed = query.trim()
+  const q = query.trim()
+  const b = brand.trim()
+  if ((q === '' && b === '') || !token) return []
 
-  if (trimmed.length === 0) return []
-
-  // Build the URL for the edge function
-  const baseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/off-search`
-  const body: { q: string; brand?: string } = { q: trimmed }
-  if (brand.trim()) {
-    body.brand = offBrandTag(brand)
-  }
-
-  const res = await fetchFn(baseUrl, {
+  const res = await fetchFn(`${baseUrl}/functions/v1/off-search`, {
     method: 'POST',
     signal,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, apikey: supabaseKey },
+    body: JSON.stringify(b ? { q, brand: b } : { q }),
   })
+  if (!res.ok) throw new Error(`search failed (HTTP ${res.status})`)
 
-  if (!res.ok) {
-    throw new Error(`Open Food Facts search failed (HTTP ${res.status})`)
-  }
-
-  const data = await res.json() as OffSearchResponse
-
-  // The hits array contains the search results
-  const hits = (data.hits as OffProductResponse[]) ?? []
-
-  // Normalize each hit to a FoodResult
+  const data: unknown = await res.json()
+  const hits = typeof data === 'object' && data !== null && 'hits' in data && Array.isArray(data.hits) ? data.hits : []
   const results: FoodResult[] = []
   for (const hit of hits) {
-    const normalized = normalizeOffProduct(hit)
-    if (normalized) {
-      results.push(normalized)
-    }
+    const food = normalizeOffProduct(hit)
+    if (food) results.push(food)
   }
-
   return results
 }
 

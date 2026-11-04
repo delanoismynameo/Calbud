@@ -133,6 +133,18 @@ http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x')
     console.log(req.method, url.pathname + url.search, body)
     if (req.method === 'OPTIONS') return send(res, 204)
+    // The off-search Edge Function: same search text as supabase/functions/off-search, asked of the real OFF.
+    if (url.pathname === '/functions/v1/off-search' && req.method === 'POST') {
+      if (!/^Bearer \S+/.test(req.headers.authorization || '')) return send(res, 401, { error: 'Sign in first' })
+      const { q = '', brand = '' } = JSON.parse(body || '{}')
+      const tag = String(brand).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      const text = [String(q).replace(/["':]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 100), 'countries_tags:"en:united-states"', tag && `brands_tags:"${tag}"`].filter(Boolean).join(' ')
+      const params = new URLSearchParams({ q: text, page_size: '20', langs: 'en', fields: 'code,product_name,brands,nutriments,images,quantity,product_quantity_unit' })
+      fetch(`https://search.openfoodfacts.org/search?${params}`, { headers: { 'User-Agent': 'Calbud/1.0 (household food log)' } })
+        .then((r) => r.ok ? r.json().then((d) => send(res, 200, { hits: d.hits ?? [] })) : send(res, 502, { error: `Open Food Facts answered ${r.status}` }))
+        .catch(() => send(res, 502, { error: 'Open Food Facts did not answer' }))
+      return
+    }
     const single = (req.headers.accept || '').includes('vnd.pgrst.object')
     const table = url.pathname.match(/^\/rest\/v1\/(profiles|households)$/)?.[1]
     if (table) {

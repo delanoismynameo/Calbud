@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { normalizeOffProduct, lookupBarcode, offServingLabel, searchOff, offBrandTag } from './off'
+import { normalizeOffProduct, lookupBarcode, offServingLabel, searchOff } from './off'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -307,96 +307,54 @@ describe('liquid detection from the package quantity', () => {
   })
 })
 
-describe('offBrandTag', () => {
-  it('converts brand to lowercase with dashes between words', () => {
-    expect(offBrandTag('Kirkland Signature')).toBe('kirkland-signature')
-    expect(offBrandTag('Trader Joe\'s')).toBe('trader-joe-s')
-    expect(offBrandTag('Great Value')).toBe('great-value')
-  })
-
-  it('handles punctuation and multiple spaces', () => {
-    expect(offBrandTag('Kirkland  Signature')).toBe('kirkland-signature')
-    expect(offBrandTag('Ben & Jerry\'s')).toBe('ben-jerry-s')
-  })
-
-  it('trims whitespace', () => {
-    expect(offBrandTag('  Kirkland Signature  ')).toBe('kirkland-signature')
-  })
-
-  it('returns empty string for empty input', () => {
-    expect(offBrandTag('')).toBe('')
-    expect(offBrandTag('   ')).toBe('')
-  })
-})
-
 describe('searchOff', () => {
-  it('returns empty array for empty query', async () => {
-    const mockFetch = vi.fn()
-    const results = await searchOff('', { fetchFn: mockFetch })
-    expect(results).toEqual([])
-    expect(mockFetch).not.toHaveBeenCalled()
-  })
-
-  it('calls the edge function with correct parameters', async () => {
-    let capturedUrl: string | undefined
-    let capturedBody: string | undefined
-    const mockFetch = vi.fn(async (url: string, init?: RequestInit) => {
-      capturedUrl = String(url)
-      capturedBody = init?.body as string
-      const data = { hits: [], count: 0 }
-      return new Response(JSON.stringify(data), { status: 200 })
-    }) as unknown as typeof fetch
-
-    await searchOff('oatmeal', { fetchFn: mockFetch })
-
-    expect(capturedUrl).toContain('/functions/v1/off-search')
-    expect(capturedBody).toContain('oatmeal')
-  })
-
-  it('includes brand parameter when provided', async () => {
-    let capturedBody: string | undefined
-    const mockFetch = vi.fn(async (_url: string, init?: RequestInit) => {
-      capturedBody = init?.body as string
-      const data = { hits: [], count: 0 }
-      return new Response(JSON.stringify(data), { status: 200 })
-    }) as unknown as typeof fetch
-
-    await searchOff('milk', { fetchFn: mockFetch, brand: 'Kirkland Signature' })
-
-    expect(capturedBody).toContain('kirkland-signature')
-  })
-
-  it('normalizes OFF hits into FoodResults', async () => {
-    const offHit = {
-      code: '1234567890123',
-      product_name: 'Test Food',
-      brands: ['Test Brand'],
-      nutriments: { 'energy-kcal_100g': 100, proteins_100g: 5, carbohydrates_100g: 10, fat_100g: 2 },
+  const hit = {
+    code: '0096619356096',
+    product_name: 'Cookies and Cream Protein Bar',
+    brands: ['Kirkland Signature'],
+    nutriments: { 'energy-kcal_100g': 283, proteins_100g: 35, carbohydrates_100g: 38, fat_100g: 12 },
+  }
+  function recorder(status = 200, body: unknown = { hits: [] }) {
+    const calls: { url: string; init: RequestInit | undefined }[] = []
+    const fetchFn: typeof fetch = (input, init) => {
+      calls.push({ url: String(input), init })
+      return Promise.resolve(new Response(JSON.stringify(body), { status }))
     }
-    const mockFetch = vi.fn(() => {
-      const data = { hits: [offHit], count: 1 }
-      return Promise.resolve(new Response(JSON.stringify(data), { status: 200 }))
-    }) as unknown as typeof fetch
+    return { calls, fetchFn }
+  }
 
-    const results = await searchOff('test', { fetchFn: mockFetch })
-    expect(results.length).toBe(1)
-    expect(results[0].name).toBe('Test Food')
-    expect(results[0].brand).toBe('Test Brand')
-    expect(results[0].source).toBe('off')
+  it('asks nothing without a sign-in token or search words', async () => {
+    const { calls, fetchFn } = recorder()
+    expect(await searchOff('oatmeal', { fetchFn })).toEqual([])
+    expect(await searchOff('  ', { fetchFn, token: 't' })).toEqual([])
+    expect(calls).toHaveLength(0)
   })
 
-  it('throws error when fetch fails', async () => {
-    const mockFetch = vi.fn(() => Promise.resolve(new Response('Error', { status: 500 })))
-    await expect(searchOff('test', { fetchFn: mockFetch })).rejects.toThrow('Open Food Facts search failed')
+  it('POSTs the words and the brand as typed to the off-search function, with the token', async () => {
+    const { calls, fetchFn } = recorder()
+    await searchOff(' bar ', { fetchFn, token: 'tok', brand: ' Kirkland Signature ', baseUrl: 'https://x.supabase.co' })
+    expect(calls[0].url).toBe('https://x.supabase.co/functions/v1/off-search')
+    expect(calls[0].init?.method).toBe('POST')
+    expect(new Headers(calls[0].init?.headers).get('Authorization')).toBe('Bearer tok')
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ q: 'bar', brand: 'Kirkland Signature' })
   })
 
-  it('handles empty hits array', async () => {
-    const mockFetch = vi.fn(() => {
-      const data = { hits: [], count: 0 }
-      return Promise.resolve(new Response(JSON.stringify(data), { status: 200 }))
-    }) as unknown as typeof fetch
+  it('a brand alone is a search', async () => {
+    const { calls, fetchFn } = recorder()
+    await searchOff('', { fetchFn, token: 'tok', brand: 'Kirkland' })
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ q: '', brand: 'Kirkland' })
+  })
 
-    const results = await searchOff('test', { fetchFn: mockFetch })
-    expect(results).toEqual([])
+  it('reads hits as foods and skips ones without full nutrition', async () => {
+    const noFat = { ...hit, code: '2', nutriments: { 'energy-kcal_100g': 100, proteins_100g: 1, carbohydrates_100g: 1 } }
+    const { fetchFn } = recorder(200, { hits: [hit, noFat] })
+    const results = await searchOff('bar', { fetchFn, token: 'tok' })
+    expect(results.map((r) => [r.source, r.name, r.brand, r.barcode])).toEqual([['off', 'Cookies and Cream Protein Bar', 'Kirkland Signature', '0096619356096']])
+    expect(results[0].servingG).toBeNull()
+  })
+
+  it('throws with the status when the function fails', async () => {
+    const { fetchFn } = recorder(401, { error: 'Sign in first' })
+    await expect(searchOff('bar', { fetchFn, token: 'tok' })).rejects.toThrow('HTTP 401')
   })
 })

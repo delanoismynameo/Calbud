@@ -47,7 +47,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
   // A favorite is listed once, under Favorites.
   const recentList = withoutFavorites(recents.data ?? [], favoriteList)
 
-  // Handle picking a food, with serving lookup for OFF results without serving info
+  // OFF search hits have no serving size, so a picked one is looked up by barcode first.
   const handlePickFood = useCallback(async (food: FoodResult) => {
     if (pickLookingUp) return
 
@@ -195,6 +195,7 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
 
           {tooShort && !empty && <p className="text-muted text-center py-4">Type at least 2 letters.</p>}
           {!tooShort && isSearching && <p className="text-sm text-muted text-center">Searching…</p>}
+          {pickLookingUp && <p className="text-sm text-muted text-center">Getting the serving size…</p>}
           {!tooShort && failed && (
             <div className="bg-card rounded-3xl shadow-card p-4 text-center space-y-2">
               <p className="text-danger">{failed}</p>
@@ -235,12 +236,12 @@ export default function FoodFinder({ onPick, onCreate }: { onPick: (food: FoodRe
             </div>
           )}
 
-          {/* Attribution line */}
-          <p className="text-xs text-muted text-center py-2">
+          {/* Open Food Facts' licence (ODbL) asks for a credit wherever its data shows. */}
+          {!tooShort && !failed && usdaResults.length > 0 && <p className="text-xs text-muted text-center py-2">
             Food data from USDA and{' '}
             <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener noreferrer"
               className="underline text-link hover:text-ink">Open Food Facts</a>
-          </p>
+          </p>}
         </>
       )}
     </div>
