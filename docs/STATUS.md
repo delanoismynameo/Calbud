@@ -1,6 +1,6 @@
 # Calbud status: start here
 
-*Last updated 2026-11-02. Update this file at the end of every task.*
+*Last updated 2026-11-04. Update this file at the end of every task.*
 
 ## Where things stand
 - **Live site:** https://delanoismynameo.github.io/Calbud/, deployed from `main` by GitHub Actions. **Everything through task 11 is live** (pushed 2026-10-28): sign-up, first-run setup, households, the Us page, and adding food with USDA basic and branded search.
@@ -115,6 +115,7 @@ Before sending a task to the harness in the web UI:
 | 79 | Brand search box | [79](review/79-brand-search.md) |
 | 80 | Water in fl oz | [80](review/80-water.md) |
 | 81 | Your own photos | [81](review/81-photos.md) |
+| 82 | Back from a picked food returns to the search | [82](review/82-add-food-back.md) |
 
 ## Next, in order
 0. **The user's list of 2026-11-02, in this order** (short plain prompts, one per run):
@@ -124,6 +125,7 @@ Before sending a task to the harness in the web UI:
    - 79 **A brand search box** beside the food search, on Add food and in the prep dish builder: done ([79](review/79-brand-search.md)), live (deploy run 41730926805)
    - 80 **Water** in fluid ounces: quick-add buttons (8, 16, 24 oz) on Today and a daily oz goal on Us: done ([80](review/80-water.md)), live (deploy run 41776191816; migrations `20261104000000`/`20261104000001` applied live)
    - 81 **Your own photos**: dish photo and recipe photo in the prep form, photos on custom foods, and add, change or remove any logged food's photo on Today; private household-only Storage bucket: done ([81](review/81-photos.md)), live (deploy run 41789488780; migration `20261105000000_photos.sql` applied live and checked). Not tried on a real phone yet
+   - 82 **Back from a picked food returns to the search** (phone back, Back link, Cancel; search text kept): done ([82](review/82-add-food-back.md)), in `main`, not pushed
 1. **Then, one task per run** (the user decided two-in-one runs aren't worth it, 2026-10-29):
    - the game plan's build items are done; left are 14 (optional offline write queue) and 16 (testing on both phones)
    - drinks in millilitres: a food gets a unit (g or ml); the amount box, label ("per 100 ml") and serving show it; treat 1 ml as 1 g, no density; scanned drinks first (Open Food Facts), then custom drinks and the dish builder; shipped: scanned drinks, a g/ml switch, saved foods keeping unit and photo, photos on Today, custom drinks and the dish builder (needs a real-phone check with the OKF aloe drink)
