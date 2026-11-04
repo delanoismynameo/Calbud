@@ -57,7 +57,17 @@ export async function saveBarcodeFood(food: FoodResult, householdId: string): Pr
   const code = food.barcode
   if (code == null) throw new Error('This food has no barcode.')
   const existing = await findHouseholdFoodByBarcode(householdId, code)
-  const saved: FoodResult = { ...food, source: 'custom', sourceId: existing?.sourceId ?? crypto.randomUUID(), barcode: code }
+  
+  // Preserve existing photo if the new food doesn't have one
+  const preservedPhotoUrl = existing?.photoUrl && !food.photoUrl ? existing.photoUrl : food.photoUrl
+  
+  const saved: FoodResult = { 
+    ...food, 
+    source: 'custom', 
+    sourceId: existing?.sourceId ?? crypto.randomUUID(), 
+    barcode: code,
+    photoUrl: preservedPhotoUrl,
+  }
   const { error } = await supabase.from('foods').upsert(foodRow(saved, householdId), { onConflict: 'household_id,source,source_id' })
   if (error) throw new Error(error.message)
   return saved

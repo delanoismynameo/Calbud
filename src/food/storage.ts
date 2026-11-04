@@ -4,14 +4,65 @@ import type { FoodResult } from './types'
 // The storage bucket name for household photos
 export const PHOTO_BUCKET = 'household_photos'
 
+// Maximum dimension for processed photos (1200px on the long edge)
+const MAX_DIMENSION = 1200
+
 // Generate a file path for a photo: household_id/food_id.jpg (or .png)
 export function photoPath(householdId: string, foodId: string, fileExt: string = 'jpg'): string {
   return `${householdId}/${foodId}.${fileExt}`
 }
 
+// Shrink an image to a maximum dimension while maintaining aspect ratio
+// Returns a new File with the image resized and converted to JPEG
+export async function shrinkImage(file: File): Promise<File> {
+  // If we're in a browser environment with canvas support
+  if (typeof window === 'undefined' || !window.HTMLCanvasElement) {
+    return file
+  }
+
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        resolve(file)
+        return
+      }
+
+      // Calculate new dimensions maintaining aspect ratio
+      const maxWidth = Math.max(img.width, img.height)
+      const scale = maxWidth > MAX_DIMENSION ? MAX_DIMENSION / maxWidth : 1
+      const newWidth = Math.round(img.width * scale)
+      const newHeight = Math.round(img.height * scale)
+
+      canvas.width = newWidth
+      canvas.height = newHeight
+
+      // Draw the image on the canvas
+      ctx.drawImage(img, 0, 0, newWidth, newHeight)
+
+      // Convert to JPEG and create a new File
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(file)
+          return
+        }
+        const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), { 
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        })
+        resolve(newFile)
+      }, 'image/jpeg', 0.85)
+    }
+    img.onerror = reject
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 // Generate a signed URL for downloading a photo
-// The url is valid for a short time (default 60 seconds)
-export async function getPhotoUrl(photoUrl: string | null, expiresIn = 60): Promise<string | null> {
+// The url is valid for a short time (default 5 minutes for display)
+export async function getPhotoUrl(photoUrl: string | null, expiresIn = 300): Promise<string | null> {
   if (!photoUrl) return null
   
   // If it's already a signed URL from Supabase (contains a signature), return as-is
@@ -35,15 +86,19 @@ export async function uploadPhoto(
   householdId: string,
   foodId: string,
   file: File,
+  options?: { shrink?: boolean },
 ): Promise<{ path: string; error: Error | null }> {
-  const fileExt = file.name.split('.').pop() ?? 'jpg'
+  // Shrink the image if requested
+  const processedFile = options?.shrink ? await shrinkImage(file) : file
+  
+  const fileExt = processedFile.name.split('.').pop() ?? 'jpg'
   const path = photoPath(householdId, foodId, fileExt)
   
   const { error } = await supabase.storage
     .from(PHOTO_BUCKET)
-    .upload(path, file, {
+    .upload(path, processedFile, {
       upsert: true,
-      contentType: file.type,
+      contentType: processedFile.type,
     })
   
   if (error) return { path: '', error }
@@ -85,11 +140,11 @@ export async function updateFoodPhoto(
   currentPhotoUrl: string | null,
   newFile: File,
 ): Promise<{ photoUrl: string; error: Error | null }> {
-  // Upload the new file
-  const { path, error: uploadError } = await uploadPhoto(householdId, foodId, newFile)
+  // Upload the new file (with shrinking)
+  const { path, error: uploadError } = await uploadPhoto(householdId, foodId, newFile, { shrink: true })
   if (uploadError) return { photoUrl: '', error: uploadError }
   
-  // Delete the old file if it's a household photo
+  // Delete the old file if it's a household photo and we're replacing it
   if (currentPhotoUrl) {
     // Extract path from URL if it contains the bucket
     const oldPath = extractStoragePath(currentPhotoUrl)

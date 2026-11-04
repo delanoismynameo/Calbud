@@ -5,6 +5,7 @@ import type { MealLogInsert } from './day'
 type LogWithFood = MealLog & { foods?: { image_url: string | null; photo_url: string | null } | null }
 
 const PHOTO_BUCKET = 'household_photos'
+const SIGNED_URL_EXPIRY = 300 // 5 minutes
 
 // The photo comes from the food the log points at. If the image_url migration isn't applied yet, the log list still loads without photos.
 export async function fetchMealLogs(userId: string, date: string): Promise<MealLog[]> {
@@ -33,7 +34,7 @@ export async function fetchMealLogs(userId: string, date: string): Promise<MealL
         // Generate signed URL for household photo
         const { data, error } = await supabase.storage
           .from(PHOTO_BUCKET)
-          .createSignedUrl(photoUrl, 60)
+          .createSignedUrl(photoUrl, SIGNED_URL_EXPIRY)
         
         if (error) {
           console.error('Failed to create signed URL:', error)

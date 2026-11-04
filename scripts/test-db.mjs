@@ -59,11 +59,27 @@ await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '202611030000
 // Water tracking migration
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000000_water.sql'), 'utf8'));
 await db.exec(readFileSync(resolve(root, 'supabase', 'migrations', '20261104000001_water_security.sql'), 'utf8'));
-// Photos migration: add photo_url columns (storage bucket is separate service, not testable in PGlite)
-await db.exec(`
-  alter table public.foods add column photo_url text;
-  alter table public.meal_prep add column photo_url text;
-`);
+// Photos migration: load column additions from migration file
+// Note: Storage bucket creation is skipped (requires real Supabase service)
+const photosMigration = readFileSync(resolve(root, 'supabase', 'migrations', '20261105000000_photos.sql'), 'utf8');
+// Extract and run only the ALTER TABLE statements (skip the storage bucket creation)
+const migrationLines = photosMigration.split('\n');
+const sqlParts = [];
+let inAlterTable = false;
+for (const line of migrationLines) {
+  if (line.trim().startsWith('alter table')) {
+    inAlterTable = true;
+  }
+  if (inAlterTable) {
+    sqlParts.push(line);
+    if (line.trim().endsWith(';')) {
+      inAlterTable = false;
+    }
+  }
+}
+if (sqlParts.length > 0) {
+  await db.exec(sqlParts.join('\n'));
+}
 
 // ---- as(): act as a user ---------------------------------------------------
 // Runs one statement as `userId` (null = anon) inside its own transaction:

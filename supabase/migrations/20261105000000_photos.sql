@@ -8,7 +8,8 @@
 -- photo_url on meal_prep: optional photo of the recipe itself (cookbook page, handwritten card).
 
 -- Create the storage bucket for household photos (one folder per household)
-create storage bucket household_photos with public = false;
+-- Uses the storage.create_bucket RPC function to create the bucket
+select supabase.storage.create_bucket('household_photos', false);
 
 -- Storage policies for the household_photos bucket
 -- Only authenticated users can work with the bucket, and only within their household's folder.
