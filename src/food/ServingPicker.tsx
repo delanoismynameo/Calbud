@@ -17,6 +17,7 @@ import { applyLabelEdit, applyServingEdit } from './labelEdit'
 import { servingWarning } from './servingCheck'
 import { saveBarcodeFood, deleteSavedBarcodeFoodAndLookupOriginal } from './householdBarcode'
 import FoodImage from './FoodImage'
+import ConvertPopup from './ConvertPopup'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 const MEALS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
@@ -151,13 +152,16 @@ export default function ServingPicker({ food, onLogged, onCancel, meal, loggedOn
         </div>
       )}
 
-      <div>
-        <label htmlFor="amount" className="block text-muted text-sm mb-1">{unit === 'serving' ? 'Servings' : amountWord}</label>
-        <input id="amount" type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
-          className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-coral" />
-        {unit === 'serving' && shown.servingLabel && isValid && (
-          <p className="text-muted text-sm mt-1">{amount} × {shown.servingLabel} = {Math.round(grams)} {displayUnit}</p>
-        )}
+      <div className="flex items-center gap-2">
+        <div>
+          <label htmlFor="amount" className="block text-muted text-sm mb-1">{unit === 'serving' ? 'Servings' : amountWord}</label>
+          <input id="amount" type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
+            className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-coral" />
+          {unit === 'serving' && shown.servingLabel && isValid && (
+            <p className="text-muted text-sm mt-1">{amount} × {shown.servingLabel} = {Math.round(grams)} {displayUnit}</p>
+          )}
+        </div>
+        <ConvertPopup food={shown} onConvert={(converted) => setAmount(String(converted))} />
       </div>
 
       {food.crossCheck && !edited && (
