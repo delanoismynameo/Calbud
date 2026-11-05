@@ -14,7 +14,9 @@ export default function PhotoField({ label, hint, path, householdId, onChange, d
   onChange: (path: string | null) => void
   disabled?: boolean
 }) {
-  const inputId = useId()
+  const takePhotoId = useId()
+  const choosePhotoId = useId()
+  const changePhotoId = useId()
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [viewing, setViewing] = useState(false)
@@ -48,7 +50,7 @@ export default function PhotoField({ label, hint, path, householdId, onChange, d
             {url && <img src={url} alt="" className="h-full w-full object-cover" />}
           </button>
         ) : (
-          <label htmlFor={inputId} aria-hidden
+          <label htmlFor={takePhotoId} aria-hidden
             className={`h-16 w-16 shrink-0 rounded-2xl border-2 border-dashed border-line flex items-center justify-center text-2xl ${busy ? 'opacity-50' : 'cursor-pointer'}`}>
             📷
           </label>
@@ -59,16 +61,23 @@ export default function PhotoField({ label, hint, path, householdId, onChange, d
             <p className="text-xs text-muted">Uploading…</p>
           ) : path ? (
             <div className="flex gap-2 mt-1">
-              <label htmlFor={inputId} className={`${small} ${busy ? 'opacity-50' : 'cursor-pointer'}`}>Change</label>
+              <label htmlFor={changePhotoId} className={`${small} ${busy ? 'opacity-50' : 'cursor-pointer'}`}>Change</label>
               <button type="button" onClick={() => onChange(null)} disabled={busy} className={small}>Remove</button>
             </div>
           ) : (
-            <label htmlFor={inputId} className={`text-xs text-link underline ${busy ? 'opacity-50' : 'cursor-pointer'}`}>
-              {hint ?? 'Take or choose a photo'}
-            </label>
+            <div className="flex gap-2 mt-1">
+              <label htmlFor={takePhotoId} className={`text-xs text-link underline ${busy ? 'opacity-50' : 'cursor-pointer'}`}>
+                Take a photo
+              </label>
+              <label htmlFor={choosePhotoId} className={`text-xs text-link underline ${busy ? 'opacity-50' : 'cursor-pointer'}`}>
+                Choose a photo
+              </label>
+            </div>
           )}
         </div>
-        <input id={inputId} type="file" accept="image/*" onChange={pick} disabled={busy} className="sr-only" />
+        <input id={takePhotoId} type="file" accept="image/*" capture="environment" onChange={pick} disabled={busy} className="sr-only" />
+        <input id={choosePhotoId} type="file" accept="image/*" onChange={pick} disabled={busy} className="sr-only" />
+        <input id={changePhotoId} type="file" accept="image/*" onChange={pick} disabled={busy} className="sr-only" />
       </div>
       {error && <p className="text-danger text-sm mt-1">{error}</p>}
       {viewing && url && <PhotoViewer url={url} alt={label} onClose={() => setViewing(false)} />}
