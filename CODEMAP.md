@@ -67,7 +67,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `FoodFinder.tsx`: FoodFinder (default)
 - `FoodImage.tsx`: FoodImage (default). _A food's photo: the household's own photo (photoPath, in Storage) first, else the package photo (imageUrl, from Open Food Facts). Shows…_
 - `NutritionLabel.tsx`: NutritionLabel (default)
-- `PhotoField.tsx`: PhotoField (default). _A photo row for a form: "Add photo" opens the phone's camera or photo library; once picked, the photo is shrunk and uploaded right away and…_
+- `PhotoField.tsx`: PhotoField (default). _A photo row for a form: "Take photo" opens the phone's camera and "Choose photo" its photo library. Android only offers the camera when the…_
 - `PhotoViewer.tsx`: PhotoViewer (default). _A photo shown full screen (a recipe page to read while cooking). Tap anywhere or press Escape to close._
 - `RecipeBuilder.tsx`: RecipeBuilder (default)
 - `ServingPicker.tsx`: ServingPicker (default)

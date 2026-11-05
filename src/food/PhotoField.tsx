@@ -3,8 +3,9 @@ import { uploadPhoto } from './storage'
 import { usePhotoUrl } from './usePhotoUrl'
 import PhotoViewer from './PhotoViewer'
 
-// A photo row for a form: "Add photo" opens the phone's camera or photo library; once picked, the photo is
-// shrunk and uploaded right away and shown with Change and Remove. The form saves the returned path
+// A photo row for a form: "Take photo" opens the phone's camera and "Choose photo" its photo library. Android
+// only offers the camera when the input asks for it (`capture`), so each has its own input. Once picked, the
+// photo is shrunk and uploaded right away and shown with the same two options plus Remove. The form saves the returned path
 // (and deletes the old file after it saves). `path` is the current photo's storage path, or null.
 export default function PhotoField({ label, hint, path, householdId, onChange, disabled = false }: {
   label: string
@@ -16,7 +17,6 @@ export default function PhotoField({ label, hint, path, householdId, onChange, d
 }) {
   const takePhotoId = useId()
   const choosePhotoId = useId()
-  const changePhotoId = useId()
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [viewing, setViewing] = useState(false)
@@ -59,25 +59,19 @@ export default function PhotoField({ label, hint, path, householdId, onChange, d
           <p className="text-sm text-ink font-semibold">{label}</p>
           {uploading ? (
             <p className="text-xs text-muted">Uploading…</p>
-          ) : path ? (
-            <div className="flex gap-2 mt-1">
-              <label htmlFor={changePhotoId} className={`${small} ${busy ? 'opacity-50' : 'cursor-pointer'}`}>Change</label>
-              <button type="button" onClick={() => onChange(null)} disabled={busy} className={small}>Remove</button>
-            </div>
           ) : (
-            <div className="flex gap-2 mt-1">
-              <label htmlFor={takePhotoId} className={`text-xs text-link underline ${busy ? 'opacity-50' : 'cursor-pointer'}`}>
-                Take a photo
-              </label>
-              <label htmlFor={choosePhotoId} className={`text-xs text-link underline ${busy ? 'opacity-50' : 'cursor-pointer'}`}>
-                Choose a photo
-              </label>
-            </div>
+            <>
+              {!path && hint && <p className="text-xs text-muted">{hint}</p>}
+              <div className="flex flex-wrap gap-2 mt-1">
+                <label htmlFor={takePhotoId} className={`${small} ${busy ? 'opacity-50' : 'cursor-pointer'}`}>Take photo</label>
+                <label htmlFor={choosePhotoId} className={`${small} ${busy ? 'opacity-50' : 'cursor-pointer'}`}>Choose photo</label>
+                {path && <button type="button" onClick={() => onChange(null)} disabled={busy} className={small}>Remove</button>}
+              </div>
+            </>
           )}
         </div>
         <input id={takePhotoId} type="file" accept="image/*" capture="environment" onChange={pick} disabled={busy} className="sr-only" />
         <input id={choosePhotoId} type="file" accept="image/*" onChange={pick} disabled={busy} className="sr-only" />
-        <input id={changePhotoId} type="file" accept="image/*" onChange={pick} disabled={busy} className="sr-only" />
       </div>
       {error && <p className="text-danger text-sm mt-1">{error}</p>}
       {viewing && url && <PhotoViewer url={url} alt={label} onClose={() => setViewing(false)} />}
