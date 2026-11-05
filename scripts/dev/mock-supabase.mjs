@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto'
 const ME = '00000000-0000-0000-0000-00000000000a'
 const PARTNER = '00000000-0000-0000-0000-00000000000b'
 const profiles = {
-  [ME]: { id: ME, household_id: null, display_name: 'alice', color: '#6366f1', goal_calories: 2000, goal_protein_g: 150, goal_carbs_g: 250, goal_fat_g: 65, goal_water_oz: 64, timezone: 'America/New_York', created_at: '2026-10-27T00:00:00Z' },
+  [ME]: { id: ME, household_id: null, display_name: 'alice', color: '#6366f1', goal_calories: 2000, goal_protein_g: 150, goal_carbs_g: 250, goal_fat_g: 65, goal_water_oz: 64, bottle_oz: 18, timezone: 'America/New_York', created_at: '2026-10-27T00:00:00Z' },
 }
 const households = {
   // A household with one member, for the join test.
@@ -102,7 +102,7 @@ if (process.argv.includes('--with-logs')) {
   slot(day(0), 'breakfast', 'OYO')
   slot(day(0), 'dinner', 'Curry', curryId)
 }
-const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'goal_water_oz', 'timezone', 'reminder_time']
+const allowed = ['display_name', 'color', 'goal_calories', 'goal_protein_g', 'goal_carbs_g', 'goal_fat_g', 'goal_water_oz', 'bottle_oz', 'timezone', 'reminder_time']
 const code8 = () => Math.random().toString(16).slice(2, 10)
 
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,HEAD,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Expose-Headers': '*' }

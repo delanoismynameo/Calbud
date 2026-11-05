@@ -1,8 +1,6 @@
-import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { insertWaterLog, deleteWaterLog } from './waterLogApi'
 import { useWaterLogs } from './useWaterLogs'
-import { useProfile } from '../household/useProfile'
 import { supabase } from '../lib/supabase'
 import { WATER_ADDS, waterProgress, lastAdd, WATER_BOTTLE_OPTIONS } from './water'
 
@@ -11,27 +9,24 @@ export default function WaterCard({ userId, date, goal, readOnly = false, bottle
   const queryClient = useQueryClient()
   const logs = useWaterLogs(userId, date)
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['water-logs', userId, date] })
-  const { profile, refresh: refreshProfile } = useProfile()
-
-  const initialBottle = bottleOz ?? profile?.bottle_oz ?? 18
-  const [bottleOzValue, setBottleOzValue] = useState(initialBottle)
 
   const add = useMutation({ mutationFn: (oz: number) => insertWaterLog(userId, date, oz), onSettled: refresh })
   const undo = useMutation({ mutationFn: (id: string) => deleteWaterLog(id), onSettled: refresh })
 
-  const setBottleMutation = useMutation({
+  // The bottle size is saved on your profile; while a change saves, the new size shows straight away.
+  const setBottle = useMutation({
     mutationFn: async (next: number) => {
       const { error } = await supabase.from('profiles').update({ bottle_oz: next }).eq('id', userId)
       if (error) throw new Error(error.message)
-      await refreshProfile()
     },
-    onSuccess: () => refresh(),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['household-data'] }),
   })
+  const bottle = setBottle.isPending ? setBottle.variables : (bottleOz ?? 18)
 
   const { total, percent, reached } = waterProgress(logs.data ?? [], goal)
   const last = lastAdd(logs.data ?? [])
   const busy = add.isPending || undo.isPending || logs.isFetching
-  const failed = add.error ?? undo.error
+  const failed = add.error ?? undo.error ?? setBottle.error
 
   return (
     <section className="bg-card rounded-3xl shadow-card p-4 space-y-3">
@@ -64,21 +59,7 @@ export default function WaterCard({ userId, date, goal, readOnly = false, bottle
       )}
 
       {!readOnly && (
-        <div className="flex items-center gap-2">
-          <select id="water-bottle" aria-label="Your water bottle size"
-            value={bottleOzValue}
-            onChange={(e) => { const next = Number(e.target.value); setBottleMutation.mutate(next) }}
-            disabled={busy || logs.isError}
-            className="h-full shrink-0 rounded-2xl border border-line bg-card text-sm font-semibold text-ink py-2.5 px-2 disabled:opacity-50">
-            {WATER_BOTTLE_OPTIONS.map((oz) => (
-              <option key={oz} value={oz}>{oz} oz</option>
-            ))}
-          </select>
-          <button type="button" onClick={() => add.mutate(bottleOzValue)} disabled={busy || logs.isError}
-            aria-label={`Add one full bottle (${bottleOzValue} oz)`}
-            className="flex-1 py-2.5 rounded-2xl border-2 border-water bg-water text-sm font-bold text-white hover:opacity-90 active:bg-water disabled:opacity-50">
-            +bottle ({bottleOzValue} oz)
-          </button>
+        <div className="space-y-2">
           <div className="grid grid-cols-3 gap-2">
             {WATER_ADDS.map((oz) => (
               <button key={oz} type="button" onClick={() => add.mutate(oz)} disabled={busy || logs.isError}
@@ -86,6 +67,17 @@ export default function WaterCard({ userId, date, goal, readOnly = false, bottle
                 +{oz} oz
               </button>
             ))}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => add.mutate(bottle)} disabled={busy || logs.isError}
+              className="flex-1 py-2.5 rounded-2xl bg-water text-sm font-bold text-white hover:opacity-90 disabled:opacity-50">
+              + Bottle ({bottle} oz)
+            </button>
+            <select aria-label="Your water bottle size" value={bottle}
+              onChange={(e) => setBottle.mutate(Number(e.target.value))} disabled={setBottle.isPending}
+              className="rounded-2xl border border-line bg-card text-sm font-semibold text-ink px-3 disabled:opacity-50">
+              {WATER_BOTTLE_OPTIONS.map((oz) => <option key={oz} value={oz}>{oz} oz bottle</option>)}
+            </select>
           </div>
         </div>
       )}
