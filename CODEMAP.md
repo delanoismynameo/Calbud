@@ -62,6 +62,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 
 ### src/food/
 - `BarcodeScanner.tsx`: BarcodeScanner (default)
+- `ConvertPopup.tsx`: ConvertPopup (default). _A Convert button for an amount box: pick a unit, type how much, and Use hands back the amount in g or ml._
 - `CustomFoodForm.tsx`: CustomFoodForm (default)
 - `ExtrasFields.tsx`: ExtrasFields (default)
 - `FoodFinder.tsx`: FoodFinder (default)
@@ -74,6 +75,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `barcode.ts` (tested): normalizeBarcode, compressUpcE
 - `brand.ts` (tested): matchesBrand, brandQuery. _True when every word of `brand` starts a word of the food's brand or name, ignoring case: "kirkland" matches "Kirkland Signature", "great…_
 - `builtLabel.ts` (tested): builtLabel
+- `convert.ts` (tested): convertUnits, convertAmount; types: ConvertUnit
 - `crossCheck.ts` (tested): sourceLabel, sourceMismatch
 - `customFood.ts` (tested): parseCustomFood; types: CustomFoodInput, CustomFoodField, CustomFoodResult
 - `extras.ts` (tested): EXTRAS, extrasFromUsda, extrasFromOff, cleanExtras, parseExtraInputs, extrasPerServing, scaleExtras, sumExtras, dvPercent; types: ExtraKey, Extras, ExtraInfo, ExtraInputs

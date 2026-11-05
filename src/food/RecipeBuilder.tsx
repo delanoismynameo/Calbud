@@ -105,14 +105,14 @@ export default function RecipeBuilder({ initial, onChange }: { initial?: Recipe;
 
         {toggleMarkup}
 
-        <div className="flex items-center gap-2">
-          <label htmlFor="ingredient-amount" className="block flex-1">
+        <div className="flex items-end gap-2">
+          <label htmlFor="ingredient-amount" className="block flex-1 min-w-0">
             <span className="text-muted text-xs">{unit === 'serving' ? 'Servings' : foodUnit === 'g' ? 'Grams' : 'Millilitres'}</span>
             <input id="ingredient-amount" type="text" inputMode="decimal" value={amountText}
               onChange={(e) => { setAmountText(e.target.value) }}
               className="w-full bg-card border border-line rounded-2xl text-ink placeholder:text-muted px-4 py-2 focus:outline-none focus:ring-2 focus:ring-coral" />
           </label>
-          <ConvertPopup food={shown} onConvert={(converted) => setAmountText(String(converted))} />
+          <ConvertPopup unit={foodUnit} onConvert={(converted) => { setUnit('g'); setAmountText(String(converted)) }} />
         </div>
 
         {amountText.trim() !== '' && amount === null && (
