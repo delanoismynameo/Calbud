@@ -8,6 +8,7 @@ export interface Profile {
   goal_carbs_g: number
   goal_fat_g: number
   goal_water_oz: number
+  bottle_oz: number
   timezone: string
   reminder_time: string | null  // ISO time format (HH:MM:SS) or null for no reminder
   created_at: string

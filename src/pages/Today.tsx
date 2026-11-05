@@ -99,7 +99,7 @@ export default function Today() {
             </div>
           )}
 
-          {!logs.isPending && profile && <WaterCard userId={profile.id} date={date} goal={profile.goal_water_oz ?? 64} />}
+          {!logs.isPending && profile && <WaterCard userId={profile.id} date={date} goal={profile.goal_water_oz ?? 64} bottleOz={profile.bottle_oz} />}
 
 
           {logs.data && logs.data.length === 0 && prevLogs.data && prevLogs.data.length > 0 && (

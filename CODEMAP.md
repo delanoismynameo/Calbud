@@ -199,7 +199,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `types.ts`: MEALS; types: MealType, MealLog
 - `useMealLogs.ts`: useMealLogs
 - `useWaterLogs.ts`: useWaterLogs. _One person's water adds for one day (yours, or a household member's, read only)._
-- `water.ts` (tested): WATER_ADDS, waterProgress, lastAdd
+- `water.ts` (tested): WATER_ADDS, WATER_BOTTLE_OPTIONS, waterProgress, lastAdd
 - `waterLogApi.ts`: fetchWaterLogs, insertWaterLog, deleteWaterLog
 - `waterTypes.ts`: types: WaterLog
 
@@ -228,3 +228,4 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `20261104000000_water.sql`
 - `20261104000001_water_security.sql`
 - `20261105000000_photos.sql`
+- `20261105000200_water_bottle.sql`
