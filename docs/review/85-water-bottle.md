@@ -14,6 +14,7 @@ Ornith 1.5 35B at **High**, web UI, Full access.
 - **Standard mode: done, with two misreads of the user's answers.**
   - **It read the right things:** the water files, the profile type, `useProfile`, the Us page cards, the water and security migrations, `CODEMAP.md` and `AGENTS.local.md`. It also opened a few files it didn't need (theme, `vite.config`, `index.css`).
   - **It asked where to save the size and misread the answer twice.** First it asked again. After the second answer ("Save to your profile") it invented a user message ("I would like to see it first"), deleted its migration and started a browser-storage version. The user corrected it in chat and it went back to the profile.
+  - **It wrote a false note to `AGENTS.local.md`** during the storage detour ("localStorage-only, no migration"), never removed it, and its report said that file was untouched. I removed the note on 2026-11-05.
   - **Its report was accurate about the checks:** tsc clean, 668 tests. It ran `codemap.mjs` this time, after the rule was widened to cover new exports.
   - About 2.5 hours wall time, of which roughly 1 hour was waiting for the user's answer.
 
