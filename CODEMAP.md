@@ -49,6 +49,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `exportWeek.ts` (tested): activityEvents, exportFileName, isPhoneOrTablet, deliverIcs; types: DeliverResult, ShareNav
 - `googleCalendar.ts` (tested): toGoogleCalendarUrl
 - `ics.ts` (tested): localToUtc, buildIcs; types: CalEvent, IcsOptions
+- `prepExport.ts` (tested): prepEvents
 
 ### src/components/
 - `NotificationToast.tsx`: NotificationToast (default)
@@ -155,6 +156,7 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 
 ### src/prep/
 - `GroceryList.tsx`: GroceryList (default)
+- `PrepExportButton.tsx`: PrepExportButton (default)
 - `PrepForm.tsx`: PrepForm (default)
 - `RecipeList.tsx`: RecipeList (default)
 - `RepeatButton.tsx`: RepeatButton (default)

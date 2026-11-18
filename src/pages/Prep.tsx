@@ -14,6 +14,7 @@ import MenuGrid from '../menu/MenuGrid'
 import SlotEditor from '../menu/SlotEditor'
 import { useProfile } from '../household/useProfile'
 import RepeatButton from '../prep/RepeatButton'
+import PrepExportButton from '../prep/PrepExportButton'
 import { usePrepRealtime } from '../prep/usePrepRealtime'
 import { useGroceryRealtime } from '../prep/useGroceryRealtime'
 import GroceryList from '../prep/GroceryList'
@@ -165,6 +166,9 @@ export default function Prep() {
               )
             })}
             <RepeatButton kind="prep" start={start} key={start} />
+            {view === 'plan' && profile.profile && (
+              <PrepExportButton sessions={data} start={start} timeZone={profile.profile.timezone} />
+            )}
           </>
         )
       ) : null}
