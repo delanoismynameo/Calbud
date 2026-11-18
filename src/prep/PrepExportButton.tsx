@@ -70,7 +70,7 @@ export default function PrepExportButton({
         Export week
       </button>
       <p className="text-xs text-muted mt-1">
-        Add this day's preps to your calendar.
+        Add this week's preps to your calendar.
       </p>
       {message && (
         <p className={`text-xs mt-1 ${failed ? 'text-danger' : 'text-muted'}`}>
