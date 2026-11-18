@@ -84,7 +84,7 @@ export default function WeekPlan() {
               <span className={`text-base font-bold ${day === selected ? 'text-coral-deep' : 'text-ink'}`}>{dom}</span>
               <span className="flex gap-0.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hasMeal ? '#ff6f7d' : 'transparent' }} />
-                {hasWork && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#b8a0ff' }} />}
+                {hasWork && <span className="w-1.5 h-1.5 rounded-full bg-workout-soft" />}
               </span>
             </button>
           )
@@ -112,15 +112,15 @@ export default function WeekPlan() {
       {/* Cards */}
       {selectedRows.map((row) => (
         <div key={`${row.type}:${row.id}`}
-          className={`flex items-center gap-3 rounded-2xl border-l-4 p-3 mb-2 ${row.type === 'meal' ? 'bg-coral-light/30 border-coral-deep' : 'bg-[#b8a0ff]/20 border-[#b8a0ff]'}`}>
-          <div className={`h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 text-lg ${row.type === 'meal' ? 'bg-coral-light' : 'bg-[#b8a0ff]/30'}`}>
+          className={`flex items-center gap-3 rounded-2xl border-l-4 p-3 mb-2 ${row.type === 'meal' ? 'bg-coral-light/30 border-coral-deep' : 'bg-workout-soft/30 border-workout-soft'}`}>
+          <div className={`h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 text-lg ${row.type === 'meal' ? 'bg-coral-light' : 'bg-workout-soft'}`}>
             {rowIcon[row.type]}
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-ink truncate">{row.title}</p>
             <p className="text-xs text-muted mt-0.5">{row.detail}</p>
           </div>
-          <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${row.type === 'meal' ? 'bg-coral-light text-coral-deep' : 'bg-[#b8a0ff]/30 text-[#7a5fe0] dark:text-[#e6d9ff]'}`}>
+          <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${row.type === 'meal' ? 'bg-coral-light text-coral-deep' : 'bg-workout-soft text-workout-ink'}`}>
             {rowLabel[row.type]}
           </span>
         </div>
