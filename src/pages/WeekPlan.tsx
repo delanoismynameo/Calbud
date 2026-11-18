@@ -83,8 +83,8 @@ export default function WeekPlan() {
               <span className="text-[10px] font-medium uppercase text-muted">{DOW[dow]}</span>
               <span className={`text-base font-bold ${day === selected ? 'text-coral-deep' : 'text-ink'}`}>{dom}</span>
               <span className="flex gap-0.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hasMeal ? '#ff6f7d' : 'transparent' }} />
-                {hasWork && <span className="w-1.5 h-1.5 rounded-full bg-workout-soft" />}
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hasMeal ? 'var(--c-meal-ink)' : 'transparent' }} />
+                {hasWork && <span className="w-1.5 h-1.5 rounded-full bg-workout-ink" />}
               </span>
             </button>
           )
