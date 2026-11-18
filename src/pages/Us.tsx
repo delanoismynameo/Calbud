@@ -8,6 +8,7 @@ import GoalsCard from '../household/GoalsCard'
 import YouCard from '../household/YouCard'
 import DataCard from '../household/DataCard'
 import WeekCard from '../dashboard/WeekCard'
+import WeekPlan from './WeekPlan'
 import PersonDay from '../household/PersonDay'
 import { useCanInstall } from '../pwa/installPromptInstance'
 import { installHint, installText } from '../pwa/install'
@@ -75,6 +76,7 @@ export default function Us() {
               </div>
               {partner && <p className="text-xs text-muted">Tap a profile to see their day.</p>}
               <div className="max-w-sm mx-auto"><WeekCard /></div>
+              <div className="max-w-sm mx-auto"><WeekPlan /></div>
               <div className="max-w-sm mx-auto"><YouCard /></div>
               <div className="max-w-sm mx-auto">
                 <GoalsCard />

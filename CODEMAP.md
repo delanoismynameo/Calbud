@@ -152,7 +152,9 @@ A calorie and meal-prep app for a household of two, built with React 19, TypeScr
 - `Prep.tsx`: Prep (default)
 - `Today.tsx`: Today (default)
 - `Us.tsx`: Us (default)
+- `WeekPlan.tsx`: WeekPlan (default)
 - `addFoodStep.ts` (tested): stepState, stepFrom; types: AddFoodStep. _Add food's second screen (a picked food, or Create a food) is its own history entry, marked in the router's location state, so the phone's…_
+- `weekRows.ts` (tested): mealToRow, activityToRow, sortRows, rowIcon, rowLabel; types: WeekRow
 
 ### src/prep/
 - `GroceryList.tsx`: GroceryList (default)
