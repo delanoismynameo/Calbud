@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { useLocalDate } from '../lib/useLocalDate'
-import { weekStart, weekDays, addDays, dayLabel } from '../prep/week'
+import { weekStart, weekDays, addDays, dayLabel, weekLabel } from '../prep/week'
 import { usePrepWeek } from '../prep/usePrepWeek'
 import { useActivityWeek } from '../activities/useActivityWeek'
 import type { WeekRow } from './weekRows'
 import { mealToRow, activityToRow, sortRows, rowIcon, rowLabel } from './weekRows'
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function weekSelectedDay(week: string[], today: string): string {
+  return week.includes(today) ? today : week[0]
+}
 
 function Loading() {
   return <p className="text-muted text-sm py-8 text-center">Loading…</p>
@@ -25,9 +29,7 @@ export default function WeekPlan() {
   const today = useLocalDate()
   const weekStarts = weekStart(today)
   const [start, setStart] = useState(() => weekStarts)
-  const [selected, setSelected] = useState<string>(() =>
-    weekDays(weekStarts).includes(today) ? today : weekDays(weekStarts)[0]
-  )
+  const [selected, setSelected] = useState<string>(() => weekSelectedDay(weekDays(weekStarts), today))
 
   const prep = usePrepWeek(start)
   const activities = useActivityWeek(start)
@@ -38,23 +40,26 @@ export default function WeekPlan() {
 
   const weekStartsNow = weekStarts
   const isFirstWeek = start === weekStartsNow
-  const prevWeek = () => setStart(addDays(start, -7))
-  const nextWeek = () => setStart(addDays(start, 7))
-  const thisWeek = () => { setStart(weekStartsNow); setSelected(today) }
+  const prevWeek = () => { setStart(addDays(start, -7)); setSelected(weekSelectedDay(weekDays(addDays(start, -7)), today)) }
+  const nextWeek = () => { setStart(addDays(start, 7)); setSelected(weekSelectedDay(weekDays(addDays(start, 7)), today)) }
+  const thisWeek = () => { setStart(weekStartsNow); setSelected(weekSelectedDay(weekDays(weekStartsNow), today)) }
 
   const selectedRows = sortRows(allRows.filter(r => r.scheduled_date === selected))
 
   return (
     <div className="bg-card rounded-3xl shadow-card p-5 text-left">
-      {/* Header nav */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-1">
-        <button type="button" aria-label="Previous week"
-          onClick={prevWeek}
-          className="h-9 w-9 flex items-center justify-center rounded-2xl bg-cream border border-line text-lg font-semibold hover:bg-coral-light">‹</button>
-        <h3 className="text-base font-bold text-ink">{weekLabel(start)}</h3>
-        <button type="button" aria-label="Next week"
-          onClick={nextWeek}
-          className="h-9 w-9 flex items-center justify-center rounded-2xl bg-cream border border-line text-lg font-semibold hover:bg-coral-light">›</button>
+        <h2 className="text-[13px] font-bold uppercase tracking-[1.5px] text-section">Week</h2>
+        <div className="flex items-center justify-between">
+          <button type="button" aria-label="Previous week"
+            onClick={prevWeek}
+            className="h-9 w-9 flex items-center justify-center rounded-2xl bg-cream border border-line text-lg font-semibold hover:bg-coral-light">‹</button>
+          <h3 className="text-base font-bold text-ink mx-2">{weekLabel(start)}</h3>
+          <button type="button" aria-label="Next week"
+            onClick={nextWeek}
+            className="h-9 w-9 flex items-center justify-center rounded-2xl bg-cream border border-line text-lg font-semibold hover:bg-coral-light">›</button>
+        </div>
       </div>
       {!isFirstWeek && (
         <div className="text-right mb-2">
@@ -66,9 +71,8 @@ export default function WeekPlan() {
       <div className="flex justify-between my-4">
         {weekDays(start).map((day) => {
           const days = allRows.filter(r => r.scheduled_date === day)
-          const dots = days.length > 0
-          const type = days[days.length - 1]?.type
-          const color = type === 'meal' ? '#ff6f7d' : type === 'work' ? '#b8a0ff' : undefined
+          const hasMeal = days.some(r => r.type === 'meal')
+          const hasWork = days.some(r => r.type === 'work')
           const [dy, dm, dd] = day.split('-').map(Number) as [number, number, number]
           const dow = new Date(dy, dm - 1, dd).getDay()
           const dom = dd
@@ -78,7 +82,10 @@ export default function WeekPlan() {
               className={`flex h-14 w-[46px] flex-col items-center justify-center gap-1 rounded-2xl border border-line ${day === selected ? 'bg-coral-light' : 'bg-cream'}`}>
               <span className="text-[10px] font-medium uppercase text-muted">{DOW[dow]}</span>
               <span className={`text-base font-bold ${day === selected ? 'text-coral-deep' : 'text-ink'}`}>{dom}</span>
-              <span className="w-1.5 h-1.5 rounded-full mt-0.5" style={{ backgroundColor: dots ? color : 'transparent' }} />
+              <span className="flex gap-0.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hasMeal ? '#ff6f7d' : 'transparent' }} />
+                {hasWork && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#b8a0ff' }} />}
+              </span>
             </button>
           )
         })}
@@ -94,8 +101,12 @@ export default function WeekPlan() {
       )}
 
       {/* Empty state */}
-      {allRows.length > 0 && !prep.isPending && !activities.isPending && selectedRows.length === 0 && (
-        <p className="text-muted text-sm py-6 text-center">Nothing planned for {dayLabel(selected)}.</p>
+      {!prep.isPending && !activities.isPending && (
+        allRows.length === 0 ? (
+          <p className="text-muted text-sm py-6 text-center">Nothing planned this week.</p>
+        ) : selectedRows.length === 0 ? (
+          <p className="text-muted text-sm py-6 text-center">Nothing planned for {dayLabel(selected)}.</p>
+        ) : null
       )}
 
       {/* Cards */}
@@ -109,18 +120,11 @@ export default function WeekPlan() {
             <p className="font-semibold text-ink truncate">{row.title}</p>
             <p className="text-xs text-muted mt-0.5">{row.detail}</p>
           </div>
-          <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${row.type === 'meal' ? 'bg-coral-light text-coral-deep' : 'bg-[#b8a0ff]/30 text-[#7a5fe0]'}`}>
+          <span className={`text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 ${row.type === 'meal' ? 'bg-coral-light text-coral-deep' : 'bg-[#b8a0ff]/30 text-[#7a5fe0] dark:text-[#e6d9ff]'}`}>
             {rowLabel[row.type]}
           </span>
         </div>
       ))}
     </div>
   )
-}
-
-function weekLabel(start: string): string {
-  const [sy, sm, sd] = start.split('-').map(Number) as [number, number, number]
-  const eDate = new Date(sy, sm - 1, sd + 6)
-  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  return `${MONTHS[sm - 1]} ${sd} – ${MONTHS[eDate.getMonth()]} ${eDate.getDate()}`
 }
